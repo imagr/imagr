@@ -1,0 +1,358 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		FCEA80AF1AD0101100DBA039 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FCEA80AE1AD0101100DBA039 /* Cocoa.framework */; };
+		FCEA80B81AD0101100DBA039 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FCEA80B71AD0101100DBA039 /* main.m */; };
+		FCEA80BB1AD0101100DBA039 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80B91AD0101100DBA039 /* Credits.rtf */; };
+		FCEA80BE1AD0101100DBA039 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FCEA80BD1AD0101100DBA039 /* libpython2.7.dylib */; };
+		FCEA80C01AD0101100DBA039 /* main.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80BF1AD0101100DBA039 /* main.py */; };
+		FCEA80C21AD0101100DBA039 /* AppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80C11AD0101100DBA039 /* AppDelegate.py */; };
+		FCEA80C51AD0101100DBA039 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80C31AD0101100DBA039 /* MainMenu.xib */; };
+		FCEA80C71AD0101100DBA039 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80C61AD0101100DBA039 /* Images.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		FCEA80AB1AD0101100DBA039 /* Imagr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Imagr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FCEA80AE1AD0101100DBA039 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		FCEA80B11AD0101100DBA039 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		FCEA80B21AD0101100DBA039 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		FCEA80B31AD0101100DBA039 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		FCEA80B61AD0101100DBA039 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FCEA80B71AD0101100DBA039 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		FCEA80BA1AD0101100DBA039 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
+		FCEA80BD1AD0101100DBA039 /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config/libpython2.7.dylib; sourceTree = "<absolute>"; };
+		FCEA80BF1AD0101100DBA039 /* main.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = main.py; sourceTree = "<group>"; };
+		FCEA80C11AD0101100DBA039 /* AppDelegate.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = AppDelegate.py; sourceTree = "<group>"; };
+		FCEA80C41AD0101100DBA039 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		FCEA80C61AD0101100DBA039 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FCEA80A81AD0101100DBA039 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FCEA80BE1AD0101100DBA039 /* libpython2.7.dylib in Frameworks */,
+				FCEA80AF1AD0101100DBA039 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FCEA80A21AD0101100DBA039 = {
+			isa = PBXGroup;
+			children = (
+				FCEA80B41AD0101100DBA039 /* Imagr */,
+				FCEA80AD1AD0101100DBA039 /* Frameworks */,
+				FCEA80AC1AD0101100DBA039 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FCEA80AC1AD0101100DBA039 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FCEA80AB1AD0101100DBA039 /* Imagr.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FCEA80AD1AD0101100DBA039 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FCEA80AE1AD0101100DBA039 /* Cocoa.framework */,
+				FCEA80B01AD0101100DBA039 /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		FCEA80B01AD0101100DBA039 /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FCEA80B11AD0101100DBA039 /* AppKit.framework */,
+				FCEA80B21AD0101100DBA039 /* CoreData.framework */,
+				FCEA80B31AD0101100DBA039 /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		FCEA80B41AD0101100DBA039 /* Imagr */ = {
+			isa = PBXGroup;
+			children = (
+				FCEA80BF1AD0101100DBA039 /* main.py */,
+				FCEA80C11AD0101100DBA039 /* AppDelegate.py */,
+				FCEA80C31AD0101100DBA039 /* MainMenu.xib */,
+				FCEA80C61AD0101100DBA039 /* Images.xcassets */,
+				FCEA80BC1AD0101100DBA039 /* SharedLibraries */,
+				FCEA80B51AD0101100DBA039 /* Supporting Files */,
+			);
+			path = Imagr;
+			sourceTree = "<group>";
+		};
+		FCEA80B51AD0101100DBA039 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				FCEA80B61AD0101100DBA039 /* Info.plist */,
+				FCEA80B71AD0101100DBA039 /* main.m */,
+				FCEA80B91AD0101100DBA039 /* Credits.rtf */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		FCEA80BC1AD0101100DBA039 /* SharedLibraries */ = {
+			isa = PBXGroup;
+			children = (
+				FCEA80BD1AD0101100DBA039 /* libpython2.7.dylib */,
+			);
+			name = SharedLibraries;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FCEA80AA1AD0101100DBA039 /* Imagr */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FCEA80CA1AD0101100DBA039 /* Build configuration list for PBXNativeTarget "Imagr" */;
+			buildPhases = (
+				FCEA80A71AD0101100DBA039 /* Sources */,
+				FCEA80A81AD0101100DBA039 /* Frameworks */,
+				FCEA80A91AD0101100DBA039 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Imagr;
+			productName = Imagr;
+			productReference = FCEA80AB1AD0101100DBA039 /* Imagr.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FCEA80A31AD0101100DBA039 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0620;
+				ORGANIZATIONNAME = "Graham Gilbert";
+				TargetAttributes = {
+					FCEA80AA1AD0101100DBA039 = {
+						CreatedOnToolsVersion = 6.2;
+					};
+				};
+			};
+			buildConfigurationList = FCEA80A61AD0101100DBA039 /* Build configuration list for PBXProject "Imagr" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = FCEA80A21AD0101100DBA039;
+			productRefGroup = FCEA80AC1AD0101100DBA039 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FCEA80AA1AD0101100DBA039 /* Imagr */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FCEA80A91AD0101100DBA039 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FCEA80BB1AD0101100DBA039 /* Credits.rtf in Resources */,
+				FCEA80C71AD0101100DBA039 /* Images.xcassets in Resources */,
+				FCEA80C21AD0101100DBA039 /* AppDelegate.py in Resources */,
+				FCEA80C01AD0101100DBA039 /* main.py in Resources */,
+				FCEA80C51AD0101100DBA039 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FCEA80A71AD0101100DBA039 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FCEA80B81AD0101100DBA039 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		FCEA80B91AD0101100DBA039 /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FCEA80BA1AD0101100DBA039 /* en */,
+			);
+			name = Credits.rtf;
+			sourceTree = "<group>";
+		};
+		FCEA80C31AD0101100DBA039 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FCEA80C41AD0101100DBA039 /* en */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		FCEA80C81AD0101100DBA039 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		FCEA80C91AD0101100DBA039 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/System/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		FCEA80CB1AD0101100DBA039 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Imagr/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		FCEA80CC1AD0101100DBA039 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Imagr/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FCEA80A61AD0101100DBA039 /* Build configuration list for PBXProject "Imagr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FCEA80C81AD0101100DBA039 /* Debug */,
+				FCEA80C91AD0101100DBA039 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FCEA80CA1AD0101100DBA039 /* Build configuration list for PBXNativeTarget "Imagr" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FCEA80CB1AD0101100DBA039 /* Debug */,
+				FCEA80CC1AD0101100DBA039 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = FCEA80A31AD0101100DBA039 /* Project object */;
+}
