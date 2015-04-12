@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>se.gu.it.LoginLog</string>
+  <key>LimitLoadToSessionType</key>
+  <array>
+    <string>LoginWindow</string>
+  </array>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Library/PrivilegedHelperTools/LoginLog.app/Contents/MacOS/LoginLog</string>
+    <string>-logfile</string>
+    <string>/var/log/first-boot.log</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+</dict>
+</plist>

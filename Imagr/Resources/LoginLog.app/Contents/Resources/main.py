@@ -1,13 +1,13 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 #
 #  main.py
-#  Imagr
+#  LoginLog
 #
-#  Created by Graham Gilbert on 04/04/2015.
-#  Copyright (c) 2015 Graham Gilbert. All rights reserved.
+#  Created by Pelle on 2013-03-05.
+#  Copyright Göteborgs universitet 2013. All rights reserved.
 #
 
-# import modules required by application
+#import modules required by application
 import objc
 import Foundation
 import AppKit
@@ -15,7 +15,8 @@ import AppKit
 from PyObjCTools import AppHelper
 
 # import modules containing classes required to start application and load MainMenu.nib
-import AppDelegate
-import MainController
+import LLAppDelegate
+import LLLogWindowController
+
 # pass control to AppKit
 AppHelper.runEventLoop()

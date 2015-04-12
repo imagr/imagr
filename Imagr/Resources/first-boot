@@ -1,0 +1,107 @@
+#!/usr/bin/python
+import socket
+import logging
+import time
+import plistlib
+import os
+import subprocess
+import shutil
+
+firstboot_dir = '/usr/local/first-boot'
+config_plist = os.path.join(firstboot_dir, 'config.plist')
+packages_dir = os.path.join(firstboot_dir, 'packages')
+installer = '/usr/sbin/installer'
+logfile = '/var/log/first-boot.log'
+
+# Logging Config
+log = logging.getLogger('first-boot')
+log.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(message)s')
+handler_stream = logging.StreamHandler()
+handler_stream.setFormatter(formatter)
+handler_stream.setLevel(logging.ERROR)
+log.addHandler(handler_stream)
+handler_file = logging.FileHandler(logfile)
+handler_file.setFormatter(formatter)
+log.addHandler(handler_file)
+
+def ip_addresses():
+    command = "ifconfig  | grep -E 'inet.[0-9]' | grep -v '127.0.0.1' | awk '{ print $2}' | wc -l"
+    proc = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
+    return proc.communicate()[0].replace('\n', '')
+
+def cleanup():
+    log.info('No more packages have been found to install, cleaning up.')
+    # remove launchdaemon
+    os.remove('/Library/LaunchDaemons/com.grahamgilbert.first-boot-pkg.plist')
+    # remove launchagent
+    os.remove('/Library/LaunchAgents/se.gu.it.LoginLog.plist')
+    # remove loginlog.app
+    shutil.rmtree('/Library/PrivilegedHelperTools/LoginLog.app')
+    # remove firstboot_dir
+    shutil.rmtree(firstboot_dir)
+
+def main():
+    log.info(('''
+######################################################
+First Boot Package Installer %s
+######################################################
+''') % time.strftime("%Y-%m-%d %H:%M:%S"))
+    plist_opts = plistlib.readPlist(config_plist)
+    if plist_opts.get('Network') == True:
+        # Check if the network is up
+        while True:
+            print ip_addresses()
+            if ip_addresses().strip() != "0":
+                log.info('Network connection is active. ')
+                break
+            else:
+                log.info('Network connection is inactive, retrying...')
+                time.sleep(10)
+    retry_limit = plist_opts.get('RetryCount')
+    # if the packages dir isn't empty, loop over them
+    if os.listdir(packages_dir):
+        # We're installing, wait to see the output
+        sleep_time = 20
+        for package in os.listdir(packages_dir):
+            log.info(('Installing %s...') % package)
+            package_path = os.path.join(packages_dir, package)
+            command = [installer, '-pkg', package_path, '-target', '/']
+            # check if we've reached the retry limit
+            retry_key = package + '_count'
+            retry_count = plist_opts.get(retry_key, 0)
+            if retry_count <= retry_limit:
+                log_path = open(logfile, 'a')  # so that data written to it will be appended
+                task = subprocess.Popen(command, stdout=log_path, stderr=log_path)
+                task.communicate()
+                if task.returncode == 0:
+                    # Package installed ok, we're good to remove it
+                    log.info(('%s installed successfully.') % package)
+                    try:
+                        os.remove(package_path)
+                    except:
+                        shutil.rmtree(package_path)
+                else:
+                    log.info(('%s didn\'t install successfully. Will retry on next boot.') % package)
+                    retry_count = retry_count + 1
+                    plist_opts[retry_key] = retry_count
+                    plistlib.writePlist(plist_opts, os.path.join(firstboot_dir, 'config.plist'))
+            else:
+                log.info(('Error limit for %s has been reached, removing the package.') % package)
+                try:
+                    os.remove(package_path)
+                except:
+                    shutil.rmtree(package_path)
+                
+
+    # if there aren't any packages, remove everything we've put in
+    else:
+        sleep_time=1
+        cleanup()
+    
+    # We're done, reboot. Wait 20 seconds so the log window can be read.
+    time.sleep(sleep_time)
+    subprocess.call(['/sbin/reboot'])
+
+if __name__ == '__main__':
+    main()
