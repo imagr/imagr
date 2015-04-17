@@ -37,9 +37,9 @@ Packages installed at first boot (currently) need to be flat packages.
 
 Imagr gets its configuration from a plist that is accessible over HTTP. This URL is configured in a plist that will be looked for in the following locations (from top to bottom) - the key is ``serverurl``:
 
-* ~/Library/Preferences/com.grahamgilbert.Imagr.plist
-* /Library/Preferences/com.grahamgilbert.Imagr.plist
-* /System/Installation/Packages/com.grahamgilbert.Imagr.plist
+* ``~/Library/Preferences/com.grahamgilbert.Imagr.plist``
+* ``/Library/Preferences/com.grahamgilbert.Imagr.plist``
+* ``/System/Installation/Packages/com.grahamgilbert.Imagr.plist``
 
 ### The plist
 
