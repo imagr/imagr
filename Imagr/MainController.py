@@ -63,7 +63,14 @@ class MainController(NSObject):
     imagingLabel = objc.IBOutlet()
     imagingProgressPanel = objc.IBOutlet()
 
-    global volumes
+    # former globals, now instance variables
+    volumes = None
+    passwordHash = None
+    workflows = None
+    targetVolume = None
+    workVolume = None
+    selectedWorkflow = None
+    packages_to_install = None
 
     def awakeFromNib(self):
         self.loginView.setHidden_(self)
@@ -78,31 +85,31 @@ class MainController(NSObject):
                                                             self.loadData, self, None)
 
     def loadData(self):
-        global passwordHash
-        global volumes
-        global workflows
+        #global passwordHash
+        #global volumes
+        #global workflows
         pool = NSAutoreleasePool.alloc().init()
-        volumes = macdisk.MountedVolumes()
+        self.volumes = macdisk.MountedVolumes()
         # We're going to get this url from a plist somewhere in the future
         theURL = Utils.getServerURL()
         if theURL:
             plistData = Utils.downloadFile(theURL)
             converted_plist = FoundationPlist.readPlistFromString(plistData)
-            passwordHash = converted_plist['password']
-            workflows = converted_plist['workflows']
+            self.passwordHash = converted_plist['password']
+            self.workflows = converted_plist['workflows']
             #NSLog(str(workflows))
         else:
-            passwordHash = False
+            self.passwordHash = False
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
                                                                    self.loadDataComplete, None, YES)
         del pool
 
     def loadDataComplete(self):
-        global passwordHash
+        #global passwordHash
         # end modal sheet and close the panel
         NSApp.endSheet_(self.progressPanel)
-        if not passwordHash:
+        if not self.passwordHash:
             self.password.setEnabled_(False)
             self.loginButton.setEnabled_(False)
             self.disableAllButtons(self)
@@ -115,11 +122,11 @@ class MainController(NSObject):
 
     @objc.IBAction
     def login_(self, sender):
-        global volumes
-        global passwordHash
+        #global volumes
+        #global passwordHash
 
         password_value = self.password.stringValue()
-        if Utils.getPasswordHash(password_value) != passwordHash and password_value != "":
+        if Utils.getPasswordHash(password_value) != self.passwordHash and password_value != "":
             self.errorField.setEnabled_(sender)
             self.errorField.setStringValue_("Incorrect password")
         else:
@@ -130,14 +137,14 @@ class MainController(NSObject):
 
     @objc.IBAction
     def setStartupDisk_(self, sender):
-        global volumes
+        #global volumes
         # This stops the console being spammed with: unlockFocus called too many times. Called on <NSButton
         NSGraphicsContext.saveGraphicsState()
         self.disableAllButtons(sender)
         # clear out the default junk in the dropdown
         self.startupDiskDropdown.removeAllItems()
         list = []
-        for volume in volumes:
+        for volume in self.volumes:
             list.append(volume.mountpoint)
 
         # Let's add the items to the popup
@@ -159,12 +166,12 @@ class MainController(NSObject):
     def chooseImagingTarget_(self, sender):
         self.disableAllButtons(sender)
         NSGraphicsContext.saveGraphicsState()
-        global volumes
-        global targetVolume
-        global workVolume
+        #global volumes
+        #global targetVolume
+        #global workVolume
         self.chooseTargetDropDown.removeAllItems()
         list = []
-        for volume in volumes:
+        for volume in self.volumes:
             if volume.mountpoint != '/':
                 if volume.mountpoint.startswith("/Volumes"):
                     if volume.mountpoint != '/Volumes':
@@ -178,12 +185,12 @@ class MainController(NSObject):
         # If there's only one volume, we're going to use that and move on to selecting the workflow
         self.enableAllButtons_(self)
         if len(list) == 1:
-            targetVolume = list[0]
+            self.targetVolume = list[0]
             self.selectWorkflow_(sender)
-            for volume in volumes:
-                if str(volume.mountpoint) == str(targetVolume):
+            for volume in self.volumes:
+                if str(volume.mountpoint) == str(self.targetVolume):
                     imaging_target = volume
-                    workVolume = volume
+                    self.workVolume = volume
                     break
             # We'll move on to the select workflow bit when it exists
         else:
@@ -211,12 +218,12 @@ class MainController(NSObject):
                                                             self.loadData, self, None)
     @objc.IBAction
     def selectImagingTarget_(self, sender):
-        global targetVolume
-        global workVolume
-        targetVolume = self.chooseTargetDropDown.titleOfSelectedItem()
-        for volume in volumes:
-            if str(volume.mountpoint) == str(targetVolume):
-                workVolume = volume
+        #global targetVolume
+        #global workVolume
+        self.targetVolume = self.chooseTargetDropDown.titleOfSelectedItem()
+        for volume in self.volumes:
+            if str(volume.mountpoint) == str(self.targetVolume):
+                self.workVolume = volume
                 break
         self.enableAllButtons_(sender)
         NSApp.endSheet_(self.chooseTargetPanel)
@@ -233,11 +240,11 @@ class MainController(NSObject):
 
     @objc.IBAction
     def selectWorkflow_(self, sender):
-        global targetVolume
-        global workflows
+        #global targetVolume
+        #global workflows
         self.chooseWorkflowDropDown.removeAllItems()
         list = []
-        for workflow in workflows:
+        for workflow in self.workflows:
             list.append(workflow['name'])
 
         self.chooseWorkflowDropDown.addItemsWithTitles_(list)
@@ -250,7 +257,7 @@ class MainController(NSObject):
     @objc.IBAction
     def chooseWorkflowDropDownDidChange_(self, sender):
         selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
-        for workflow in workflows:
+        for workflow in self.workflows:
             if selected_workflow == workflow['name']:
                 try:
                     self.workflowDescription.setString_(workflow['description'])
@@ -293,8 +300,8 @@ class MainController(NSObject):
             MacDiskError: target is not a Disk object
         """
 
-        global volumes
-        global workVolume
+        #global volumes
+        #global workVolume
         # if isinstance(source, macdisk.Image):
         #     # even attached dmgs can be a restore source as path to the dmg
         #     source_ref = source.imagepath
@@ -303,10 +310,10 @@ class MainController(NSObject):
         # else:
         #     raise macdisk.MacDiskError("source is not a Disk or Image object")
 
-        for volume in volumes:
+        for volume in self.volumes:
             if str(volume.mountpoint) == str(target):
                 imaging_target = volume
-                workVolume = volume
+                self.workVolume = volume
                 break
 
         if isinstance(imaging_target, macdisk.Disk):
@@ -371,46 +378,46 @@ class MainController(NSObject):
             return True
 
     def imageOnThread(self, sender):
-        global targetVolume
-        global volumes
-        global selectedWorkflow
+        #global targetVolume
+        #global volumes
+        #global selectedWorkflow
         pool = NSAutoreleasePool.alloc().init()
         selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
         # let's get the workflow
         dmg = None
-        for workflow in workflows:
+        for workflow in self.workflows:
             if selected_workflow == workflow['name']:
-                selectedWorkflow = workflow
+                self.selectedWorkflow = workflow
                 for item in workflow['components']:
                     if item['type'] == 'image':
                         dmg = item['url']
                         break
         if dmg:
-            self.Clone(dmg, targetVolume)
+            self.Clone(dmg, self.targetVolume)
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
                                                                    self.imageOnThreadComplete, None, YES)
         del pool
 
     def imageOnThreadComplete(self, sender):
-        global selectedWorkflow
-        global packages_to_install
+        #global selectedWorkflow
+        #global packages_to_install
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
-        packages_to_install = False
+        self.packages_to_install = False
         pre_first_boot = False
-        for item in selectedWorkflow['components']:
+        for item in self.selectedWorkflow['components']:
             if item['type'] == 'package':
                 if 'pre_first_boot' in item:
                     pre_first_boot = True
-                packages_to_install = True
+                self.packages_to_install = True
                 break
 
         if pre_first_boot:
             # have packages to install
             self.downloadAndInstallPackages_(sender)
 
-        if packages_to_install:
+        if self.packages_to_install:
             # got packages to install at first boot, let's process those
             self.downloadAndCopyPackages_(sender)
         else:
@@ -418,9 +425,9 @@ class MainController(NSObject):
             self.restartToImagedVolume_(sender)
 
     def downloadAndInstallPackages_(self, sender):
-        global packages_to_install
-        global workVolume
-        global selectedWorkflow
+        #global packages_to_install
+        #global workVolume
+        #global selectedWorkflow
         self.progressText.setStringValue_("Installing Packages...")
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.progressPanel,
                                                                 self.mainWindow, self, None, None)
@@ -428,29 +435,29 @@ class MainController(NSObject):
                                                                 self, None)
 
     def downloadAndInstallPackagesOnThread_(self, sender):
-        global packages_to_install
-        global workVolume
+        #global packages_to_install
+        #global workVolume
         pool = NSAutoreleasePool.alloc().init()
 
         # mount the target
-        if not workVolume.Mounted():
-            workVolume.Mount()
+        if not self.workVolume.Mounted():
+            self.workVolume.Mount()
 
-        for item in selectedWorkflow['components']:
+        for item in self.selectedWorkflow['components']:
             if item['type'] == 'package':
                 if 'pre_first_boot' in item:
-                    Utils.downloadAndInstallPackage(item['url'], workVolume.mountpoint)
+                    Utils.downloadAndInstallPackage(item['url'], self.workVolume.mountpoint)
         # restart
         del pool
-        if packages_to_install:
+        if self.packages_to_install:
             self.downloadAndCopyPackages_(sender)
         else:
             self.restartToImagedVolume_(sender)
 
     def downloadAndCopyPackages_(self, sender):
 
-        global workVolume
-        global selectedWorkflow
+        #global workVolume
+        #global selectedWorkflow
         self.progressText.setStringValue_("Copying packages for install on first boot...")
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.progressPanel,
                                                                 self.mainWindow, self, None, None)
@@ -459,30 +466,32 @@ class MainController(NSObject):
 
 
     def downloadAndCopyPackagesOnThread_(self, sender):
-        global workVolume
+        #global workVolume
         pool = NSAutoreleasePool.alloc().init()
         # mount the target
-        workVolume.Mount()
+        if not self.workVolume.Mounted():
+            self.workVolume.Mount()
 
-        packages_dir = os.path.join(workVolume.mountpoint, 'usr/local/first-boot/')
-        os.makedirs(packages_dir)
-        package_count = len(selectedWorkflow['components'])
+        packages_dir = os.path.join(self.workVolume.mountpoint, 'usr/local/first-boot/')
+        if not os.path.exists(packages_dir):
+            os.makedirs(packages_dir)
+        package_count = len(self.selectedWorkflow['components'])
         counter = 0
         # download packages to /usr/local/first-boot - append number
-        for item in selectedWorkflow['components']:
+        for item in self.selectedWorkflow['components']:
             if item['type'] == 'package':
                 counter = counter + 1
-                Utils.downloadPackage(item['url'], workVolume.mountpoint, counter, package_count)
+                Utils.downloadPackage(item['url'], self.workVolume.mountpoint, counter, package_count)
         # copy bits for first boot script
-        Utils.copyFirstBoot(workVolume.mountpoint)
+        Utils.copyFirstBoot(self.workVolume.mountpoint)
         # restart
         del pool
         self.restartToImagedVolume_(sender)
 
     def restartToImagedVolume_(self, sender):
         # set the startup disk to the restored volume
-        global workVolume
-        workVolume.SetStartupDisk()
+        #global workVolume
+        self.workVolume.SetStartupDisk()
         cmd = ['/sbin/reboot']
         task = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)

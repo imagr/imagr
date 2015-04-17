@@ -95,7 +95,7 @@ def installPkg(pkg, target):
     installer_pool = NSAutoreleasePool.alloc().init()
     cmd = ['/usr/sbin/installer', '-pkg', pkg, '-target', target]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (ouput, unusederr) = proc.communicate()
+    (output, unusederr) = proc.communicate()
     if unusederr:
         NSLog(str(unusederr))
     del installer_pool
@@ -149,7 +149,7 @@ def downloadPackage(url, target, number, package_count):
         os.makedirs(os.path.join(target, "usr/local/first-boot/packages"))
     file = os.path.join(target, 'usr/local/first-boot/packages',package_name)
     output = downloadChunks(url, file)
-    return ouput
+    return output
 
 def downloadChunks(url, file):
     try:
@@ -208,7 +208,8 @@ def copyFirstBoot(root):
     os.chown(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.plist'), 0, 0)
 
     helperTools_dir = os.path.join(root, 'Library', 'PrivilegedHelperTools')
-    os.makedirs(helperTools_dir)
+    if not os.path.exists(helperTools_dir):
+        os.makedirs(helperTools_dir)
     shutil.copytree(os.path.join(script_dir, 'LoginLog.app'),
     os.path.join(helperTools_dir, 'LoginLog.app'))
     # Set the permisisons
