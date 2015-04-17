@@ -165,8 +165,10 @@ class MainController(NSObject):
         list = []
         for volume in volumes:
             if volume.mountpoint != '/':
-                if volume.writable:
-                    list.append(volume.mountpoint)
+                if volume.mountpoint.startswith("/Volumes"):
+                    if volume.mountpoint != '/Volumes':
+                        if volume.writable:
+                            list.append(volume.mountpoint)
          # No writable volumes, this is bad.
         if len(list) == 0:
            alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(                                                                                                        NSLocalizedString(u"No writable volumes found", None),                                                                                                                      NSLocalizedString(u"Restart", None),                                                                                                                      NSLocalizedString(u"Open Disk Utility", None),                                                                                                                      objc.nil,                                                                                                                    NSLocalizedString(u"No writable volumes were found on this Mac.", None))
@@ -188,7 +190,7 @@ class MainController(NSObject):
         if returncode == NSAlertDefaultReturn:
             self.setStartupDisk_(sender)
         else:
-            cmd = ['/usr/bin/open', '/Applications/Utilities/Disk Utility.app']
+            cmd = ['/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility']
             proc = subprocess.call(cmd)
             alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(                                                                                                        NSLocalizedString(u"Rescan for volumes", None),                                                                                                                      NSLocalizedString(u"Rescan", None),                                                                                                                      objc.nil,                                                                                                                      objc.nil,                                                                                                                    NSLocalizedString(u"Rescan for volumes.", None))
 
