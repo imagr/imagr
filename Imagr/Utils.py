@@ -18,6 +18,8 @@ from SystemConfiguration import *
 from Foundation import *
 from AppKit import *
 from Cocoa import *
+import tempfile
+import subprocess
 
 def downloadFile(url):
     # Migrate this to requests to actually do a bit of cert validation. This
@@ -55,25 +57,102 @@ def getServerURL():
     except:
         pass
 
-    # Try an environment variable
 
-    try:
-        NSLog("Trying Env Variable Location")
-        serverurl = os.environ['SERVERURL']
-    except:
-        pass
+def downloadAndInstallPackage(url, target):
+    if os.path.basename(url).endswith('.dmg'):
+        # We're going to mount the dmg
+        dmgmountpoints = mountdmg(url)
+        dmgmountpoint = dmgmountpoints[0]
+
+        # Now we're going to go over everything that ends .pkg or
+        # .mpkg and install it
+        for package in os.listdir(dmgmountpoint):
+            if package.endswith('.pkg') or package.endswith('.mpkg'):
+                pkg = os.path.join(dmgmountpoint, package)
+                installPkg(pkg, target)
+
+        # Unmount it
+        unmountdmg(dmgmountpoint)
+
+    if os.path.basename(url).endswith('.pkg'):
+
+        # Make our temp directory on the target
+        temp_dir = tempfile.mkdtemp(dir=target)
+        # Download it
+        packagename = os.path.basename(url)
+        downloaded_file = downloadChunks(url, os.path.join(temp_dir,
+                                                        packagename))
+        # Install it
+        installPkg(downloaded_file, target)
+        # Clean up after ourselves
+        shutil.rmtree(temp_dir)
+
+
+def installPkg(pkg, target):
+    """
+    Installs a package on a specific volume
+    """
+    cmd = ['/usr/sbin/installer', '-pkg', pkg, '-target', target]
+    NSLog(str(cmd))
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (ouput, unusederr) = proc.communicate()
+    if unusederr:
+        NSLog(str(unusederr))
+    return output
+
+def mountdmg(dmgpath):
+    """
+    Attempts to mount the dmg at dmgpath
+    and returns a list of mountpoints
+    """
+    mountpoints = []
+    dmgname = os.path.basename(dmgpath)
+    cmd = ['/usr/bin/hdiutil', 'attach', dmgpath, '-nobrowse', '-plist',
+           '-owners', 'on']
+    proc = subprocess.Popen(cmd, bufsize=-1,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (pliststr, err) = proc.communicate()
+    if proc.returncode:
+        print >> sys.stderr, 'Error: "%s" while mounting %s.' % (err, dmgname)
+    if pliststr:
+        plist = plistlib.readPlistFromString(pliststr)
+        for entity in plist['system-entities']:
+            if 'mount-point' in entity:
+                mountpoints.append(entity['mount-point'])
+
+    return mountpoints
+
+def unmountdmg(mountpoint):
+    """
+    Unmounts the dmg at mountpoint
+    """
+    proc = subprocess.Popen(['/usr/bin/hdiutil', 'detach', mountpoint],
+                            bufsize=-1, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    (unused_output, err) = proc.communicate()
+    if proc.returncode:
+        print >> sys.stderr, 'Polite unmount failed: %s' % err
+        print >> sys.stderr, 'Attempting to force unmount %s' % mountpoint
+        # try forcing the unmount
+        retcode = subprocess.call(['/usr/bin/hdiutil', 'detach', mountpoint,
+                                   '-force'])
+        print('Unmounting successful...')
+        if retcode:
+            print >> sys.stderr, 'Failed to unmount %s' % mountpoint
 
 def downloadPackage(url, target, number, package_count):
     package_name = str(number) +"-" +os.path.basename(url)
-
-    #move the file to a more uniqe path
     os.umask(0002)
     #package_name = str(number) + '-' +package_name
     package_name = package_name.zfill(package_count)
     if not os.path.exists(os.path.join(target, "usr/local/first-boot/packages")):
         os.makedirs(os.path.join(target, "usr/local/first-boot/packages"))
+    file = os.path.join(target, 'usr/local/first-boot/packages',package_name)
+    output = downloadChunks(url, file)
+    return ouput
+
+def downloadChunks(url, file):
     try:
-        file = os.path.join(target, 'usr/local/first-boot/packages',package_name)
         req = urllib2.urlopen(url)
         total_size = int(req.info().getheader('Content-Length').strip())
         downloaded = 0
@@ -93,7 +172,6 @@ def downloadPackage(url, target, number, package_count):
         return False
 
     return file
-
 
 def copyFirstBoot(root):
     # Create the config plist

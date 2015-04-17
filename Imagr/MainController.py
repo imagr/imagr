@@ -161,6 +161,7 @@ class MainController(NSObject):
         NSGraphicsContext.saveGraphicsState()
         global volumes
         global targetVolume
+        global workVolume
         self.chooseTargetDropDown.removeAllItems()
         list = []
         for volume in volumes:
@@ -179,6 +180,11 @@ class MainController(NSObject):
         if len(list) == 1:
             targetVolume = list[0]
             self.selectWorkflow_(sender)
+            for volume in volumes:
+                if str(volume.mountpoint) == str(targetVolume):
+                    imaging_target = volume
+                    workVolume = volume
+                    break
             # We'll move on to the select workflow bit when it exists
         else:
             self.chooseTargetDropDown.addItemsWithTitles_(list)
@@ -206,7 +212,12 @@ class MainController(NSObject):
     @objc.IBAction
     def selectImagingTarget_(self, sender):
         global targetVolume
+        global workVolume
         targetVolume = self.chooseTargetDropDown.titleOfSelectedItem()
+        for volume in volumes:
+            if str(volume.mountpoint) == str(targetVolume):
+                workVolume = volume
+                break
         self.enableAllButtons_(sender)
         NSApp.endSheet_(self.chooseTargetPanel)
         self.chooseTargetPanel.orderOut_(self)
@@ -366,6 +377,7 @@ class MainController(NSObject):
         pool = NSAutoreleasePool.alloc().init()
         selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
         # let's get the workflow
+        dmg = None
         for workflow in workflows:
             if selected_workflow == workflow['name']:
                 selectedWorkflow = workflow
@@ -373,26 +385,66 @@ class MainController(NSObject):
                     if item['type'] == 'image':
                         dmg = item['url']
                         break
-        self.Clone(dmg, targetVolume)
+        if dmg:
+            self.Clone(dmg, targetVolume)
+
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
                                                                    self.imageOnThreadComplete, None, YES)
         del pool
 
     def imageOnThreadComplete(self, sender):
         global selectedWorkflow
+        global packages_to_install
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
         packages_to_install = False
+        pre_first_boot = False
         for item in selectedWorkflow['components']:
             if item['type'] == 'package':
+                if 'pre_first_boot' in item:
+                    pre_first_boot = True
                 packages_to_install = True
                 break
 
+        if pre_first_boot:
+            # have packages to install
+            self.downloadAndInstallPackages_(sender)
+
         if packages_to_install:
-            # got packages to install, let's process those
+            # got packages to install at first boot, let's process those
             self.downloadAndCopyPackages_(sender)
         else:
             # We're done!
+            self.restartToImagedVolume_(sender)
+
+    def downloadAndInstallPackages_(self, sender):
+        global packages_to_install
+        global workVolume
+        global selectedWorkflow
+        self.progressText.setStringValue_("Installing Packages...")
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.progressPanel,
+                                                                self.mainWindow, self, None, None)
+        NSThread.detachNewThreadSelector_toTarget_withObject_(self.downloadAndInstallPackagesOnThread_(sender),
+                                                                self, None)
+
+    def downloadAndInstallPackagesOnThread_(self, sender):
+        global packages_to_install
+        global workVolume
+        pool = NSAutoreleasePool.alloc().init()
+
+        # mount the target
+        if not workVolume.Mounted():
+            workVolume.Mount()
+
+        for item in selectedWorkflow['components']:
+            if item['type'] == 'package':
+                if 'pre_first_boot' in item:
+                    Utils.downloadAndInstallPackage(item['url'], workVolume.mountpoint)
+        # restart
+        del pool
+        if packages_to_install:
+            self.downloadAndCopyPackages_(sender)
+        else:
             self.restartToImagedVolume_(sender)
 
     def downloadAndCopyPackages_(self, sender):
@@ -407,6 +459,7 @@ class MainController(NSObject):
 
 
     def downloadAndCopyPackagesOnThread_(self, sender):
+        global workVolume
         pool = NSAutoreleasePool.alloc().init()
         # mount the target
         workVolume.Mount()
@@ -432,7 +485,7 @@ class MainController(NSObject):
         workVolume.SetStartupDisk()
         cmd = ['/sbin/reboot']
         task = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                                        stderr=subprocess.PIPE)
+                                    stderr=subprocess.PIPE)
         task.communicate()
     def enableAllButtons_(self, sender):
         self.cancelAndRestartButton.setEnabled_(True)
