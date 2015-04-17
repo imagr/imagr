@@ -31,7 +31,7 @@ Packages can either be installed at first boot (the default) or pre first boot b
 </dict>
 ```
 
-Packages installed at first boot (currently) need to be flat packages. Packages installed pre first boot **must** be in a dmg.
+Packages installed at first boot (currently) need to be flat packages.
 
 ## Configuration
 
