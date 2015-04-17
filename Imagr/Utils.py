@@ -92,13 +92,13 @@ def installPkg(pkg, target):
     """
     Installs a package on a specific volume
     """
+    installer_pool = NSAutoreleasePool.alloc().init()
     cmd = ['/usr/sbin/installer', '-pkg', pkg, '-target', target]
-    NSLog(str(cmd))
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (ouput, unusederr) = proc.communicate()
     if unusederr:
         NSLog(str(unusederr))
-    return output
+    del installer_pool
 
 def mountdmg(dmgpath):
     """

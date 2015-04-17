@@ -18,7 +18,20 @@ The image is deployed using ASR over HTTP. An image that is produced by AutoDMG 
 
 ### Packages
 
-Packages are currently installed at first boot, and must be flat packages. In the future, support for installing packages from a dmg and at imaging time is planned to support those use cases.
+Packages can either be installed at first boot (the default) or pre first boot by using the following in the component in the configuration plist:
+
+``` xml
+<dict>
+    <key>type</key>
+    <string>package</string>
+    <key>url</key>
+    <string>http://192.168.178.135/MunkiTools.pkg</string>
+    <key>pre_first_boot</key>
+    <true/>
+</dict>
+```
+
+Packages installed at first boot (currently) need to be flat packages. Packages installed pre first boot **must** be in a dmg.
 
 ## Configuration
 
