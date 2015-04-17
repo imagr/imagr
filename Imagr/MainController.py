@@ -416,8 +416,7 @@ class MainController(NSObject):
         if pre_first_boot:
             # have packages to install
             self.downloadAndInstallPackages_(sender)
-
-        if self.packages_to_install:
+        elif self.packages_to_install:
             # got packages to install at first boot, let's process those
             self.downloadAndCopyPackages_(sender)
         else:
@@ -442,14 +441,18 @@ class MainController(NSObject):
         # mount the target
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
-
+                
+        first_boot_pkgs_to_install = False
         for item in self.selectedWorkflow['components']:
             if item['type'] == 'package':
                 if 'pre_first_boot' in item:
                     Utils.downloadAndInstallPackage(item['url'], self.workVolume.mountpoint)
+                else:
+                    first_boot_pkgs_to_install = True
+                
         # restart
         del pool
-        if self.packages_to_install:
+        if first_boot_pkgs_to_install:
             self.downloadAndCopyPackages_(sender)
         else:
             self.restartToImagedVolume_(sender)
@@ -479,7 +482,7 @@ class MainController(NSObject):
         counter = 0
         # download packages to /usr/local/first-boot - append number
         for item in self.selectedWorkflow['components']:
-            if item['type'] == 'package':
+            if item['type'] == 'package' and not 'pre_first_boot' in item:
                 counter = counter + 1
                 Utils.downloadPackage(item['url'], self.workVolume.mountpoint, counter, package_count)
         # copy bits for first boot script
