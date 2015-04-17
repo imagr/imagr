@@ -33,23 +33,23 @@ Imagr gets its configuration from a plist that is accessible over HTTP. This URL
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>password</key>
-	<string>b109f3bbbc244eb82441917ed06d618b9008dd09b3befd1b5e07394c706a8bb980b1d7785e5976ec049b46df5f1326af5a2ea6d103fd07c95385ffab0cacbc86</string>
-	<key>workflows</key>
-	<array>
-		<dict>
-			<key>name</key>
-			<string>Munki_10103</string>
-			<key>description</key>
-			<string>Deploys a 10.10.3 image with Munki Tools and it's configuration.</string>
-			<key>components</key>
-			<array>
-				<dict>
-					<key>type</key>
-					<string>image</string>
-					<key>url</key>
-					<string>http://192.168.178.135/osx_custom_150410-10.10.3-14D131.hfs.dmg</string>
-				</dict>
+  <key>password</key>
+  <string>b109f3bbbc244eb82441917ed06d618b9008dd09b3befd1b5e07394c706a8bb980b1d7785e5976ec049b46df5f1326af5a2ea6d103fd07c95385ffab0cacbc86</string>
+  <key>workflows</key>
+  <array>
+    <dict>
+      <key>name</key>
+      <string>Munki_10103</string>
+      <key>description</key>
+      <string>Deploys a 10.10.3 image with Munki Tools and it's configuration.</string>
+      <key>components</key>
+      <array>
+        <dict>
+          <key>type</key>
+          <string>image</string>
+          <key>url</key>
+          <string>http://192.168.178.135/osx_custom_150410-10.10.3-14D131.hfs.dmg</string>
+        </dict>
         <dict>
             <key>type</key>
             <string>package</string>
@@ -62,15 +62,15 @@ Imagr gets its configuration from a plist that is accessible over HTTP. This URL
             <key>url</key>
             <string>http://192.168.178.135/Munki_Config.pkg</string>
         </dict>
-				<dict>
-						<key>type</key>
-						<string>package</string>
-						<key>url</key>
-						<string>http://192.168.178.135/clearReg.pkg</string>
-				</dict>
-			</array>
-		</dict>
-	</array>
+        <dict>
+            <key>type</key>
+            <string>package</string>
+            <key>url</key>
+            <string>http://192.168.178.135/clearReg.pkg</string>
+        </dict>
+      </array>
+    </dict>
+  </array>
 </dict>
 </plist>
 ```
