@@ -24,6 +24,7 @@ class AppDelegate(NSObject):
     progressPanel = objc.IBOutlet()
     progressIndicator = objc.IBOutlet()
     progressText = objc.IBOutlet()
+    
     def applicationDidFinishLaunching_(self, sender):
         NSLog("Application did finish launching.")
         if self.mainWindow:

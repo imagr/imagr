@@ -92,6 +92,7 @@ def installPkg(pkg, target):
     """
     Installs a package on a specific volume
     """
+    NSLog("Installing %@ to %@", pkg, target)
     installer_pool = NSAutoreleasePool.alloc().init()
     cmd = ['/usr/sbin/installer', '-pkg', pkg, '-target', target]
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -100,11 +101,13 @@ def installPkg(pkg, target):
         NSLog(str(unusederr))
     del installer_pool
 
+
 def mountdmg(dmgpath):
     """
     Attempts to mount the dmg at dmgpath
     and returns a list of mountpoints
     """
+    NSLog("Mounting disk image %@", dmgpath)
     mountpoints = []
     dmgname = os.path.basename(dmgpath)
     cmd = ['/usr/bin/hdiutil', 'attach', dmgpath, '-nobrowse', '-plist',
@@ -122,10 +125,12 @@ def mountdmg(dmgpath):
 
     return mountpoints
 
+
 def unmountdmg(mountpoint):
     """
     Unmounts the dmg at mountpoint
     """
+    NSLog("Unmounting disk image at %@", mountpoint)
     proc = subprocess.Popen(['/usr/bin/hdiutil', 'detach', mountpoint],
                             bufsize=-1, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
@@ -140,7 +145,9 @@ def unmountdmg(mountpoint):
         if retcode:
             print >> sys.stderr, 'Failed to unmount %s' % mountpoint
 
+
 def downloadPackage(url, target, number, package_count):
+    NSLog("Downloading pkg %@", url)
     package_name = str(number) +"-" +os.path.basename(url)
     os.umask(0002)
     #package_name = str(number) + '-' +package_name
@@ -150,6 +157,7 @@ def downloadPackage(url, target, number, package_count):
     file = os.path.join(target, 'usr/local/first-boot/packages',package_name)
     output = downloadChunks(url, file)
     return output
+
 
 def downloadChunks(url, file):
     try:
@@ -173,7 +181,9 @@ def downloadChunks(url, file):
 
     return file
 
+
 def copyFirstBoot(root):
+    NSLog("Copying first boot pkg install tools")
     # Create the config plist
     config_plist = {}
     network = True
