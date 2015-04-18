@@ -442,16 +442,21 @@ class MainController(NSObject):
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
                 
-        first_boot_pkgs_to_install = False
-        for item in self.selectedWorkflow['components']:
-            if item['type'] == 'package':
-                if 'pre_first_boot' in item:
-                    Utils.downloadAndInstallPackage(item['url'], self.workVolume.mountpoint)
-                else:
-                    first_boot_pkgs_to_install = True
+        pkgs_to_install = [item for item in self.selectedWorkflow['components']
+                           if item.get('type') == 'package' and item.get('pre_first_boot')]
+        package_count = len(pkgs_to_install)
+        counter = 0
+        for item in pkgs_to_install:
+            counter = counter + 1
+            Utils.downloadAndInstallPackage(
+                item['url'], self.workVolume.mountpoint, counter, package_count)
                 
         # restart
         del pool
+        # are there more pkgs to install at first boot?
+        first_boot_pkgs_to_install = [item for item in self.selectedWorkflow['components']
+                                      if item.get('type') == 'package'
+                                      and not item.get('pre_first_boot')]
         if first_boot_pkgs_to_install:
             self.downloadAndCopyPackages_(sender)
         else:
@@ -478,13 +483,14 @@ class MainController(NSObject):
         packages_dir = os.path.join(self.workVolume.mountpoint, 'usr/local/first-boot/')
         if not os.path.exists(packages_dir):
             os.makedirs(packages_dir)
-        package_count = len(self.selectedWorkflow['components'])
+        pkgs_to_install = [item for item in self.selectedWorkflow['components']
+                           if item.get('type') == 'package' and not item.get('pre_first_boot')]
+        package_count = len(pkgs_to_install)
         counter = 0
         # download packages to /usr/local/first-boot - append number
-        for item in self.selectedWorkflow['components']:
-            if item['type'] == 'package' and not 'pre_first_boot' in item:
-                counter = counter + 1
-                Utils.downloadPackage(item['url'], self.workVolume.mountpoint, counter, package_count)
+        for item in pkgs_to_install:
+            counter = counter + 1
+            Utils.downloadPackage(item['url'], self.workVolume.mountpoint, counter, package_count)
         # copy bits for first boot script
         Utils.copyFirstBoot(self.workVolume.mountpoint)
         # restart

@@ -58,7 +58,7 @@ def getServerURL():
         pass
 
 
-def downloadAndInstallPackage(url, target):
+def downloadAndInstallPackage(url, target, number, package_count):
     if os.path.basename(url).endswith('.dmg'):
         # We're going to mount the dmg
         dmgmountpoints = mountdmg(url)
