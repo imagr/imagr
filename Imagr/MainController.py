@@ -441,7 +441,7 @@ class MainController(NSObject):
         # mount the target
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
-                
+
         pkgs_to_install = [item for item in self.selectedWorkflow['components']
                            if item.get('type') == 'package' and item.get('pre_first_boot')]
         package_count = len(pkgs_to_install)
@@ -450,9 +450,12 @@ class MainController(NSObject):
             counter = counter + 1
             Utils.downloadAndInstallPackage(
                 item['url'], self.workVolume.mountpoint, counter, package_count)
-                
-        # restart
+
+        self.performSelectorOnMainThread_withObject_waitUntilDone_(
+                                                                   self.downloadAndInstallComplete, None, YES)
         del pool
+
+    def downloadAndInstallComplete(self, sender):
         # are there more pkgs to install at first boot?
         first_boot_pkgs_to_install = [item for item in self.selectedWorkflow['components']
                                       if item.get('type') == 'package'
@@ -474,7 +477,6 @@ class MainController(NSObject):
 
 
     def downloadAndCopyPackagesOnThread_(self, sender):
-        #global workVolume
         pool = NSAutoreleasePool.alloc().init()
         # mount the target
         if not self.workVolume.Mounted():
@@ -499,8 +501,9 @@ class MainController(NSObject):
 
     def restartToImagedVolume_(self, sender):
         # set the startup disk to the restored volume
-        #global workVolume
+
         self.workVolume.SetStartupDisk()
+
         cmd = ['/sbin/reboot']
         task = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
