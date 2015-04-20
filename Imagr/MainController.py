@@ -85,12 +85,10 @@ class MainController(NSObject):
                                                             self.loadData, self, None)
 
     def loadData(self):
-        #global passwordHash
-        #global volumes
-        #global workflows
+
         pool = NSAutoreleasePool.alloc().init()
         self.volumes = macdisk.MountedVolumes()
-        # We're going to get this url from a plist somewhere in the future
+
         theURL = Utils.getServerURL()
         if theURL:
             plistData = Utils.downloadFile(theURL)
@@ -434,8 +432,6 @@ class MainController(NSObject):
                                                                 self, None)
 
     def downloadAndInstallPackagesOnThread_(self, sender):
-        #global packages_to_install
-        #global workVolume
         pool = NSAutoreleasePool.alloc().init()
 
         # mount the target
@@ -452,10 +448,10 @@ class MainController(NSObject):
                 item['url'], self.workVolume.mountpoint, counter, package_count)
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
-                                                                   self.downloadAndInstallComplete, None, YES)
+                                                                   self.downloadAndInstallComplete_(sender), None, YES)
         del pool
 
-    def downloadAndInstallComplete(self, sender):
+    def downloadAndInstallComplete_(self, sender):
         # are there more pkgs to install at first boot?
         first_boot_pkgs_to_install = [item for item in self.selectedWorkflow['components']
                                       if item.get('type') == 'package'
