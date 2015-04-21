@@ -16,13 +16,12 @@ from AppKit import *
 from Cocoa import *
 import subprocess
 import sys
-import re
-import urllib
-import re
+#import re
+#import urllib
 import macdisk
 import urllib2
 import Utils
-import plistlib
+#import plistlib
 import PyObjCTools
 
 class MainController(NSObject):
@@ -62,6 +61,7 @@ class MainController(NSObject):
     imagingProgress = objc.IBOutlet()
     imagingLabel = objc.IBOutlet()
     imagingProgressPanel = objc.IBOutlet()
+    imagingProgressDetail = objc.IBOutlet()
 
     # former globals, now instance variables
     volumes = None
@@ -79,10 +79,9 @@ class MainController(NSObject):
         # Run app startup - get the images, password, volumes - anything that takes a while
 
         self.progressText.setStringValue_("Application Starting...")
-        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.progressPanel,
-                                                                self.mainWindow, self, None, None)
-        NSThread.detachNewThreadSelector_toTarget_withObject_(
-                                                            self.loadData, self, None)
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.progressPanel, self.mainWindow, self, None, None)
+        NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
 
     def loadData(self):
 
@@ -100,7 +99,7 @@ class MainController(NSObject):
             self.passwordHash = False
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
-                                                                   self.loadDataComplete, None, YES)
+            self.loadDataComplete, None, YES)
         del pool
 
     def loadDataComplete(self):
@@ -111,7 +110,8 @@ class MainController(NSObject):
             self.password.setEnabled_(False)
             self.loginButton.setEnabled_(False)
             self.disableAllButtons(self)
-            self.startUpDiskText.setStringValue_("No Server URL has been set. Please contact your administrator.")
+            self.startUpDiskText.setStringValue_(
+                "No Server URL has been set. Please contact your administrator.")
             self.setStartupDisk_(self)
         self.progressPanel.orderOut_(self)
         self.loginView.setHidden_(False)
@@ -147,7 +147,8 @@ class MainController(NSObject):
 
         # Let's add the items to the popup
         self.startupDiskDropdown.addItemsWithTitles_(list)
-        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.startUpDiskPanel, self.mainWindow, self, None, None)
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.startUpDiskPanel, self.mainWindow, self, None, None)
         NSGraphicsContext.restoreGraphicsState()
 
     @objc.IBAction
@@ -158,7 +159,8 @@ class MainController(NSObject):
 
     @objc.IBAction
     def openProgress_(self, sender):
-        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.progressPanel, self.mainWindow, self, None, None)
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.progressPanel, self.mainWindow, self, None, None)
 
     @objc.IBAction
     def chooseImagingTarget_(self, sender):
@@ -177,9 +179,15 @@ class MainController(NSObject):
                             list.append(volume.mountpoint)
          # No writable volumes, this is bad.
         if len(list) == 0:
-           alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(                                                                                                        NSLocalizedString(u"No writable volumes found", None),                                                                                                                      NSLocalizedString(u"Restart", None),                                                                                                                      NSLocalizedString(u"Open Disk Utility", None),                                                                                                                      objc.nil,                                                                                                                    NSLocalizedString(u"No writable volumes were found on this Mac.", None))
+            alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
+                NSLocalizedString(u"No writable volumes found", None),
+                NSLocalizedString(u"Restart", None),
+                NSLocalizedString(u"Open Disk Utility", None),
+                objc.nil,
+                NSLocalizedString(u"No writable volumes were found on this Mac.", None))
 
-           alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(self.mainWindow, self, self.noVolAlertDidEnd_returnCode_contextInfo_, objc.nil)
+            alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                self.mainWindow, self, self.noVolAlertDidEnd_returnCode_contextInfo_, objc.nil)
         # If there's only one volume, we're going to use that and move on to selecting the workflow
         self.enableAllButtons_(self)
         if len(list) == 1:
@@ -193,7 +201,8 @@ class MainController(NSObject):
             # We'll move on to the select workflow bit when it exists
         else:
             self.chooseTargetDropDown.addItemsWithTitles_(list)
-            NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.chooseTargetPanel, self.mainWindow, self, None, None)
+            NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                self.chooseTargetPanel, self.mainWindow, self, None, None)
         NSGraphicsContext.restoreGraphicsState()
 
     @PyObjCTools.AppHelper.endSheetMethod
@@ -203,17 +212,22 @@ class MainController(NSObject):
         else:
             cmd = ['/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility']
             proc = subprocess.call(cmd)
-            alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(                                                                                                        NSLocalizedString(u"Rescan for volumes", None),                                                                                                                      NSLocalizedString(u"Rescan", None),                                                                                                                      objc.nil,                                                                                                                      objc.nil,                                                                                                                    NSLocalizedString(u"Rescan for volumes.", None))
+            alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
+                NSLocalizedString(u"Rescan for volumes", None),
+                NSLocalizedString(u"Rescan", None),
+                objc.nil,
+                objc.nil,
+                NSLocalizedString(u"Rescan for volumes.", None))
 
-            alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(self.mainWindow, self, self.rescanAlertDidEnd_returnCode_contextInfo_, objc.nil)
+            alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                self.mainWindow, self, self.rescanAlertDidEnd_returnCode_contextInfo_, objc.nil)
 
     @PyObjCTools.AppHelper.endSheetMethod
     def rescanAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
         self.progressText.setStringValue_("Reloading Volumes...")
-        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.progressPanel,
-                                                                self.mainWindow, self, None, None)
-        NSThread.detachNewThreadSelector_toTarget_withObject_(
-                                                            self.loadData, self, None)
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.progressPanel, self.mainWindow, self, None, None)
+        NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
     @objc.IBAction
     def selectImagingTarget_(self, sender):
         #global targetVolume
@@ -265,6 +279,7 @@ class MainController(NSObject):
 
     @objc.IBAction
     def runWorkflow_(self, sender):
+        '''Set up the selected workflow to run on secondary thread'''
         self.imagingProgress.setHidden_(False)
         self.imagingLabel.setHidden_(False)
         self.cancelAndRestartButton.setEnabled_(False)
@@ -274,10 +289,79 @@ class MainController(NSObject):
         self.runWorkflowButton.setEnabled_(False)
         self.cancelAndRestartButton.setEnabled_(False)
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
-        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.imagingProgressPanel,
-                                                                self.mainWindow, self, None, None)
+        self.imagingProgressDetail.setStringValue_('')
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.imagingProgressPanel, self.mainWindow, self, None, None)
+        # initialize the progress bar
+        self.imagingProgress.setMinValue_(0.0)
+        self.imagingProgress.setMaxValue_(100.0)
+        self.imagingProgress.setIndeterminate_(True)
+        self.imagingProgress.setUsesThreadedAnimation_(True)
+        self.imagingProgress.startAnimation_(self)
         NSThread.detachNewThreadSelector_toTarget_withObject_(
-                                                            self.imageOnThread, self, None)
+            self.processWorkflowOnThread, self, None)
+
+    def updateProgressWithInfo_(self, info):
+        '''UI stuff should be done on the main thread. Yet we do all our interesting work
+        on a secondary thread. So to update the UI, the secondary thread should call this
+        method using performSelectorOnMainThread_withObject_waitUntilDone_'''
+        if 'title' in info.keys():
+            self.imagingLabel.setStringValue_(info['title'])
+        if 'percent' in info.keys():
+            if float(info['percent']) < 0:
+                if not self.imagingProgress.isIndeterminate():
+                    self.imagingProgress.setIndeterminate_(True)
+                    self.imagingProgress.startAnimation_(self)
+            else:
+                if self.imagingProgress.isIndeterminate():
+                    self.imagingProgress.stopAnimation_(self)
+                    self.imagingProgress.setIndeterminate_(False)
+                self.imagingProgress.setDoubleValue_(float(info['percent']))
+        if 'detail' in info.keys():
+            self.imagingProgressDetail.setStringValue_(info['detail'])
+
+    def updateProgressTitle_Percent_Detail_(self, title, percent, detail):
+        '''Wrapper method that calls the UI updadte method on the main thread'''
+        info = {}
+        if title is not None:
+            info['title'] = title
+        if percent is not None:
+            info['percent'] = percent
+        if detail is not None:
+            info['detail'] = detail
+        self.performSelectorOnMainThread_withObject_waitUntilDone_(
+            self.updateProgressWithInfo_, info, objc.NO)
+
+    def processWorkflowOnThread(self, sender):
+        '''Process the selected workflow'''
+        pool = NSAutoreleasePool.alloc().init()
+        selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
+        # let's get the workflow
+        self.selectedWorkflow = None
+        for workflow in self.workflows:
+            if selected_workflow == workflow['name']:
+                self.selectedWorkflow = workflow
+                break
+        if self.selectedWorkflow:
+            self.restoreImage()
+            self.downloadAndInstallPackages()
+            self.downloadAndCopyPackages()
+
+        self.performSelectorOnMainThread_withObject_waitUntilDone_(
+            self.processWorkflowOnThreadComplete, None, YES)
+        del pool
+
+    def processWorkflowOnThreadComplete(self):
+        '''Done running workflow, restart to imaged volume'''
+        NSApp.endSheet_(self.imagingProgressPanel)
+        self.imagingProgressPanel.orderOut_(self)
+        self.restartToImagedVolume()
+
+    def restoreImage(self):
+        dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
+                           if item.get('type') == 'image' and item.get('url')]
+        if dmgs_to_restore:
+            Clone(dmgs_to_restore[0], self.targetVolume)
 
     def Clone(self, source, target, erase=True, verify=True, show_activity=True):
         """A wrapper around 'asr' to clone one disk object onto another.
@@ -298,16 +382,6 @@ class MainController(NSObject):
             MacDiskError: target is not a Disk object
         """
 
-        #global volumes
-        #global workVolume
-        # if isinstance(source, macdisk.Image):
-        #     # even attached dmgs can be a restore source as path to the dmg
-        #     source_ref = source.imagepath
-        # elif isinstance(source, macdisk.Disk):
-        #     source_ref = "/dev/%s" % source.deviceidentifier
-        # else:
-        #     raise macdisk.MacDiskError("source is not a Disk or Image object")
-
         for volume in self.volumes:
             if str(volume.mountpoint) == str(target):
                 imaging_target = volume
@@ -319,10 +393,8 @@ class MainController(NSObject):
         else:
             raise macdisk.MacDiskError("target is not a Disk object")
 
-
-
-        command = ["/usr/sbin/asr", "restore", "--source", str(source), "--target",
-                             target_ref, "--noprompt", "--puppetstrings"]
+        command = ["/usr/sbin/asr", "restore", "--source", str(source),
+                   "--target", target_ref, "--noprompt", "--puppetstrings"]
 
         if erase:
             # check we can unmount the target... may as well fail here than later.
@@ -333,17 +405,12 @@ class MainController(NSObject):
         if not verify:
             command.append("--noverify")
 
-        self.imagingProgress.setMinValue_(0.0)
-        self.imagingProgress.setMaxValue_(100.0)
-        self.imagingProgress.setIndeterminate_(True)
-        self.imagingProgress.setUsesThreadedAnimation_(True)
-        self.imagingProgress.startAnimation_(True)
-        self.imagingProgress.setDoubleValue_(float(0.001))
-        NSLog(str(command))
-        task = subprocess.Popen(command, stdout=subprocess.PIPE,
-                                                        stderr=subprocess.PIPE)
+        self.updateProgressTitle_Percent_Detail_('Restoring %s' % source, -1, '')
 
-        message = " "
+        NSLog(str(command))
+        task = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        message = ""
         while task.poll() is None:
             output = task.stdout.readline().strip()
             try:
@@ -353,20 +420,17 @@ class MainController(NSObject):
             if len(output.split("\t")) == 4:
                 if output.split("\t")[3] == "restore":
                     message = "Restoring: "+ str(percent) + "%"
-
                 elif output.split("\t")[3] == "verify":
                     message = "Verifying: "+ str(percent) + "%"
                 else:
-                    message = " "
+                    message = ""
             else:
-                message = " "
+                message = ""
             if percent == 0:
                 percent = 0.001
-            self.imagingProgress.setIndeterminate_(False)
-            self.imagingProgress.setDoubleValue_(float(percent))
-            self.imagingProgress.setNeedsDisplay_(True)
-            self.imagingLabel.setStringValue_(str(message))
-            self.imagingLabel.setNeedsDisplay_(True)
+            info = {'detail': message, 'percent': float(percent)}
+            self.performSelectorOnMainThread_withObject_waitUntilDone_(
+                self.updateProgressWithInfo_, info, objc.NO)
 
         (unused_stdout, stderr) = task.communicate()
 
@@ -375,65 +439,8 @@ class MainController(NSObject):
         if task.poll() == 0:
             return True
 
-    def imageOnThread(self, sender):
-        #global targetVolume
-        #global volumes
-        #global selectedWorkflow
-        pool = NSAutoreleasePool.alloc().init()
-        selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
-        # let's get the workflow
-        dmg = None
-        for workflow in self.workflows:
-            if selected_workflow == workflow['name']:
-                self.selectedWorkflow = workflow
-                for item in workflow['components']:
-                    if item['type'] == 'image':
-                        dmg = item['url']
-                        break
-        if dmg:
-            self.Clone(dmg, self.targetVolume)
-
-        self.performSelectorOnMainThread_withObject_waitUntilDone_(
-                                                                   self.imageOnThreadComplete, None, YES)
-        del pool
-
-    def imageOnThreadComplete(self, sender):
-        #global selectedWorkflow
-        #global packages_to_install
-        NSApp.endSheet_(self.imagingProgressPanel)
-        self.imagingProgressPanel.orderOut_(self)
-        self.packages_to_install = False
-        pre_first_boot = False
-        for item in self.selectedWorkflow['components']:
-            if item['type'] == 'package':
-                if 'pre_first_boot' in item:
-                    pre_first_boot = True
-                self.packages_to_install = True
-                break
-
-        if pre_first_boot:
-            # have packages to install
-            self.downloadAndInstallPackages_(sender)
-        elif self.packages_to_install:
-            # got packages to install at first boot, let's process those
-            self.downloadAndCopyPackages_(sender)
-        else:
-            # We're done!
-            self.restartToImagedVolume_(sender)
-
-    def downloadAndInstallPackages_(self, sender):
-        #global packages_to_install
-        #global workVolume
-        #global selectedWorkflow
-        self.progressText.setStringValue_("Installing Packages...")
-        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.progressPanel,
-                                                                self.mainWindow, self, None, None)
-        NSThread.detachNewThreadSelector_toTarget_withObject_(self.downloadAndInstallPackagesOnThread_(sender),
-                                                                self, None)
-
-    def downloadAndInstallPackagesOnThread_(self, sender):
-        pool = NSAutoreleasePool.alloc().init()
-
+    def downloadAndInstallPackages(self):
+        self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
         # mount the target
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
@@ -441,39 +448,19 @@ class MainController(NSObject):
         pkgs_to_install = [item for item in self.selectedWorkflow['components']
                            if item.get('type') == 'package' and item.get('pre_first_boot')]
         package_count = len(pkgs_to_install)
-        counter = 0
+        counter = 0.0
         for item in pkgs_to_install:
-            counter = counter + 1
+            counter = counter + 1.0
+            package_name = os.path.basename(item['url'])
+            percent_done = (counter / package_count) * 100
+            self.updateProgressTitle_Percent_Detail_(
+                'Installing packages...', percent_done, package_name)
             Utils.downloadAndInstallPackage(
                 item['url'], self.workVolume.mountpoint, counter, package_count)
 
-        self.performSelectorOnMainThread_withObject_waitUntilDone_(
-                                                                   self.downloadAndInstallComplete_(sender), None, YES)
-        del pool
-
-    def downloadAndInstallComplete_(self, sender):
-        # are there more pkgs to install at first boot?
-        first_boot_pkgs_to_install = [item for item in self.selectedWorkflow['components']
-                                      if item.get('type') == 'package'
-                                      and not item.get('pre_first_boot')]
-        if first_boot_pkgs_to_install:
-            self.downloadAndCopyPackages_(sender)
-        else:
-            self.restartToImagedVolume_(sender)
-
-    def downloadAndCopyPackages_(self, sender):
-
-        #global workVolume
-        #global selectedWorkflow
-        self.progressText.setStringValue_("Copying packages for install on first boot...")
-        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(self.progressPanel,
-                                                                self.mainWindow, self, None, None)
-        NSThread.detachNewThreadSelector_toTarget_withObject_(
-                                                            self.downloadAndCopyPackagesOnThread_, self, None)
-
-
-    def downloadAndCopyPackagesOnThread_(self, sender):
-        pool = NSAutoreleasePool.alloc().init()
+    def downloadAndCopyPackages(self):
+        self.updateProgressTitle_Percent_Detail_(
+            'Copying packages for install on first boot...', -1, '')
         # mount the target
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
@@ -484,26 +471,27 @@ class MainController(NSObject):
         pkgs_to_install = [item for item in self.selectedWorkflow['components']
                            if item.get('type') == 'package' and not item.get('pre_first_boot')]
         package_count = len(pkgs_to_install)
-        counter = 0
-        # download packages to /usr/local/first-boot - append number
+        counter = 0.0
+        # download packages to /usr/local/first-boot - prepend number
         for item in pkgs_to_install:
-            counter = counter + 1
+            counter = counter + 1.0
+            package_name = os.path.basename(item['url'])
+            percent_done = (counter / package_count) * 100
+            self.updateProgressTitle_Percent_Detail_(
+                'Copying packages for install on first boot...', percent_done, package_name)
             Utils.downloadPackage(item['url'], self.workVolume.mountpoint, counter, package_count)
-        # copy bits for first boot script
-        Utils.copyFirstBoot(self.workVolume.mountpoint)
-        # restart
-        del pool
-        self.restartToImagedVolume_(sender)
+        if package_count:
+            # copy bits for first boot script
+            Utils.copyFirstBoot(self.workVolume.mountpoint)
 
-    def restartToImagedVolume_(self, sender):
+    def restartToImagedVolume(self):
         # set the startup disk to the restored volume
-
         self.workVolume.SetStartupDisk()
 
         cmd = ['/sbin/reboot']
-        task = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+        task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         task.communicate()
+
     def enableAllButtons_(self, sender):
         self.cancelAndRestartButton.setEnabled_(True)
         self.runWorkflowButton.setEnabled_(True)
