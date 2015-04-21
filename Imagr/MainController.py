@@ -71,6 +71,7 @@ class MainController(NSObject):
     workVolume = None
     selectedWorkflow = None
     packages_to_install = None
+    restartAction = 'restart'
 
     def awakeFromNib(self):
         self.loginView.setHidden_(self)
@@ -94,6 +95,8 @@ class MainController(NSObject):
             converted_plist = FoundationPlist.readPlistFromString(plistData)
             self.passwordHash = converted_plist['password']
             self.workflows = converted_plist['workflows']
+            if 'restart_action' in converted_plist:
+                self.restartAction = converted_plist['restart_action']
             #NSLog(str(workflows))
         else:
             self.passwordHash = False
@@ -355,7 +358,8 @@ class MainController(NSObject):
         '''Done running workflow, restart to imaged volume'''
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
-        self.restartToImagedVolume()
+        if self.restartAction == 'restart':
+            self.restartToImagedVolume()
 
     def restoreImage(self):
         dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
