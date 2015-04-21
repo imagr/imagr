@@ -346,6 +346,7 @@ class MainController(NSObject):
                 self.selectedWorkflow = workflow
                 break
         if self.selectedWorkflow:
+            self.setRestartAction()
             self.restoreImage()
             self.downloadAndInstallPackages()
             self.downloadAndCopyPackages()
@@ -358,8 +359,12 @@ class MainController(NSObject):
         '''Done running workflow, restart to imaged volume'''
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
-        if self.restartAction == 'restart':
+        if self.restartAction == 'restart' or self.restartAction == 'shutdown':
             self.restartToImagedVolume()
+
+    def setRestartAction(self):
+        if 'restart_action' in self.selectedWorkflow:
+            self.restartAction = self.selectedWorkflow['restart_action']
 
     def restoreImage(self):
         dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
@@ -491,8 +496,11 @@ class MainController(NSObject):
     def restartToImagedVolume(self):
         # set the startup disk to the restored volume
         self.workVolume.SetStartupDisk()
-
-        cmd = ['/sbin/reboot']
+        if self.restartAction == 'restart':
+            cmd = ['/sbin/reboot']
+        elif self.restartAction == 'shutdown':
+            cmd = ['/sbin/reboot', '-h', 'now']
+        
         task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         task.communicate()
 
