@@ -147,13 +147,11 @@ def unmountdmg(mountpoint):
 
 def downloadPackage(url, target, number, package_count):
     NSLog("Downloading pkg %@", url)
-    package_name = str(number) +"-" +os.path.basename(url)
+    package_name = "%03d-%s" % (number, os.path.basename(url))
     os.umask(0002)
-    #package_name = str(number) + '-' +package_name
-    package_name = package_name.zfill(package_count)
     if not os.path.exists(os.path.join(target, "usr/local/first-boot/packages")):
         os.makedirs(os.path.join(target, "usr/local/first-boot/packages"))
-    file = os.path.join(target, 'usr/local/first-boot/packages',package_name)
+    file = os.path.join(target, 'usr/local/first-boot/packages', package_name)
     output = downloadChunks(url, file)
     return output
 
