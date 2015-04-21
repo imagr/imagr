@@ -361,7 +361,7 @@ class MainController(NSObject):
         dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
                            if item.get('type') == 'image' and item.get('url')]
         if dmgs_to_restore:
-            Clone(dmgs_to_restore[0], self.targetVolume)
+            self.Clone(dmgs_to_restore[0], self.targetVolume)
 
     def Clone(self, source, target, erase=True, verify=True, show_activity=True):
         """A wrapper around 'asr' to clone one disk object onto another.
