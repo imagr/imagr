@@ -291,6 +291,7 @@ class MainController(NSObject):
         self.runWorkflowButton.setEnabled_(False)
         self.cancelAndRestartButton.setEnabled_(False)
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
+        self.imagingProgressDetail.setStringValue_('')
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
             self.imagingProgressPanel, self.mainWindow, self, None, None)
         # initialize the progress bar
@@ -309,7 +310,7 @@ class MainController(NSObject):
         if 'title' in info.keys():
             self.imagingLabel.setStringValue_(info['title'])
         if 'percent' in info.keys():
-            if float(progressInfo['percent']) < 0:
+            if float(info['percent']) < 0:
                 if not self.imagingProgress.isIndeterminate():
                     self.imagingProgress.setIndeterminate_(True)
                     self.imagingProgress.startAnimation_(self)
@@ -319,7 +320,7 @@ class MainController(NSObject):
                     self.imagingProgress.setIndeterminate_(False)
                 self.imagingProgress.setDoubleValue_(float(info['percent']))
         if 'detail' in info.keys():
-            self.imagingDetail.setStringValue_(info['detail'])
+            self.imagingProgressDetail.setStringValue_(info['detail'])
 
     def updateProgressTitle_Percent_Detail_(self, title, percent, detail):
         '''Wrapper method that calls the UI updadte method on the main thread'''
@@ -469,12 +470,13 @@ class MainController(NSObject):
                            if item.get('type') == 'package' and not item.get('pre_first_boot')]
         package_count = len(pkgs_to_install)
         counter = 0
-        # download packages to /usr/local/first-boot - append number
+        # download packages to /usr/local/first-boot - prepend number
         for item in pkgs_to_install:
             counter = counter + 1
             Utils.downloadPackage(item['url'], self.workVolume.mountpoint, counter, package_count)
-        # copy bits for first boot script
-        Utils.copyFirstBoot(self.workVolume.mountpoint)
+        if pkgs_to_install:
+            # copy bits for first boot script
+            Utils.copyFirstBoot(self.workVolume.mountpoint)
 
     def restartToImagedVolume(self):
         # set the startup disk to the restored volume
