@@ -41,7 +41,21 @@ Imagr gets its configuration from a plist that is accessible over HTTP. This URL
 * ``/Library/Preferences/com.grahamgilbert.Imagr.plist``
 * ``/System/Installation/Packages/com.grahamgilbert.Imagr.plist``
 
-### The plist
+*Sample ``com.grahamgilbert.Imagr.plist``*
+``` xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>serverurl</key>
+  <string>http://192.168.178.135/imagr_config.plist</string>
+</dict>
+</plist>
+```
+
+### The configuration plist
+
+Seen above as ``imagr_config.plist``. This file can be named whatever you like but needs to match.
 
 ``` xml
 <?xml version="1.0" encoding="UTF-8"?>
