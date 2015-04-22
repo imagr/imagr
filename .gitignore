@@ -1,3 +1,4 @@
 build/
-
-Imagr.xcodeproj/xcuserdata/grahamgilbert.xcuserdatad/xcschemes/Imagr.xcscheme
+Imagr.xcodeproj/xcuserdata/*
+*.dmg
+*.pkg
