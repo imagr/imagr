@@ -16,12 +16,9 @@ from AppKit import *
 from Cocoa import *
 import subprocess
 import sys
-#import re
-#import urllib
 import macdisk
 import urllib2
 import Utils
-#import plistlib
 import PyObjCTools
 
 class MainController(NSObject):
@@ -71,7 +68,7 @@ class MainController(NSObject):
     workVolume = None
     selectedWorkflow = None
     packages_to_install = None
-    restartAction = 'restart'
+    restartAction = None
 
     def awakeFromNib(self):
         self.loginView.setHidden_(self)
@@ -95,9 +92,6 @@ class MainController(NSObject):
             converted_plist = FoundationPlist.readPlistFromString(plistData)
             self.passwordHash = converted_plist['password']
             self.workflows = converted_plist['workflows']
-            if 'restart_action' in converted_plist:
-                self.restartAction = converted_plist['restart_action']
-            #NSLog(str(workflows))
         else:
             self.passwordHash = False
 
@@ -106,7 +100,6 @@ class MainController(NSObject):
         del pool
 
     def loadDataComplete(self):
-        #global passwordHash
         # end modal sheet and close the panel
         NSApp.endSheet_(self.progressPanel)
         if not self.passwordHash:
@@ -123,11 +116,9 @@ class MainController(NSObject):
 
     @objc.IBAction
     def login_(self, sender):
-        #global volumes
-        #global passwordHash
 
         password_value = self.password.stringValue()
-        if Utils.getPasswordHash(password_value) != self.passwordHash and password_value != "":
+        if Utils.getPasswordHash(password_value) != self.passwordHash or password_value == "":
             self.errorField.setEnabled_(sender)
             self.errorField.setStringValue_("Incorrect password")
         else:
@@ -138,7 +129,6 @@ class MainController(NSObject):
 
     @objc.IBAction
     def setStartupDisk_(self, sender):
-        #global volumes
         # This stops the console being spammed with: unlockFocus called too many times. Called on <NSButton
         NSGraphicsContext.saveGraphicsState()
         self.disableAllButtons(sender)
@@ -169,9 +159,6 @@ class MainController(NSObject):
     def chooseImagingTarget_(self, sender):
         self.disableAllButtons(sender)
         NSGraphicsContext.saveGraphicsState()
-        #global volumes
-        #global targetVolume
-        #global workVolume
         self.chooseTargetDropDown.removeAllItems()
         list = []
         for volume in self.volumes:
@@ -231,10 +218,10 @@ class MainController(NSObject):
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
             self.progressPanel, self.mainWindow, self, None, None)
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
+
+
     @objc.IBAction
     def selectImagingTarget_(self, sender):
-        #global targetVolume
-        #global workVolume
         self.targetVolume = self.chooseTargetDropDown.titleOfSelectedItem()
         for volume in self.volumes:
             if str(volume.mountpoint) == str(self.targetVolume):
@@ -255,8 +242,6 @@ class MainController(NSObject):
 
     @objc.IBAction
     def selectWorkflow_(self, sender):
-        #global targetVolume
-        #global workflows
         self.chooseWorkflowDropDown.removeAllItems()
         list = []
         for workflow in self.workflows:
@@ -288,7 +273,7 @@ class MainController(NSObject):
         self.cancelAndRestartButton.setEnabled_(False)
         self.chooseWorkflowLabel.setEnabled_(True)
         self.chooseWorkflowDropDown.setEnabled_(False)
-        #self.workflowDescriptionView.setEnabled_(True)
+        # self.workflowDescriptionView.setEnabled_(True)
         self.runWorkflowButton.setEnabled_(False)
         self.cancelAndRestartButton.setEnabled_(False)
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
@@ -346,7 +331,8 @@ class MainController(NSObject):
                 self.selectedWorkflow = workflow
                 break
         if self.selectedWorkflow:
-            self.setRestartAction()
+            if 'restart_action' in self.selectedWorkflow:
+                self.restartAction = self.selectedWorkflow['restart_action']
             self.restoreImage()
             self.downloadAndInstallPackages()
             self.downloadAndCopyPackages()
@@ -361,10 +347,14 @@ class MainController(NSObject):
         self.imagingProgressPanel.orderOut_(self)
         if self.restartAction == 'restart' or self.restartAction == 'shutdown':
             self.restartToImagedVolume()
+        else:
+            self.openEndWorkflowPanel()
 
     def setRestartAction(self):
         if 'restart_action' in self.selectedWorkflow:
             self.restartAction = self.selectedWorkflow['restart_action']
+        else:
+            self.restartAction = 'restart'
 
     def restoreImage(self):
         dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
@@ -500,9 +490,36 @@ class MainController(NSObject):
             cmd = ['/sbin/reboot']
         elif self.restartAction == 'shutdown':
             cmd = ['/sbin/reboot', '-h', 'now']
-        
         task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         task.communicate()
+
+    def openEndWorkflowPanel(self):
+        label_string = "%s completed." % self.selectedWorkflow['name']
+        alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
+            NSLocalizedString(label_string, None),
+            NSLocalizedString(u"Restart", None),
+            NSLocalizedString(u"Run another workflow", None),
+            NSLocalizedString(u"Shutdown", None),
+            NSLocalizedString(u"", None),)
+
+        alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.mainWindow, self, self.endWorkflowAlertDidEnd_returnCode_contextInfo_, objc.nil)
+
+    @PyObjCTools.AppHelper.endSheetMethod
+    def endWorkflowAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
+        # -1 = Shutdown
+        # 0 = another workflow
+        # 1 = Restart
+        if returncode == -1:
+            self.restartAction = 'shutdown'
+            self.restartToImagedVolume()
+        elif returncode == 1:
+            self.restartAction = 'restart'
+            self.restartToImagedVolume()
+        elif returncode == 0:
+            self.chooseWorkflowDropDown.setEnabled_(True)
+            self.chooseImagingTarget_(contextinfo)
+
 
     def enableAllButtons_(self, sender):
         self.cancelAndRestartButton.setEnabled_(True)

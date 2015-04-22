@@ -9,21 +9,21 @@ cd $source_path
 xcodebuild
 
 # Create an initial disk image (32 megs)
-hdiutil create -size 32m -fs HFS+ -volname "imagr" imagr.dmg
+hdiutil create -size 32m -fs HFS+ -volname "Imagr" Imagr.dmg
 
 # Mount the disk image
-hdiutil attach imagr.dmg
+hdiutil attach Imagr.dmg
 
 # Copy imagr.app to dmg
-cp -r ./build/Release/Imagr.app /Volumes/imagr
+cp -r ./build/Release/Imagr.app /Volumes/Imagr
 
 # Unmount the disk image
-hdiutil detach /Volumes/imagr
+hdiutil detach /Volumes/Imagr
 
 # Convert the disk image to read-only and add version number
 version=`defaults read $(pwd)/build/Release/Imagr.app/Contents/Info.plist CFBundleShortVersionString`
-hdiutil convert imagr.dmg -format UDZO -o imagr-compressed.dmg
-mv imagr-compressed.dmg imagr-$version.dmg
+hdiutil convert Imagr.dmg -format UDZO -o Imagr-compressed.dmg
+mv Imagr-compressed.dmg Imagr-$version.dmg
 
 # Remove temp dmg
-rm imagr.dmg
+rm Imagr.dmg

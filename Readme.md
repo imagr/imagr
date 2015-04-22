@@ -6,7 +6,7 @@ This is a Python application, so Python will need to be included in your NetInst
 
 This is pre-release code and under heavy development. There are bugs if you don't follow the magic path. Bug reports are welcomed, pull requests are even better.
 
-##Table of Contents
+## Table of Contents
 
 * [Features](#features)
 	* [Workflows](#workflows)

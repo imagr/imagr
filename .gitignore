@@ -2,3 +2,4 @@ build/
 Imagr.xcodeproj/xcuserdata/*
 *.dmg
 *.pkg
+build-test.sh
