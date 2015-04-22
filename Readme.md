@@ -16,6 +16,7 @@ This is pre-release code and under heavy development. There are bugs if you don'
 	* [The configuration plist](#the-configuration-plist)
 	* [Password](#password)
 	* [Restart Action](#restart-action)
+	* [Startup Disk](#startup-disk)
 * [Building a NetInstall](#building-a-netinstall)
 
 ## Features
@@ -133,6 +134,17 @@ Each workflow can have a ``restart_action`` defined. If no ``restart_action`` is
 * ``restart``: Once the workflow is completed, Imagr will restart to the target volume.
 * ``shutdown``: Once the workflow is completed, Imagr will set the startup disk to the target volume and shut the Mac down.
 * ``none``: Once the workflow is completed, Imagr will present a dialog asking if the Mac should be shut down, restarted or if another workflow should be run.
+
+#### Startup Disk
+
+By default, Imagr will bless the target volume to set it as the startup volume. This is usually desirable, but in some cases you will want to not do this (for example, when using [createOSXinstallPkg](https://github.com/munki/createOSXinstallPkg)). To avoid this, use the follwing in your workflow:
+
+``` xml
+<key>bless_target</key>
+<false/>
+```
+
+The above doesn't work yet. I've documented it here so I remember to fix it.
 
 ## Building a NetInstall
 

@@ -69,6 +69,7 @@ class MainController(NSObject):
     selectedWorkflow = None
     packages_to_install = None
     restartAction = None
+    blessTarget = None
 
     def awakeFromNib(self):
         self.loginView.setHidden_(self)
@@ -333,6 +334,10 @@ class MainController(NSObject):
         if self.selectedWorkflow:
             if 'restart_action' in self.selectedWorkflow:
                 self.restartAction = self.selectedWorkflow['restart_action']
+            if 'bless_target' in self.selectedWorkflow:
+                self.blessTarget = self.selectedWorkflow['bless_target']
+            else:
+                self.blessTarget = True
             self.restoreImage()
             self.downloadAndInstallPackages()
             self.downloadAndCopyPackages()
@@ -349,12 +354,6 @@ class MainController(NSObject):
             self.restartToImagedVolume()
         else:
             self.openEndWorkflowPanel()
-
-    def setRestartAction(self):
-        if 'restart_action' in self.selectedWorkflow:
-            self.restartAction = self.selectedWorkflow['restart_action']
-        else:
-            self.restartAction = 'restart'
 
     def restoreImage(self):
         dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
@@ -485,7 +484,8 @@ class MainController(NSObject):
 
     def restartToImagedVolume(self):
         # set the startup disk to the restored volume
-        self.workVolume.SetStartupDisk()
+        if self.blessTarget == True:
+            self.workVolume.SetStartupDisk()
         if self.restartAction == 'restart':
             cmd = ['/sbin/reboot']
         elif self.restartAction == 'shutdown':
