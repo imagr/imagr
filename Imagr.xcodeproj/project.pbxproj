@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C06979C21AE83F3500914535 /* gurl.py in Resources */ = {isa = PBXBuildFile; fileRef = C06979C11AE83F3500914535 /* gurl.py */; };
 		FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */; };
 		FC98DA241AD6B2DC00F90405 /* first-boot in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA201AD6B2DC00F90405 /* first-boot */; };
 		FC98DA251AD6B2DC00F90405 /* LoginLog.app in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA211AD6B2DC00F90405 /* LoginLog.app */; };
@@ -55,6 +56,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C06979C11AE83F3500914535 /* gurl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gurl.py; sourceTree = "<group>"; };
 		FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "com.grahamgilbert.first-boot-pkg.plist"; sourceTree = "<group>"; };
 		FC98DA201AD6B2DC00F90405 /* first-boot */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "first-boot"; sourceTree = "<group>"; };
 		FC98DA211AD6B2DC00F90405 /* LoginLog.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; path = LoginLog.app; sourceTree = "<group>"; };
@@ -185,6 +187,7 @@
 		FCEA80B51AD0101100DBA039 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				C06979C11AE83F3500914535 /* gurl.py */,
 				FC98DA1E1AD6B2DC00F90405 /* Resources */,
 				FCF6B30D1AD1D73E00311D3A /* Installer.icns */,
 				FCF6B30E1AD1D73E00311D3A /* package.icns */,
@@ -297,6 +300,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C06979C21AE83F3500914535 /* gurl.py in Resources */,
 				FCEA81061AD018E500DBA039 /* timer.py in Resources */,
 				FC98DA251AD6B2DC00F90405 /* LoginLog.app in Resources */,
 				FCEA80F51AD018E500DBA039 /* certs_test.py in Resources */,

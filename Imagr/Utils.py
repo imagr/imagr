@@ -7,11 +7,11 @@
 #  Copyright (c) 2015 Graham Gilbert. All rights reserved.
 #
 
-import urllib2
+#import urllib2
 import hashlib
 import os
 import FoundationPlist
-import math
+#import math
 import plistlib
 import shutil
 from SystemConfiguration import *
@@ -21,12 +21,134 @@ from Cocoa import *
 import tempfile
 import subprocess
 
+from gurl import Gurl
+
+class GurlError(Exception):
+    pass
+
+class HTTPError(Exception):
+    pass
+
+def get_url(url, destinationpath, message=None, follow_redirects=False):
+    """Gets an HTTP or HTTPS URL and stores it in
+    destination path. Returns a dictionary of headers, which includes
+    http_result_code and http_result_description.
+    Will raise GurlError if Gurl returns an error.
+    Will raise HTTPError if HTTP Result code is not 2xx or 304.
+    If destinationpath already exists, you can set 'onlyifnewer' to true to
+    indicate you only want to download the file only if it's newer on the
+    server.
+    If you set resume to True, Gurl will attempt to resume an
+    interrupted download."""
+
+    tempdownloadpath = destinationpath + '.download'
+    if os.path.exists(tempdownloadpath):
+        os.remove(tempdownloadpath)
+
+    options = {'url': url,
+               'file': tempdownloadpath,
+               'follow_redirects': follow_redirects,
+               'logging_function': NSLog}
+    NSLog('gurl options: %@',  options)
+
+    connection = Gurl.alloc().initWithOptions_(options)
+    stored_percent_complete = -1
+    stored_bytes_received = 0
+    connection.start()
+    try:
+        while True:
+            # if we did `while not connection.isDone()` we'd miss printing
+            # messages and displaying percentages if we exit the loop first
+            connection_done = connection.isDone()
+            if message and connection.status and connection.status != 304:
+                # log always, display if verbose is 1 or more
+                # also display in MunkiStatus detail field
+                NSLog(message)
+                # now clear message so we don't display it again
+                message = None
+            if (str(connection.status).startswith('2')
+                and connection.percentComplete != -1):
+                if connection.percentComplete != stored_percent_complete:
+                    # display percent done if it has changed
+                    stored_percent_complete = connection.percentComplete
+                    NSLog('Percent done: %@', stored_percent_complete)
+            elif connection.bytesReceived != stored_bytes_received:
+                # if we don't have percent done info, log bytes received
+                stored_bytes_received = connection.bytesReceived
+                NSLog('Bytes received: %@', stored_bytes_received)
+            if connection_done:
+                break
+
+    except (KeyboardInterrupt, SystemExit):
+        # safely kill the connection then re-raise
+        connection.cancel()
+        raise
+    except Exception, err: # too general, I know
+        # Let us out! ... Safely! Unexpectedly quit dialogs are annoying...
+        connection.cancel()
+        # Re-raise the error as a GurlError
+        raise GurlError(-1, str(err))
+
+    if connection.error != None:
+        # Gurl returned an error
+        NSLog('Download error %@: %@', connection.error.code(),
+              connection.error.localizedDescription())
+        if connection.SSLerror:
+           NSLog('SSL error detail: %@', str(connection.SSLerror))
+        NSLog('Headers: %@', str(connection.headers))
+        if os.path.exists(tempdownloadpath):
+            os.remove(tempdownloadpath)
+        raise GurlError(connection.error.code(), 
+                        connection.error.localizedDescription())
+
+    if connection.response != None:
+        NSLog('Status: %@', connection.status)
+        NSLog('Headers: %@', connection.headers)
+    if connection.redirection != []:
+        NSLog('Redirection: %@', connection.redirection)
+
+    temp_download_exists = os.path.isfile(tempdownloadpath)
+    connection.headers['http_result_code'] = str(connection.status)
+    description = NSHTTPURLResponse.localizedStringForStatusCode_(
+                                                            connection.status)
+    connection.headers['http_result_description'] = description
+
+    if str(connection.status).startswith('2') and temp_download_exists:
+        os.rename(tempdownloadpath, destinationpath)
+        return connection.headers
+    elif connection.status == 304:
+        # unchanged on server
+        NSLog('Item is unchanged on the server.')
+        return connection.headers
+    else:
+        # there was an HTTP error of some sort; remove our temp download.
+        if os.path.exists(tempdownloadpath):
+            try:
+                os.unlink(tempdownloadpath)
+            except OSError:
+                pass
+        raise HTTPError(connection.status,
+                        connection.headers.get('http_result_description',''))
+
 def downloadFile(url):
-    # Migrate this to requests to actually do a bit of cert validation. This
-    # was lazy
-    data = urllib2.urlopen(url)
-    new_data = data.read()
-    return new_data
+    temp_file = '/private/var/root/Library/temporary_data'
+    try:
+        headers = get_url(url, temp_file)
+    except HTTPError, err:
+        NSLog("HTTP Error: %@", err)
+        return False
+    except GurlError, err:
+        NSLog("Gurl Error: %@", err)
+        return False
+    try:
+        file_handle = open(temp_file)
+        data = file_handle.read()
+        file_handle.close()
+        return data
+    except (OSError, IOError):
+        NSLog('Couldn\'t read %@', temp_file)
+        return False
+
 
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
@@ -158,25 +280,15 @@ def downloadPackage(url, target, number, package_count):
 
 def downloadChunks(url, file):
     try:
-        req = urllib2.urlopen(url)
-        total_size = int(req.info().getheader('Content-Length').strip())
-        downloaded = 0
-        CHUNK = 256 * 10240
-        with open(file, 'wb') as fp:
-            while True:
-                chunk = req.read(CHUNK)
-                downloaded += len(chunk)
-                #print math.floor( (downloaded / total_size) * 100 )
-                if not chunk: break
-                fp.write(chunk)
-    except urllib2.HTTPError, e:
-        #print "HTTP Error:",e.code , url
+        headers = get_url(url, file)
+    except HTTPError, err:
+        NSLog("HTTP Error: %@", err)
         return False
-    except urllib2.URLError, e:
-        #print "URL Error:",e.reason , url
+    except GurlError, err:
+        NSLog("Gurl Error: %@", err)
         return False
-
-    return file
+    else:
+        return file
 
 
 def copyFirstBoot(root):
