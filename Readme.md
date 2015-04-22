@@ -158,36 +158,41 @@ Imagr was designed to work in a NetInstall environment created by [AutoNBI](http
 
 	We should now have a running copy of Imagr located in the build/Release folder.
 
-2. Download AutoNBI.
+1. Download AutoNBI.
 
 	```
 	$ curl -fsSL https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py -o ./AutoNBI.py
 	$ chmod 755 ./AutoNBI.py
 	```
+1. Download and install Munkitools (needed for FoundationPlist for AutoNBI)
 
-3. Create a Packages/Extras directory. This is necessary to make Imagr auto launch when your NetInstall has loaded.
+	```
+	curl https://raw.githubusercontent.com/n8felton/Mac-OS-X-Scripts/master/munki/latest2_stable_admin.sh | bash
+	```
+
+1. Create a Packages/Extras directory. This is necessary to make Imagr auto launch when your NetInstall has loaded.
 
 	```
 	$ mkdir -p Packages/Extras
 	```
 
-4. Create a ``rc.imaging`` file inside of the Extras directory. For greater details regarding the ``rc.imaging`` file visit this [blog post](http://grahamgilbert.com/blog/2015/04/13/more-fun-with-autonbi/).
+1. Create a ``rc.imaging`` file inside of the Extras directory. For greater details regarding the ``rc.imaging`` file visit this [blog post](http://grahamgilbert.com/blog/2015/04/13/more-fun-with-autonbi/).
 
 	```
 	$ printf '%s\n%s' '#!/bin/bash' '/System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr' >> Packages/Extras/rc.imaging
 	```
 
-5. Copy ``Imagr.app`` into the Packages directory.
+1. Copy ``Imagr.app`` into the Packages directory.
 
 	```
 	$ cp -r ./build/Release/Imagr.app ./Packages
 	```
 
-6. Create your ``com.grahamgilbert.Imagr.plist`` file inside of the Packages directory.
+1. Create your ``com.grahamgilbert.Imagr.plist`` file inside of the Packages directory.
 
 	[See example above](#packages).
 
-7. Verify your directory structure looks correct.
+1. Verify your directory structure looks correct.
 
 	```
 	├── AutoNBI.py
@@ -198,14 +203,14 @@ Imagr was designed to work in a NetInstall environment created by [AutoNBI](http
 	│   └── com.grahamgilbert.Imagr.plist
 	```
 
-8. Set file permissions.
+1. Set file permissions.
 
 	```
 	$ sudo chown -R root:wheel Packages/*
 	$ sudo chmod -R 755 Packages/*
 	```
 
-9. Build your image. Make sure and change your Installer path to a valid OS X installer. Fore more details on AutoNBI visit the project [README](https://bitbucket.org/bruienne/autonbi/src).
+1. Build your image. Make sure and change your Installer path to a valid OS X installer. Fore more details on AutoNBI visit the project [README](https://bitbucket.org/bruienne/autonbi/src).
 
 	```
 	$ sudo ./AutoNBI.py -e -p -s /Applications/Install\ OS\ X\ Yosemite.app -f Packages -d ~/Desktop -n Imagr
