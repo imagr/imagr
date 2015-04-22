@@ -144,8 +144,6 @@ By default, Imagr will bless the target volume to set it as the startup volume. 
 <false/>
 ```
 
-The above doesn't work yet. I've documented it here so I remember to fix it.
-
 ## Building a NetInstall
 
 Imagr was designed to work in a NetInstall environment created by [AutoNBI](https://bitbucket.org/bruienne/autonbi/src). Basic instructions for creating this NetInstall are located below.
