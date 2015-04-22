@@ -6,6 +6,17 @@ This is a Python application, so Python will need to be included in your NetInst
 
 This is pre-release code and under heavy development. There are bugs if you don't follow the magic path. Bug reports are welcomed, pull requests are even better.
 
+##Table of Contents
+
+* [Features](#features)
+	* [Workflows](#workflows)
+	* [Imaging](#imaging)
+	* [Packages](#packages)
+* [Configuration](#configuration)
+	* [The configuration plist](#the-configuration-plist)
+	* [Password](#password)
+* [Building a NetInstall](#building-a-netinstall)
+
 ## Features
 
 ### Workflows
@@ -14,7 +25,7 @@ Taking inspiration from DeployStudio, Imagr supports multiple workflows - these 
 
 ### Imaging
 
-The image is deployed using ASR over HTTP. An image that is produced by AutoDMG will work perfectly.
+The image is deployed using ASR over HTTP. An image that is produced by [AutoDMG](https://github.com/MagerValp/AutoDMG) will work perfectly.
 
 ### Packages
 
@@ -41,7 +52,7 @@ Imagr gets its configuration from a plist that is accessible over HTTP. This URL
 * ``/Library/Preferences/com.grahamgilbert.Imagr.plist``
 * ``/System/Installation/Packages/com.grahamgilbert.Imagr.plist``
 
-*Sample ``com.grahamgilbert.Imagr.plist``*
+Sample ``com.grahamgilbert.Imagr.plist``:
 ``` xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -55,7 +66,7 @@ Imagr gets its configuration from a plist that is accessible over HTTP. This URL
 
 ### The configuration plist
 
-Seen above as ``imagr_config.plist``. This file can be named whatever you like but needs to match.
+Seen above as ``imagr_config.plist``. This file can be named anything but needs to match your ``serverurl``.
 
 ``` xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -108,8 +119,77 @@ The above plist will configure Imagr. The majority of the options should be obvi
 
 #### Password
 
-The password is a SHA hash - designed to stop customers from accidently imaging their computers, not to keep the crown jewels safe! To generate one:
+The password is a SHA hash - designed to stop customers from accidentally imaging their computers, not to keep the crown jewels safe! To generate one:
 
 ```
 $ python -c 'import hashlib; print hashlib.sha512("YOURPASSWORDHERE").hexdigest()'
 ```
+
+## Building a NetInstall
+
+Imagr was designed to work in a NetInstall environment created by [AutoNBI](https://bitbucket.org/bruienne/autonbi/src). Basic instructions for creating this NetInstall are located below.
+
+1. Download and build Imagr. (Xcode 6.0 or later will need to be installed).
+
+	```
+	$ git clone https://github.com/grahamgilbert/imagr.git
+	$ cd imagr
+	$ xcodebuild
+	```
+
+	We should now have a running copy of Imagr located in the build/Release folder.
+
+2. Download AutoNBI.
+
+	```
+	$ curl -fsSL https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py -o ./AutoNBI.py
+	$ chmod 755 ./AutoNBI.py
+	```
+
+3. Create a Packages/Extras directory. This is necessary to make Imagr auto launch when your NetInstall has loaded.
+
+	```
+	$ mkdir -p Packages/Extras
+	```
+
+4. Create a ``rc.imaging`` file inside of the Extras directory. For greater details regarding the ``rc.imaging`` file visit this [blog post](http://grahamgilbert.com/blog/2015/04/13/more-fun-with-autonbi/).
+
+	```
+	$ printf '%s\n%s' '#!/bin/bash' '/System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr' >> Packages/Extras/rc.imaging
+	```
+
+5. Copy ``imagr.app`` into the Packages directory.
+
+	```
+	$ cp -r ./build/Release/Imagr.app ./Packages
+	```
+
+6. Create your ``com.grahamgilbert.Imagr.plist`` file inside of the Packages directory.
+
+	[See example above](#packages).
+
+7. Verify your directory structure looks correct.
+
+	```
+	├── AutoNBI.py
+	├── Packages
+	│   ├── Extras
+	│   │   └── rc.imaging
+	│   ├── Imagr.app
+	│   └── com.grahamgilbert.Imagr.plist
+	```
+
+8. Set file permissions.
+
+	```
+	$ sudo chown -R root:wheel Packages/*
+	$ sudo chmod -R 755 Packages/*
+	```
+
+9. Build your image. Make sure and change your Installer path to a valid OS X installer. Fore more details on AutoNBI visit the project [README](https://bitbucket.org/bruienne/autonbi/src).
+
+	```
+	$ sudo ./AutoNBI.py -e -p -s /Applications/Install\ OS\ X\ Yosemite.app -f Packages -d ~/Desktop -n imagr
+	```
+	
+	This process will takes a few minutes to build the environment.
