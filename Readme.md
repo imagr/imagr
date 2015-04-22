@@ -15,6 +15,7 @@ This is pre-release code and under heavy development. There are bugs if you don'
 * [Configuration](#configuration)
 	* [The configuration plist](#the-configuration-plist)
 	* [Password](#password)
+	* [Restart Action](#restart-action)
 * [Building a NetInstall](#building-a-netinstall)
 
 ## Features
@@ -124,6 +125,14 @@ The password is a SHA hash - designed to stop customers from accidentally imagin
 ```
 $ python -c 'import hashlib; print hashlib.sha512("YOURPASSWORDHERE").hexdigest()'
 ```
+
+#### Restart Action
+
+Each workflow can have a ``restart_action`` defined. If no ``restart_action`` is specified, Imagr will fall back to the default of ``restart``.
+
+* ``restart``: Once the workflow is completed, Imagr will restart to the target volume.
+* ``shutdown``: Once the workflow is completed, Imagr will set the startup disk to the target volume and shut the Mac down.
+* ``none``: Once the workflow is completed, Imagr will present a dialog asking if the Mac should be shut down, restarted or if another workflow should be run.
 
 ## Building a NetInstall
 
