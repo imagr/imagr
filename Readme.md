@@ -158,7 +158,7 @@ Imagr was designed to work in a NetInstall environment created by [AutoNBI](http
 	$ printf '%s\n%s' '#!/bin/bash' '/System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr' >> Packages/Extras/rc.imaging
 	```
 
-5. Copy ``imagr.app`` into the Packages directory.
+5. Copy ``Imagr.app`` into the Packages directory.
 
 	```
 	$ cp -r ./build/Release/Imagr.app ./Packages
@@ -189,7 +189,7 @@ Imagr was designed to work in a NetInstall environment created by [AutoNBI](http
 9. Build your image. Make sure and change your Installer path to a valid OS X installer. Fore more details on AutoNBI visit the project [README](https://bitbucket.org/bruienne/autonbi/src).
 
 	```
-	$ sudo ./AutoNBI.py -e -p -s /Applications/Install\ OS\ X\ Yosemite.app -f Packages -d ~/Desktop -n imagr
+	$ sudo ./AutoNBI.py -e -p -s /Applications/Install\ OS\ X\ Yosemite.app -f Packages -d ~/Desktop -n Imagr
 	```
-	
+
 	This process will takes a few minutes to build the environment.
