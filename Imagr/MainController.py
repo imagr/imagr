@@ -71,15 +71,19 @@ class MainController(NSObject):
     restartAction = None
     blessTarget = None
 
-    def awakeFromNib(self):
+    def runStartupTasks(self):
         self.loginView.setHidden_(self)
-        self.progressPanel.center()
-        self.password.becomeFirstResponder()
+        self.mainWindow.center()
+        #self.progressPanel.center()
+        #self.password.becomeFirstResponder()
         # Run app startup - get the images, password, volumes - anything that takes a while
 
         self.progressText.setStringValue_("Application Starting...")
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
             self.progressPanel, self.mainWindow, self, None, None)
+        self.progressIndicator.setIndeterminate_(True)
+        self.progressIndicator.setUsesThreadedAnimation_(True)
+        self.progressIndicator.startAnimation_(self)
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
 
     def loadData(self):
@@ -103,6 +107,7 @@ class MainController(NSObject):
     def loadDataComplete(self):
         # end modal sheet and close the panel
         NSApp.endSheet_(self.progressPanel)
+        self.progressPanel.orderOut_(self)
         if not self.passwordHash:
             self.password.setEnabled_(False)
             self.loginButton.setEnabled_(False)
@@ -110,23 +115,22 @@ class MainController(NSObject):
             self.startUpDiskText.setStringValue_(
                 "No Server URL has been set. Please contact your administrator.")
             self.setStartupDisk_(self)
-        self.progressPanel.orderOut_(self)
         self.loginView.setHidden_(False)
-        self.mainView.setHidden_(self)
-        return
+        self.mainView.setHidden_(True)
+        self.mainWindow.makeFirstResponder_(self.password)
 
     @objc.IBAction
     def login_(self, sender):
-
-        password_value = self.password.stringValue()
-        if Utils.getPasswordHash(password_value) != self.passwordHash or password_value == "":
-            self.errorField.setEnabled_(sender)
-            self.errorField.setStringValue_("Incorrect password")
-        else:
-            self.loginView.setHidden_(sender)
-            self.mainView.setHidden_(False)
-            self.chooseImagingTarget_(sender)
-            self.enableAllButtons_(self)
+        if self.passwordHash:
+            password_value = self.password.stringValue()
+            if Utils.getPasswordHash(password_value) != self.passwordHash or password_value == "":
+                self.errorField.setEnabled_(sender)
+                self.errorField.setStringValue_("Incorrect password")
+            else:
+                self.loginView.setHidden_(sender)
+                self.mainView.setHidden_(False)
+                self.chooseImagingTarget_(sender)
+                self.enableAllButtons_(self)
 
     @objc.IBAction
     def setStartupDisk_(self, sender):
