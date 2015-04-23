@@ -131,7 +131,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False):
                         connection.headers.get('http_result_description',''))
 
 def downloadFile(url):
-    temp_file = '/private/var/root/Library/temporary_data'
+    temp_file = os.path.expanduser('~/Library/temporary_data')
     try:
         headers = get_url(url, temp_file)
     except HTTPError, err:
@@ -144,10 +144,14 @@ def downloadFile(url):
         file_handle = open(temp_file)
         data = file_handle.read()
         file_handle.close()
-        return data
     except (OSError, IOError):
         NSLog('Couldn\'t read %@', temp_file)
         return False
+    try:
+        os.unlink(temp_file)
+    except (OSError, IOError):
+        pass
+    return data
 
 
 def getPasswordHash(password):
