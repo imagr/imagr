@@ -157,7 +157,10 @@ def copyPkgFromDmg(url, dest_dir, number):
         if package.endswith('.pkg') or package.endswith('.mpkg'):
             pkg = os.path.join(dmgmountpoint, package)
             dest_file = os.path.join(dest_dir, "%03d-%s" % (number, os.path.basename(pkg)))
-            shutil.copy(pkg, dest_file)
+            if os.path.isfile(pkg):
+                shutil.copy(pkg, dest_file)
+            else:
+                shutil.copytree(pkg, dest_file)
             pkg_list.append(dest_file)
 
     # Unmount it
