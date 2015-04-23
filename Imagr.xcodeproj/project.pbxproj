@@ -250,6 +250,7 @@
 				FCEA80A71AD0101100DBA039 /* Sources */,
 				FCEA80A81AD0101100DBA039 /* Frameworks */,
 				FCEA80A91AD0101100DBA039 /* Resources */,
+				E665E9221AE887C5001C07F4 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -343,6 +344,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E665E9221AE887C5001C07F4 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# based on http://tgoode.com/2014/06/05/sensible-way-increment-bundle-version-cfbundleversion-xcode\nif git rev-parse --is-inside-work-tree 2> /dev/null > /dev/null; then\n    echo \"Setting CFBundleVersion to Git rev-list --count\"\n    build_number=$(git rev-list HEAD --count)\n    /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $build_number\" \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\nelse\n    echo \"Not in a Git repo, not setting CFBundleVersion\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		FCEA80A71AD0101100DBA039 /* Sources */ = {
