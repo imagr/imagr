@@ -493,7 +493,7 @@ class MainController(NSObject):
         if self.restartAction == 'restart':
             cmd = ['/sbin/reboot']
         elif self.restartAction == 'shutdown':
-            cmd = ['/sbin/reboot', '-h', 'now']
+            cmd = ['/sbin/shutdown', '-h', 'now']
         task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         task.communicate()
 
