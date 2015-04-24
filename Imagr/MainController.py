@@ -29,6 +29,7 @@ class MainController(NSObject):
     introTab = objc.IBOutlet()
     loginTab = objc.IBOutlet()
     mainTab = objc.IBOutlet()
+    errorTab = objc.IBOutlet()
 
     password = objc.IBOutlet()
     passwordLabel = objc.IBOutlet()
@@ -73,6 +74,19 @@ class MainController(NSObject):
     packages_to_install = None
     restartAction = None
     blessTarget = None
+    errorMessage = None
+
+    def errorPanel(self, error):
+        errorText = str(error)
+        alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
+            NSLocalizedString(errorText, None),
+            NSLocalizedString(u"Okay", None),
+            objc.nil,
+            objc.nil,
+            NSLocalizedString(u"", None))
+
+        alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.mainWindow, self, self.setStartupDisk_, objc.nil)
 
     def runStartupTasks(self):
         self.mainWindow.center()
@@ -92,26 +106,37 @@ class MainController(NSObject):
         theURL = Utils.getServerURL()
         if theURL:
             plistData = Utils.downloadFile(theURL)
-            converted_plist = FoundationPlist.readPlistFromString(plistData)
-            self.passwordHash = converted_plist['password']
-            self.workflows = converted_plist['workflows']
+            if plistData:
+                try:
+                    converted_plist = FoundationPlist.readPlistFromString(plistData)
+                except:
+                    self.errorMessage = "Configuration plist couldn't be read."
+                try:
+                    self.passwordHash = converted_plist['password']
+                except:
+                    self.errorMessage = "Password wasn't set."
+
+                try:
+                    self.workflows = converted_plist['workflows']
+                except:
+                    self.errorMessage = "No workflows found in the configuration plist."
+            else:
+                self.errorMessage = "Couldn't get configuration plist from server."
         else:
-            self.passwordHash = False
+            self.errorMessage = "Configuration URL wasn't set."
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.loadDataComplete, None, YES)
         del pool
 
     def loadDataComplete(self):
-        if not self.passwordHash:
-            self.password.setEnabled_(False)
-            self.loginButton.setEnabled_(False)
-            self.disableAllButtons(self)
-            self.startUpDiskText.setStringValue_(
-                "No Server URL has been set. Please contact your administrator.")
-            self.setStartupDisk_(self)
-        self.theTabView.selectTabViewItem_(self.loginTab)
-        self.mainWindow.makeFirstResponder_(self.password)
+        NSLog(self.errorMessage)
+        if self.errorMessage:
+            self.theTabView.selectTabViewItem_(self.errorTab)
+            self.errorPanel(self.errorMessage)
+        else:
+            self.theTabView.selectTabViewItem_(self.loginTab)
+            self.mainWindow.makeFirstResponder_(self.password)
 
     @objc.IBAction
     def login_(self, sender):
@@ -127,6 +152,7 @@ class MainController(NSObject):
 
     @objc.IBAction
     def setStartupDisk_(self, sender):
+        self.restartAction = 'restart'
         # This stops the console being spammed with: unlockFocus called too many times. Called on <NSButton
         NSGraphicsContext.saveGraphicsState()
         self.disableAllButtons(sender)
@@ -478,6 +504,11 @@ class MainController(NSObject):
         if package_count:
             # copy bits for first boot script
             Utils.copyFirstBoot(self.workVolume.mountpoint)
+
+    @objc.IBAction
+    def restartButtonClicked_(self, sender):
+        NSLog("Restart Button Clicked")
+        self.restartToImagedVolume()
 
     def restartToImagedVolume(self):
         # set the startup disk to the restored volume
