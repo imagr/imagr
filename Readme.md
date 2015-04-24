@@ -151,7 +151,7 @@ By default, Imagr will bless the target volume to set it as the startup volume. 
 **Requirements:** Most of these are taken care of automatically with the included ``Makefile``.
 
 * AutoNBI
-	* [Munki Admin Tools](https://github.com/munki/munki/releases) the full install works fine, we specifically need ``FoundationPlist``
+	* We need the ``FoundationPlist`` module from [Munki](https://github.com/munki/munki)
 	* A OS X Mavericks 10.9 (or later) Installer Application
 * Xcode 6.0 or later (currently needed to build Imagr)
 
@@ -192,6 +192,7 @@ Basic instructions for creating this NetInstall manually are located below.
 1. Download and build Imagr. (Xcode 6.0 or later will need to be installed).
 
 	```
+	$ bash
 	$ git clone https://github.com/grahamgilbert/imagr.git
 	$ cd imagr
 	$ xcodebuild -configuration Release
@@ -205,10 +206,11 @@ Basic instructions for creating this NetInstall manually are located below.
 	$ curl -fsSL https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py -o ./AutoNBI.py
 	$ chmod 755 ./AutoNBI.py
 	```
-1. Download and install Munki Admin Tools if not currently installed (_Note:_ this WILL replace your current install of munki admin tools.)
+1. Download ``FoundationPlist.py`` to the current directory for AutoNBI.
 
 	```
-	curl https://raw.githubusercontent.com/n8felton/Mac-OS-X-Scripts/master/munki/latest2_stable_admin.sh | bash
+	$ curl -fsSL https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py -o ./FoundationPlist.py
+	$ chmod 755 FoundationPlist.py
 	```
 
 1. Create a Packages/Extras directory. This is necessary to make Imagr auto launch when your NetInstall has loaded.

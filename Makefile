@@ -14,8 +14,10 @@ build:
 	xcodebuild -configuration Release
 
 autonbi:
-	curl -fsSL https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py -o ./AutoNBI.py
-	chmod 755 ./AutoNBI.py
+	if [ ! -f ./AutoNBI.py ]; then \
+		curl -fsSL https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py -o ./AutoNBI.py; \
+		chmod 755 ./AutoNBI.py; \
+	fi
 
 clean:
 	rm -rf build
@@ -25,9 +27,9 @@ clean-pkgs:
 
 clean-all: clean clean-pkgs
 	rm -rf AutoNBI.py
-	rm -rf *.pyc
-	rm -rf FoundationPlist.py
 	rm -rf com.grahamgilbert.Imagr.plist
+	rm -rf FoundationPlist.py
+	rm -rf FoundationPlist.pyc
 
 config:
 	defaults write $(shell pwd)/com.grahamgilbert.Imagr serverurl $(URL)
@@ -35,6 +37,8 @@ config:
 deps: autonbi foundation
 
 dmg: build
+	rm -f ./Imagr.dmg
+	rm -f ./Imagr-compressed.dmg
 	hdiutil create -size 32m -fs HFS+ -volname "Imagr" Imagr.dmg
 	hdiutil attach Imagr.dmg
 	cp -r ./build/Release/Imagr.app /Volumes/Imagr
@@ -44,13 +48,12 @@ dmg: build
 	rm Imagr.dmg
 
 foundation:
-	curl -fsSL https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py -o ./FoundationPlist.py
-	chmod 755 ./FoundationPlist.py
+	if [ ! -f ./FoundationPlist.py ]; then \
+		curl -fsSL https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py -o ./FoundationPlist.py; \
+		chmod 755 ./FoundationPlist.py; \
+	fi
 
-nbi: clean-pkgs build
-	(if [ ! -f ./com.grahamgilbert.Imagr.plist ]; then make config; fi)
-	(if [ ! -f ./AutoNBI.py ]; then make autonbi; fi)
-	(if [ ! -f ./FoundationPlist.py ]; then make foundation; fi)
+nbi: clean-pkgs build autonbi foundation config
 	mkdir -p Packages/Extras
 	printf '%s\n%s' '#!/bin/bash' '/System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr' > Packages/Extras/rc.imaging
 	cp ./com.grahamgilbert.Imagr.plist Packages/
