@@ -453,9 +453,7 @@ class MainController(NSObject):
                 message = ""
             if percent == 0:
                 percent = 0.001
-            info = {'detail': message, 'percent': float(percent)}
-            self.performSelectorOnMainThread_withObject_waitUntilDone_(
-                self.updateProgressWithInfo_, info, objc.NO)
+            self.updateProgressTitle_Percent_Detail_(None, percent, message)
 
         (unused_stdout, stderr) = task.communicate()
 
