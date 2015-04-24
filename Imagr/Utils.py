@@ -271,14 +271,51 @@ def unmountdmg(mountpoint):
             print >> sys.stderr, 'Failed to unmount %s' % mountpoint
 
 
+def copyPkgFromDmg(url, dest_dir, number):
+    # We're going to mount the dmg
+    dmgmountpoints = mountdmg(url)
+    dmgmountpoint = dmgmountpoints[0]
+
+    # Now we're going to go over everything that ends .pkg or
+    # .mpkg and install it
+    pkg_list = []
+    for package in os.listdir(dmgmountpoint):
+        if package.endswith('.pkg') or package.endswith('.mpkg'):
+            pkg = os.path.join(dmgmountpoint, package)
+            dest_file = os.path.join(dest_dir, "%03d-%s" % (number, os.path.basename(pkg)))
+            if os.path.isfile(pkg):
+                shutil.copy(pkg, dest_file)
+            else:
+                shutil.copytree(pkg, dest_file)
+            pkg_list.append(dest_file)
+
+    # Unmount it
+    unmountdmg(dmgmountpoint)
+
+    if not pkg_list:
+        NSLog("No packages found in %@", url)
+        result = False
+    else:
+        result = pkg_list
+
+    return result
+
+
 def downloadPackage(url, target, number, package_count):
-    NSLog("Downloading pkg %@", url)
-    package_name = "%03d-%s" % (number, os.path.basename(url))
-    os.umask(0002)
-    if not os.path.exists(os.path.join(target, "usr/local/first-boot/packages")):
-        os.makedirs(os.path.join(target, "usr/local/first-boot/packages"))
-    file = os.path.join(target, 'usr/local/first-boot/packages', package_name)
-    output = downloadChunks(url, file)
+    dest_dir = os.path.join(target, 'usr/local/first-boot/packages')
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+
+    if os.path.basename(url).endswith('.dmg'):
+        NSLog("Copying pkg(s) from %@", url)
+        output = copyPkgFromDmg(url, dest_dir, number)
+    else:
+        NSLog("Downloading pkg %@", url)
+        package_name = "%03d-%s" % (number, os.path.basename(url))
+        os.umask(0002)
+        file = os.path.join(dest_dir, package_name)
+        output = downloadChunks(url, file)
+
     return output
 
 
