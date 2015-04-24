@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C06979C21AE83F3500914535 /* gurl.py in Resources */ = {isa = PBXBuildFile; fileRef = C06979C11AE83F3500914535 /* gurl.py */; };
+		03999E1F1AEB0896006039E8 /* imagrlib in Resources */ = {isa = PBXBuildFile; fileRef = 03999E1E1AEB0896006039E8 /* imagrlib */; };
 		FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */; };
 		FC98DA241AD6B2DC00F90405 /* first-boot in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA201AD6B2DC00F90405 /* first-boot */; };
 		FC98DA251AD6B2DC00F90405 /* LoginLog.app in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA211AD6B2DC00F90405 /* LoginLog.app */; };
@@ -17,46 +17,15 @@
 		FCEA80BB1AD0101100DBA039 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80B91AD0101100DBA039 /* Credits.rtf */; };
 		FCEA80BE1AD0101100DBA039 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FCEA80BD1AD0101100DBA039 /* libpython2.7.dylib */; };
 		FCEA80C01AD0101100DBA039 /* main.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80BF1AD0101100DBA039 /* main.py */; };
-		FCEA80C21AD0101100DBA039 /* AppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80C11AD0101100DBA039 /* AppDelegate.py */; };
 		FCEA80C51AD0101100DBA039 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80C31AD0101100DBA039 /* MainMenu.xib */; };
 		FCEA80C71AD0101100DBA039 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80C61AD0101100DBA039 /* Images.xcassets */; };
 		FCEA80CE1AD0108B00DBA039 /* NetBootVolume.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80CD1AD0108B00DBA039 /* NetBootVolume.icns */; };
-		FCEA80D01AD010D100DBA039 /* MainController.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80CF1AD010D100DBA039 /* MainController.py */; };
-		FCEA80D21AD0110A00DBA039 /* FoundationPlist.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80D11AD0110A00DBA039 /* FoundationPlist.py */; };
-		FCEA80EF1AD018E500DBA039 /* __init__.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80D41AD018E500DBA039 /* __init__.py */; };
-		FCEA80F01AD018E500DBA039 /* airport.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80D51AD018E500DBA039 /* airport.py */; };
-		FCEA80F11AD018E500DBA039 /* airport_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80D61AD018E500DBA039 /* airport_test.py */; };
-		FCEA80F21AD018E500DBA039 /* applescript.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80D71AD018E500DBA039 /* applescript.py */; };
-		FCEA80F31AD018E500DBA039 /* applescript_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80D81AD018E500DBA039 /* applescript_test.py */; };
-		FCEA80F41AD018E500DBA039 /* certs.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80D91AD018E500DBA039 /* certs.py */; };
-		FCEA80F51AD018E500DBA039 /* certs_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80DA1AD018E500DBA039 /* certs_test.py */; };
-		FCEA80F61AD018E500DBA039 /* cocoadialog.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80DB1AD018E500DBA039 /* cocoadialog.py */; };
-		FCEA80F71AD018E500DBA039 /* defaults.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80DC1AD018E500DBA039 /* defaults.py */; };
-		FCEA80F81AD018E500DBA039 /* ds.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80DD1AD018E500DBA039 /* ds.py */; };
-		FCEA80F91AD018E500DBA039 /* ds_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80DE1AD018E500DBA039 /* ds_test.py */; };
-		FCEA80FA1AD018E500DBA039 /* experiments.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80DF1AD018E500DBA039 /* experiments.py */; };
-		FCEA80FB1AD018E500DBA039 /* experiments_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80E01AD018E500DBA039 /* experiments_test.py */; };
-		FCEA80FC1AD018E500DBA039 /* getauth.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80E11AD018E500DBA039 /* getauth.py */; };
-		FCEA80FD1AD018E500DBA039 /* getauth_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80E21AD018E500DBA039 /* getauth_test.py */; };
-		FCEA80FE1AD018E500DBA039 /* gmacpyutil.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80E31AD018E500DBA039 /* gmacpyutil.py */; };
-		FCEA80FF1AD018E500DBA039 /* gmacpyutil_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80E41AD018E500DBA039 /* gmacpyutil_test.py */; };
-		FCEA81001AD018E500DBA039 /* macdisk.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80E51AD018E500DBA039 /* macdisk.py */; };
-		FCEA81011AD018E500DBA039 /* macdisk_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80E61AD018E500DBA039 /* macdisk_test.py */; };
-		FCEA81021AD018E500DBA039 /* profiles.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80E71AD018E500DBA039 /* profiles.py */; };
-		FCEA81031AD018E500DBA039 /* profiles_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80E81AD018E500DBA039 /* profiles_test.py */; };
-		FCEA81041AD018E500DBA039 /* systemconfig.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80E91AD018E500DBA039 /* systemconfig.py */; };
-		FCEA81051AD018E500DBA039 /* systemconfig_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80EA1AD018E500DBA039 /* systemconfig_test.py */; };
-		FCEA81061AD018E500DBA039 /* timer.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80EB1AD018E500DBA039 /* timer.py */; };
-		FCEA81071AD018E500DBA039 /* timer_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80EC1AD018E500DBA039 /* timer_test.py */; };
-		FCEA81081AD018E500DBA039 /* wifi_network_order.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80ED1AD018E500DBA039 /* wifi_network_order.py */; };
-		FCEA81091AD018E500DBA039 /* wifi_network_order_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80EE1AD018E500DBA039 /* wifi_network_order_test.py */; };
-		FCEA810B1AD02C9A00DBA039 /* Utils.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA810A1AD02C9A00DBA039 /* Utils.py */; };
 		FCF6B30F1AD1D73E00311D3A /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCF6B30D1AD1D73E00311D3A /* Installer.icns */; };
 		FCF6B3101AD1D73E00311D3A /* package.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCF6B30E1AD1D73E00311D3A /* package.icns */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		C06979C11AE83F3500914535 /* gurl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gurl.py; sourceTree = "<group>"; };
+		03999E1E1AEB0896006039E8 /* imagrlib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = imagrlib; sourceTree = "<group>"; };
 		FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "com.grahamgilbert.first-boot-pkg.plist"; sourceTree = "<group>"; };
 		FC98DA201AD6B2DC00F90405 /* first-boot */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "first-boot"; sourceTree = "<group>"; };
 		FC98DA211AD6B2DC00F90405 /* LoginLog.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; path = LoginLog.app; sourceTree = "<group>"; };
@@ -71,40 +40,9 @@
 		FCEA80BA1AD0101100DBA039 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
 		FCEA80BD1AD0101100DBA039 /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config/libpython2.7.dylib; sourceTree = "<absolute>"; };
 		FCEA80BF1AD0101100DBA039 /* main.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = main.py; sourceTree = "<group>"; };
-		FCEA80C11AD0101100DBA039 /* AppDelegate.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = AppDelegate.py; sourceTree = "<group>"; };
 		FCEA80C41AD0101100DBA039 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		FCEA80C61AD0101100DBA039 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		FCEA80CD1AD0108B00DBA039 /* NetBootVolume.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = NetBootVolume.icns; sourceTree = "<group>"; };
-		FCEA80CF1AD010D100DBA039 /* MainController.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = MainController.py; sourceTree = "<group>"; };
-		FCEA80D11AD0110A00DBA039 /* FoundationPlist.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = FoundationPlist.py; sourceTree = "<group>"; };
-		FCEA80D41AD018E500DBA039 /* __init__.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
-		FCEA80D51AD018E500DBA039 /* airport.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = airport.py; sourceTree = "<group>"; };
-		FCEA80D61AD018E500DBA039 /* airport_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = airport_test.py; sourceTree = "<group>"; };
-		FCEA80D71AD018E500DBA039 /* applescript.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = applescript.py; sourceTree = "<group>"; };
-		FCEA80D81AD018E500DBA039 /* applescript_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = applescript_test.py; sourceTree = "<group>"; };
-		FCEA80D91AD018E500DBA039 /* certs.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = certs.py; sourceTree = "<group>"; };
-		FCEA80DA1AD018E500DBA039 /* certs_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = certs_test.py; sourceTree = "<group>"; };
-		FCEA80DB1AD018E500DBA039 /* cocoadialog.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = cocoadialog.py; sourceTree = "<group>"; };
-		FCEA80DC1AD018E500DBA039 /* defaults.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = defaults.py; sourceTree = "<group>"; };
-		FCEA80DD1AD018E500DBA039 /* ds.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ds.py; sourceTree = "<group>"; };
-		FCEA80DE1AD018E500DBA039 /* ds_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ds_test.py; sourceTree = "<group>"; };
-		FCEA80DF1AD018E500DBA039 /* experiments.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = experiments.py; sourceTree = "<group>"; };
-		FCEA80E01AD018E500DBA039 /* experiments_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = experiments_test.py; sourceTree = "<group>"; };
-		FCEA80E11AD018E500DBA039 /* getauth.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = getauth.py; sourceTree = "<group>"; };
-		FCEA80E21AD018E500DBA039 /* getauth_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = getauth_test.py; sourceTree = "<group>"; };
-		FCEA80E31AD018E500DBA039 /* gmacpyutil.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gmacpyutil.py; sourceTree = "<group>"; };
-		FCEA80E41AD018E500DBA039 /* gmacpyutil_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gmacpyutil_test.py; sourceTree = "<group>"; };
-		FCEA80E51AD018E500DBA039 /* macdisk.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = macdisk.py; sourceTree = "<group>"; };
-		FCEA80E61AD018E500DBA039 /* macdisk_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = macdisk_test.py; sourceTree = "<group>"; };
-		FCEA80E71AD018E500DBA039 /* profiles.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = profiles.py; sourceTree = "<group>"; };
-		FCEA80E81AD018E500DBA039 /* profiles_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = profiles_test.py; sourceTree = "<group>"; };
-		FCEA80E91AD018E500DBA039 /* systemconfig.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = systemconfig.py; sourceTree = "<group>"; };
-		FCEA80EA1AD018E500DBA039 /* systemconfig_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = systemconfig_test.py; sourceTree = "<group>"; };
-		FCEA80EB1AD018E500DBA039 /* timer.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = timer.py; sourceTree = "<group>"; };
-		FCEA80EC1AD018E500DBA039 /* timer_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = timer_test.py; sourceTree = "<group>"; };
-		FCEA80ED1AD018E500DBA039 /* wifi_network_order.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = wifi_network_order.py; sourceTree = "<group>"; };
-		FCEA80EE1AD018E500DBA039 /* wifi_network_order_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = wifi_network_order_test.py; sourceTree = "<group>"; };
-		FCEA810A1AD02C9A00DBA039 /* Utils.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Utils.py; sourceTree = "<group>"; };
 		FCF6B30D1AD1D73E00311D3A /* Installer.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Installer.icns; sourceTree = "<group>"; };
 		FCF6B30E1AD1D73E00311D3A /* package.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = package.icns; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -174,9 +112,6 @@
 			children = (
 				FCEA80BF1AD0101100DBA039 /* main.py */,
 				FCEA80C31AD0101100DBA039 /* MainMenu.xib */,
-				FCEA80C11AD0101100DBA039 /* AppDelegate.py */,
-				FCEA80CF1AD010D100DBA039 /* MainController.py */,
-				FCEA810A1AD02C9A00DBA039 /* Utils.py */,
 				FCEA80C61AD0101100DBA039 /* Images.xcassets */,
 				FCEA80BC1AD0101100DBA039 /* SharedLibraries */,
 				FCEA80B51AD0101100DBA039 /* Supporting Files */,
@@ -187,12 +122,10 @@
 		FCEA80B51AD0101100DBA039 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				C06979C11AE83F3500914535 /* gurl.py */,
+				03999E1E1AEB0896006039E8 /* imagrlib */,
 				FC98DA1E1AD6B2DC00F90405 /* Resources */,
 				FCF6B30D1AD1D73E00311D3A /* Installer.icns */,
 				FCF6B30E1AD1D73E00311D3A /* package.icns */,
-				FCEA80D31AD018E500DBA039 /* gmacpyutil */,
-				FCEA80D11AD0110A00DBA039 /* FoundationPlist.py */,
 				FCEA80CD1AD0108B00DBA039 /* NetBootVolume.icns */,
 				FCEA80B61AD0101100DBA039 /* Info.plist */,
 				FCEA80B71AD0101100DBA039 /* main.m */,
@@ -207,40 +140,6 @@
 				FCEA80BD1AD0101100DBA039 /* libpython2.7.dylib */,
 			);
 			name = SharedLibraries;
-			sourceTree = "<group>";
-		};
-		FCEA80D31AD018E500DBA039 /* gmacpyutil */ = {
-			isa = PBXGroup;
-			children = (
-				FCEA80D41AD018E500DBA039 /* __init__.py */,
-				FCEA80D51AD018E500DBA039 /* airport.py */,
-				FCEA80D61AD018E500DBA039 /* airport_test.py */,
-				FCEA80D71AD018E500DBA039 /* applescript.py */,
-				FCEA80D81AD018E500DBA039 /* applescript_test.py */,
-				FCEA80D91AD018E500DBA039 /* certs.py */,
-				FCEA80DA1AD018E500DBA039 /* certs_test.py */,
-				FCEA80DB1AD018E500DBA039 /* cocoadialog.py */,
-				FCEA80DC1AD018E500DBA039 /* defaults.py */,
-				FCEA80DD1AD018E500DBA039 /* ds.py */,
-				FCEA80DE1AD018E500DBA039 /* ds_test.py */,
-				FCEA80DF1AD018E500DBA039 /* experiments.py */,
-				FCEA80E01AD018E500DBA039 /* experiments_test.py */,
-				FCEA80E11AD018E500DBA039 /* getauth.py */,
-				FCEA80E21AD018E500DBA039 /* getauth_test.py */,
-				FCEA80E31AD018E500DBA039 /* gmacpyutil.py */,
-				FCEA80E41AD018E500DBA039 /* gmacpyutil_test.py */,
-				FCEA80E51AD018E500DBA039 /* macdisk.py */,
-				FCEA80E61AD018E500DBA039 /* macdisk_test.py */,
-				FCEA80E71AD018E500DBA039 /* profiles.py */,
-				FCEA80E81AD018E500DBA039 /* profiles_test.py */,
-				FCEA80E91AD018E500DBA039 /* systemconfig.py */,
-				FCEA80EA1AD018E500DBA039 /* systemconfig_test.py */,
-				FCEA80EB1AD018E500DBA039 /* timer.py */,
-				FCEA80EC1AD018E500DBA039 /* timer_test.py */,
-				FCEA80ED1AD018E500DBA039 /* wifi_network_order.py */,
-				FCEA80EE1AD018E500DBA039 /* wifi_network_order_test.py */,
-			);
-			path = gmacpyutil;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -301,48 +200,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C06979C21AE83F3500914535 /* gurl.py in Resources */,
-				FCEA81061AD018E500DBA039 /* timer.py in Resources */,
 				FC98DA251AD6B2DC00F90405 /* LoginLog.app in Resources */,
-				FCEA80F51AD018E500DBA039 /* certs_test.py in Resources */,
-				FCEA80FA1AD018E500DBA039 /* experiments.py in Resources */,
 				FCEA80CE1AD0108B00DBA039 /* NetBootVolume.icns in Resources */,
 				FCEA80BB1AD0101100DBA039 /* Credits.rtf in Resources */,
-				FCEA81031AD018E500DBA039 /* profiles_test.py in Resources */,
-				FCEA80F41AD018E500DBA039 /* certs.py in Resources */,
-				FCEA81071AD018E500DBA039 /* timer_test.py in Resources */,
-				FCEA80FF1AD018E500DBA039 /* gmacpyutil_test.py in Resources */,
-				FCEA81011AD018E500DBA039 /* macdisk_test.py in Resources */,
-				FCEA81091AD018E500DBA039 /* wifi_network_order_test.py in Resources */,
 				FCEA80C71AD0101100DBA039 /* Images.xcassets in Resources */,
 				FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist in Resources */,
-				FCEA80F31AD018E500DBA039 /* applescript_test.py in Resources */,
-				FCEA80FB1AD018E500DBA039 /* experiments_test.py in Resources */,
-				FCEA81051AD018E500DBA039 /* systemconfig_test.py in Resources */,
-				FCEA80D01AD010D100DBA039 /* MainController.py in Resources */,
-				FCEA80EF1AD018E500DBA039 /* __init__.py in Resources */,
 				FC98DA261AD6B2DC00F90405 /* se.gu.it.LoginLog.plist in Resources */,
-				FCEA80D21AD0110A00DBA039 /* FoundationPlist.py in Resources */,
-				FCEA81081AD018E500DBA039 /* wifi_network_order.py in Resources */,
-				FCEA80C21AD0101100DBA039 /* AppDelegate.py in Resources */,
-				FCEA81021AD018E500DBA039 /* profiles.py in Resources */,
-				FCEA80F61AD018E500DBA039 /* cocoadialog.py in Resources */,
-				FCEA81041AD018E500DBA039 /* systemconfig.py in Resources */,
+				03999E1F1AEB0896006039E8 /* imagrlib in Resources */,
 				FCEA80C01AD0101100DBA039 /* main.py in Resources */,
-				FCEA81001AD018E500DBA039 /* macdisk.py in Resources */,
 				FCF6B30F1AD1D73E00311D3A /* Installer.icns in Resources */,
 				FC98DA241AD6B2DC00F90405 /* first-boot in Resources */,
-				FCEA80FD1AD018E500DBA039 /* getauth_test.py in Resources */,
-				FCEA80F21AD018E500DBA039 /* applescript.py in Resources */,
-				FCEA80F11AD018E500DBA039 /* airport_test.py in Resources */,
-				FCEA80F01AD018E500DBA039 /* airport.py in Resources */,
-				FCEA80F81AD018E500DBA039 /* ds.py in Resources */,
-				FCEA80FE1AD018E500DBA039 /* gmacpyutil.py in Resources */,
 				FCEA80C51AD0101100DBA039 /* MainMenu.xib in Resources */,
-				FCEA810B1AD02C9A00DBA039 /* Utils.py in Resources */,
-				FCEA80F71AD018E500DBA039 /* defaults.py in Resources */,
-				FCEA80F91AD018E500DBA039 /* ds_test.py in Resources */,
-				FCEA80FC1AD018E500DBA039 /* getauth.py in Resources */,
 				FCF6B3101AD1D73E00311D3A /* package.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
