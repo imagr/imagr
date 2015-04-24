@@ -219,12 +219,31 @@ def installPkg(pkg, target):
     Installs a package on a specific volume
     """
     NSLog("Installing %@ to %@", pkg, target)
-    installer_pool = NSAutoreleasePool.alloc().init()
-    cmd = ['/usr/sbin/installer', '-pkg', pkg, '-target', target]
+    cmd = ['/usr/sbin/installer', '-pkg', pkg, '-target', target, '-verboseR']
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, unusederr) = proc.communicate()
-    if unusederr:
-        NSLog(str(unusederr))
+    while proc.poll() is None:
+        output = proc.stdout.readline().strip().decode('UTF-8')
+        if output.startswith("installer:"):
+            msg = output[10:].rstrip("\n")
+            if msg.startswith("PHASE:"):
+                phase = msg[6:]
+                if phase:
+                    NSLog(phase)
+            elif msg.startswith("STATUS:"):
+                status = msg[7:]
+                if status:
+                    NSLog(status)
+            elif msg.startswith("%"):
+                percent = float(msg[1:])
+                NSLog("%@ percent complete", percent)
+            elif msg.startswith(" Error"):
+                NSLog(msg)
+            elif msg.startswith(" Cannot install"):
+                NSLog(msg)
+            else:
+                NSLog(msg)
+        
+    return proc.returncode
 
 
 def mountdmg(dmgpath):
