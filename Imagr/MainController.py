@@ -130,7 +130,6 @@ class MainController(NSObject):
         del pool
 
     def loadDataComplete(self):
-        NSLog(self.errorMessage)
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
