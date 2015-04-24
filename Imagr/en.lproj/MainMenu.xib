@@ -1327,7 +1327,6 @@
 												<array class="NSMutableArray" key="NSSubviews"/>
 												<string key="NSFrame">{{536, 243}, {87, 32}}</string>
 												<reference key="NSSuperview" ref="482842367"/>
-												<reference key="NSNextKeyView"/>
 												<string key="NSHuggingPriority">{250, 750}</string>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="1048853569">
@@ -1392,7 +1391,6 @@
 												<array class="NSMutableArray" key="NSSubviews"/>
 												<string key="NSFrame">{{532, 13}, {134, 32}}</string>
 												<reference key="NSSuperview" ref="22249470"/>
-												<reference key="NSNextKeyView"/>
 												<string key="NSHuggingPriority">{250, 750}</string>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="389625284">
@@ -1417,7 +1415,6 @@
 												<array class="NSMutableArray" key="NSSubviews"/>
 												<string key="NSFrame">{{491, 327}, {126, 32}}</string>
 												<reference key="NSSuperview" ref="22249470"/>
-												<reference key="NSNextKeyView"/>
 												<string key="NSReuseIdentifierKey">_NS:9</string>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="837689253">
@@ -1522,7 +1519,7 @@
 																<int key="NSvFlags">2322</int>
 																<string key="NSFrameSize">{491, 260}</string>
 																<reference key="NSSuperview" ref="1019754332"/>
-																<reference key="NSNextKeyView"/>
+																<reference key="NSNextKeyView" ref="723861177"/>
 																<string key="NSReuseIdentifierKey">_NS:13</string>
 																<object class="NSTextContainer" key="NSTextContainer" id="784039287">
 																	<object class="NSLayoutManager" key="NSLayoutManager">
@@ -1587,7 +1584,7 @@
 														</array>
 														<string key="NSFrame">{{1, 1}, {491, 260}}</string>
 														<reference key="NSSuperview" ref="37250636"/>
-														<reference key="NSNextKeyView"/>
+														<reference key="NSNextKeyView" ref="54294484"/>
 														<string key="NSReuseIdentifierKey">_NS:11</string>
 														<reference key="NSDocView" ref="54294484"/>
 														<object class="NSColor" key="NSBGColor">
@@ -1635,7 +1632,7 @@
 												</array>
 												<string key="NSFrame">{{118, 61}, {493, 262}}</string>
 												<reference key="NSSuperview" ref="22249470"/>
-												<reference key="NSNextKeyView" ref="723861177"/>
+												<reference key="NSNextKeyView" ref="1019754332"/>
 												<string key="NSReuseIdentifierKey">_NS:9</string>
 												<int key="NSsFlags">133138</int>
 												<reference key="NSVScroller" ref="375661957"/>
@@ -1663,6 +1660,7 @@
 										<string key="NSFrameSize">{680, 487}</string>
 										<reference key="NSSuperview" ref="159778808"/>
 										<reference key="NSWindow"/>
+										<reference key="NSNextKeyView"/>
 										<string key="NSReuseIdentifierKey">_NS:28</string>
 									</object>
 									<string key="NSLabel">Main</string>
@@ -1797,6 +1795,7 @@
 							<string key="NSFrame">{{359, 13}, {85, 32}}</string>
 							<reference key="NSSuperview" ref="797659792"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<string key="NSHuggingPriority">{250, 750}</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="380942625">
@@ -1933,6 +1932,7 @@
 							<string key="NSFrame">{{369, 23}, {129, 32}}</string>
 							<reference key="NSSuperview" ref="995259204"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<string key="NSHuggingPriority">{250, 750}</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="601744127">
@@ -2036,6 +2036,7 @@
 							<string key="NSFrame">{{18, 20}, {431, 17}}</string>
 							<reference key="NSSuperview" ref="976016814"/>
 							<reference key="NSWindow"/>
+							<reference key="NSNextKeyView"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="186590015">
 								<int key="NSCellFlags">68157504</int>
@@ -3983,20 +3984,6 @@
 						<reference key="parent" ref="976016814"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">794</int>
-						<reference key="object" ref="29244736"/>
-						<array class="NSMutableArray" key="children">
-							<reference ref="743351425"/>
-						</array>
-						<reference key="parent" ref="976016814"/>
-						<string key="objectName">Imaging Progress Label</string>
-					</object>
-					<object class="IBObjectRecord">
-						<int key="objectID">795</int>
-						<reference key="object" ref="743351425"/>
-						<reference key="parent" ref="29244736"/>
-					</object>
-					<object class="IBObjectRecord">
 						<int key="objectID">801</int>
 						<reference key="object" ref="893580892"/>
 						<array class="NSMutableArray" key="children">
@@ -4272,6 +4259,20 @@
 						<array class="NSMutableArray" key="children"/>
 						<reference key="parent" ref="760072728"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">794</int>
+						<reference key="object" ref="29244736"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="743351425"/>
+						</array>
+						<reference key="parent" ref="976016814"/>
+						<string key="objectName">Imaging Progress Label</string>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">795</int>
+						<reference key="object" ref="743351425"/>
+						<reference key="parent" ref="29244736"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
@@ -4392,7 +4393,7 @@
 				<boolean value="YES" key="450.NSWindowTemplate.visibleAtLaunch"/>
 				<boolean value="NO" key="452.IBNSWindowAutoPositionCentersHorizontal"/>
 				<boolean value="NO" key="452.IBNSWindowAutoPositionCentersVertical"/>
-				<string key="452.IBPersistedLastKnownCanvasPosition">{258, 862}</string>
+				<string key="452.IBPersistedLastKnownCanvasPosition">{-178, 596}</string>
 				<string key="452.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<reference key="453.IBNSViewMetadataConstraints" ref="0"/>
 				<reference key="453.IBNSViewMetadataGestureRecognizers" ref="0"/>
@@ -4467,7 +4468,7 @@
 				<string key="664.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="NO" key="703.IBNSWindowAutoPositionCentersHorizontal"/>
 				<boolean value="NO" key="703.IBNSWindowAutoPositionCentersVertical"/>
-				<string key="703.IBPersistedLastKnownCanvasPosition">{878, 678}</string>
+				<string key="703.IBPersistedLastKnownCanvasPosition">{442, 412}</string>
 				<string key="703.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<reference key="704.IBNSViewMetadataConstraints" ref="0"/>
 				<reference key="704.IBNSViewMetadataGestureRecognizers" ref="0"/>
@@ -4523,7 +4524,7 @@
 				<string key="79.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="NO" key="791.IBNSWindowAutoPositionCentersHorizontal"/>
 				<boolean value="NO" key="791.IBNSWindowAutoPositionCentersVertical"/>
-				<string key="791.IBPersistedLastKnownCanvasPosition">{276, 672}</string>
+				<string key="791.IBPersistedLastKnownCanvasPosition">{-160, 406}</string>
 				<string key="791.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<reference key="792.IBNSViewMetadataConstraints" ref="0"/>
 				<reference key="792.IBNSViewMetadataGestureRecognizers" ref="0"/>
