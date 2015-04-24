@@ -23,6 +23,8 @@ import PyObjCTools
 
 class MainController(NSObject):
 
+    mainWindow = objc.IBOutlet()
+
     theTabView = objc.IBOutlet()
     introTab = objc.IBOutlet()
     loginTab = objc.IBOutlet()
@@ -33,9 +35,7 @@ class MainController(NSObject):
     loginLabel = objc.IBOutlet()
     loginButton = objc.IBOutlet()
     errorField = objc.IBOutlet()
-    mainWindow = objc.IBOutlet()
 
-    progressPanel = objc.IBOutlet()
     progressIndicator = objc.IBOutlet()
     progressText = objc.IBOutlet()
 
@@ -75,15 +75,10 @@ class MainController(NSObject):
     blessTarget = None
 
     def runStartupTasks(self):
-        #self.loginView.setHidden_(self)
         self.mainWindow.center()
-        #self.progressPanel.center()
-        #self.password.becomeFirstResponder()
         # Run app startup - get the images, password, volumes - anything that takes a while
 
         self.progressText.setStringValue_("Application Starting...")
-        #NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-        #    self.progressPanel, self.mainWindow, self, None, None)
         self.progressIndicator.setIndeterminate_(True)
         self.progressIndicator.setUsesThreadedAnimation_(True)
         self.progressIndicator.startAnimation_(self)
@@ -108,9 +103,6 @@ class MainController(NSObject):
         del pool
 
     def loadDataComplete(self):
-        # end modal sheet and close the panel
-        #NSApp.endSheet_(self.progressPanel)
-        #self.progressPanel.orderOut_(self)
         if not self.passwordHash:
             self.password.setEnabled_(False)
             self.loginButton.setEnabled_(False)
@@ -118,8 +110,6 @@ class MainController(NSObject):
             self.startUpDiskText.setStringValue_(
                 "No Server URL has been set. Please contact your administrator.")
             self.setStartupDisk_(self)
-        #self.loginView.setHidden_(False)
-        #self.mainView.setHidden_(True)
         self.theTabView.selectTabViewItem_(self.loginTab)
         self.mainWindow.makeFirstResponder_(self.password)
 
@@ -317,7 +307,7 @@ class MainController(NSObject):
             self.imagingProgressDetail.setStringValue_(info['detail'])
 
     def updateProgressTitle_Percent_Detail_(self, title, percent, detail):
-        '''Wrapper method that calls the UI updadte method on the main thread'''
+        '''Wrapper method that calls the UI update method on the main thread'''
         info = {}
         if title is not None:
             info['title'] = title
