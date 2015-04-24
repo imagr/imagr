@@ -29,7 +29,8 @@ class GurlError(Exception):
 class HTTPError(Exception):
     pass
 
-def get_url(url, destinationpath, message=None, follow_redirects=False):
+def get_url(url, destinationpath, message=None, follow_redirects=False,
+            progress_method=None):
     """Gets an HTTP or HTTPS URL and stores it in
     destination path. Returns a dictionary of headers, which includes
     http_result_code and http_result_description.
@@ -62,8 +63,10 @@ def get_url(url, destinationpath, message=None, follow_redirects=False):
             connection_done = connection.isDone()
             if message and connection.status and connection.status != 304:
                 # log always, display if verbose is 1 or more
-                # also display in MunkiStatus detail field
+                # also display in progress field
                 NSLog(message)
+                if progress_method:
+                    progress_method(None, None, message)
                 # now clear message so we don't display it again
                 message = None
             if (str(connection.status).startswith('2')
@@ -72,10 +75,14 @@ def get_url(url, destinationpath, message=None, follow_redirects=False):
                     # display percent done if it has changed
                     stored_percent_complete = connection.percentComplete
                     NSLog('Percent done: %@', stored_percent_complete)
+                    if progress_method:
+                        progress_method(None, stored_percent_complete, None)
             elif connection.bytesReceived != stored_bytes_received:
                 # if we don't have percent done info, log bytes received
                 stored_bytes_received = connection.bytesReceived
                 NSLog('Bytes received: %@', stored_bytes_received)
+                if progress_method:
+                    progress_method(None, None, 'Bytes received: %s' % stored_bytes_received)
             if connection_done:
                 break
 
@@ -195,7 +202,7 @@ def downloadAndInstallPackage(url, target, progress_method=None):
         for package in os.listdir(dmgmountpoint):
             if package.endswith('.pkg') or package.endswith('.mpkg'):
                 pkg = os.path.join(dmgmountpoint, package)
-                installPkg(pkg, target)
+                installPkg(pkg, target, progress_method=progress_method)
 
         # Unmount it
         unmountdmg(dmgmountpoint)
@@ -254,6 +261,8 @@ def installPkg(pkg, target, progress_method=None):
                     progress_method(None, None, msg)
             else:
                 NSLog(msg)
+                if progress_method:
+                    progress_method(None, None, msg)
         
     return proc.returncode
 
@@ -332,7 +341,7 @@ def copyPkgFromDmg(url, dest_dir, number):
     return result
 
 
-def downloadPackage(url, target, number, package_count):
+def downloadPackage(url, target, number, progress_method=None):
     dest_dir = os.path.join(target, 'usr/local/first-boot/packages')
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
@@ -345,14 +354,15 @@ def downloadPackage(url, target, number, package_count):
         package_name = "%03d-%s" % (number, os.path.basename(url))
         os.umask(0002)
         file = os.path.join(dest_dir, package_name)
-        output = downloadChunks(url, file)
+        output = downloadChunks(url, file, progress_method=progress_method)
 
     return output
 
 
-def downloadChunks(url, file):
+def downloadChunks(url, file, progress_method=None):
+    message = "Downloading %s" % os.path.basename(url)
     try:
-        headers = get_url(url, file)
+        headers = get_url(url, file, message=message, progress_method=progress_method)
     except HTTPError, err:
         NSLog("HTTP Error: %@", err)
         return False
