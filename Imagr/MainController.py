@@ -221,7 +221,7 @@ class MainController(NSObject):
     @PyObjCTools.AppHelper.endSheetMethod
     def noVolAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
         if returncode == NSAlertDefaultReturn:
-            self.setStartupDisk_(sender)
+            self.setStartupDisk_(None)
         else:
             cmd = ['/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility']
             proc = subprocess.call(cmd)
