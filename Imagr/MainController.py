@@ -75,17 +75,18 @@ class MainController(NSObject):
     restartAction = None
     blessTarget = None
     errorMessage = None
+    alert = None
 
     def errorPanel(self, error):
         errorText = str(error)
-        alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
+        self.alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
             NSLocalizedString(errorText, None),
             NSLocalizedString(u"Okay", None),
             objc.nil,
             objc.nil,
             NSLocalizedString(u"", None))
 
-        alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+        self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
             self.mainWindow, self, self.setStartupDisk_, objc.nil)
 
     def runStartupTasks(self):
@@ -151,6 +152,10 @@ class MainController(NSObject):
 
     @objc.IBAction
     def setStartupDisk_(self, sender):
+        if self.alert:
+            self.alert.window().orderOut_(self)
+            self.alert = None
+            
         self.restartAction = 'restart'
         # This stops the console being spammed with: unlockFocus called too many times. Called on <NSButton
         NSGraphicsContext.saveGraphicsState()
