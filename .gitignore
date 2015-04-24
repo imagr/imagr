@@ -3,3 +3,6 @@ Imagr.xcodeproj/xcuserdata/*
 *.dmg
 *.pkg
 build-test.sh
+com.grahamgilbert.Imagr.plist
+Packages/
+AutoNBI.py
