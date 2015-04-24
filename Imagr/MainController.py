@@ -481,7 +481,8 @@ class MainController(NSObject):
             self.updateProgressTitle_Percent_Detail_(
                 'Installing packages...', percent_done, package_name)
             Utils.downloadAndInstallPackage(
-                item['url'], self.workVolume.mountpoint, counter, package_count)
+                item['url'], self.workVolume.mountpoint,
+                progress_method=self.updateProgressTitle_Percent_Detail_)
 
     def downloadAndCopyPackages(self):
         self.updateProgressTitle_Percent_Detail_(

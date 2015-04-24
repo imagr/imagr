@@ -184,7 +184,7 @@ def getServerURL():
         pass
 
 
-def downloadAndInstallPackage(url, target, number, package_count):
+def downloadAndInstallPackage(url, target, progress_method=None):
     if os.path.basename(url).endswith('.dmg'):
         # We're going to mount the dmg
         dmgmountpoints = mountdmg(url)
@@ -209,16 +209,18 @@ def downloadAndInstallPackage(url, target, number, package_count):
         downloaded_file = downloadChunks(url, os.path.join(temp_dir,
                                                         packagename))
         # Install it
-        installPkg(downloaded_file, target)
+        installPkg(downloaded_file, target, progress_method=progress_method)
         # Clean up after ourselves
         shutil.rmtree(temp_dir)
 
 
-def installPkg(pkg, target):
+def installPkg(pkg, target, progress_method=None):
     """
     Installs a package on a specific volume
     """
     NSLog("Installing %@ to %@", pkg, target)
+    if progress_method:
+        progress_method("Installing %s" % os.path.basename(pkg), 0, '')
     cmd = ['/usr/sbin/installer', '-pkg', pkg, '-target', target, '-verboseR']
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     while proc.poll() is None:
@@ -229,17 +231,27 @@ def installPkg(pkg, target):
                 phase = msg[6:]
                 if phase:
                     NSLog(phase)
+                    if progress_method:
+                        progress_method(None, None, phase)
             elif msg.startswith("STATUS:"):
                 status = msg[7:]
                 if status:
                     NSLog(status)
+                    if progress_method:
+                        progress_method(None, None, status)
             elif msg.startswith("%"):
                 percent = float(msg[1:])
                 NSLog("%@ percent complete", percent)
+                if progress_method:
+                    progress_method(None, percent, None)
             elif msg.startswith(" Error"):
                 NSLog(msg)
+                if progress_method:
+                    progress_method(None, None, msg)
             elif msg.startswith(" Cannot install"):
                 NSLog(msg)
+                if progress_method:
+                    progress_method(None, None, msg)
             else:
                 NSLog(msg)
         
