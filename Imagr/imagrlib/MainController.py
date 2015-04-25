@@ -8,7 +8,6 @@
 #
 
 import objc
-import FoundationPlist
 import os
 from SystemConfiguration import *
 from Foundation import *
@@ -18,6 +17,7 @@ import subprocess
 import sys
 import macdisk
 import urllib2
+import FoundationPlist
 import Utils
 import PyObjCTools
 
