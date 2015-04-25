@@ -453,9 +453,7 @@ class MainController(NSObject):
                 message = ""
             if percent == 0:
                 percent = 0.001
-            info = {'detail': message, 'percent': float(percent)}
-            self.performSelectorOnMainThread_withObject_waitUntilDone_(
-                self.updateProgressWithInfo_, info, objc.NO)
+            self.updateProgressTitle_Percent_Detail_(None, percent, message)
 
         (unused_stdout, stderr) = task.communicate()
 
@@ -472,16 +470,11 @@ class MainController(NSObject):
 
         pkgs_to_install = [item for item in self.selectedWorkflow['components']
                            if item.get('type') == 'package' and item.get('pre_first_boot')]
-        package_count = len(pkgs_to_install)
-        counter = 0.0
         for item in pkgs_to_install:
-            counter = counter + 1.0
             package_name = os.path.basename(item['url'])
-            percent_done = (counter / package_count) * 100
-            self.updateProgressTitle_Percent_Detail_(
-                'Installing packages...', percent_done, package_name)
             Utils.downloadAndInstallPackage(
-                item['url'], self.workVolume.mountpoint, counter, package_count)
+                item['url'], self.workVolume.mountpoint,
+                progress_method=self.updateProgressTitle_Percent_Detail_)
 
     def downloadAndCopyPackages(self):
         self.updateProgressTitle_Percent_Detail_(
@@ -501,10 +494,8 @@ class MainController(NSObject):
         for item in pkgs_to_install:
             counter = counter + 1.0
             package_name = os.path.basename(item['url'])
-            percent_done = (counter / package_count) * 100
-            self.updateProgressTitle_Percent_Detail_(
-                'Copying packages for install on first boot...', percent_done, package_name)
-            Utils.downloadPackage(item['url'], self.workVolume.mountpoint, counter, package_count)
+            Utils.downloadPackage(item['url'], self.workVolume.mountpoint, counter,
+                                  progress_method=self.updateProgressTitle_Percent_Detail_)
         if package_count:
             # copy bits for first boot script
             Utils.copyFirstBoot(self.workVolume.mountpoint)
