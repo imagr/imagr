@@ -18,6 +18,8 @@ This is pre-release code and under heavy development. There are bugs if you don'
 	* [Restart Action](#restart-action)
 	* [Startup Disk](#startup-disk)
 * [Building a NetInstall](#building-a-netinstall)
+	* [Automatic Creation Using Make](#automatic-creation-using-make)
+	* [Manual Build Creation](#manual-build-creation)
 
 ## Features
 
@@ -137,7 +139,7 @@ Each workflow can have a ``restart_action`` defined. If no ``restart_action`` is
 
 #### Startup Disk
 
-By default, Imagr will bless the target volume to set it as the startup volume. This is usually desirable, but in some cases you will want to not do this (for example, when using [createOSXinstallPkg](https://github.com/munki/createOSXinstallPkg)). To avoid this, use the follwing in your workflow:
+By default, Imagr will bless the target volume to set it as the startup volume. This is usually desirable, but in some cases you will want to not do this (for example, when using [createOSXinstallPkg](https://github.com/munki/createOSXinstallPkg)). To avoid this, use the following in your workflow:
 
 ``` xml
 <key>bless_target</key>
@@ -146,14 +148,54 @@ By default, Imagr will bless the target volume to set it as the startup volume. 
 
 ## Building a NetInstall
 
-Imagr was designed to work in a NetInstall environment created by [AutoNBI](https://bitbucket.org/bruienne/autonbi/src). Basic instructions for creating this NetInstall are located below.
+**Requirements:** Most of these are taken care of automatically with the included ``Makefile``.
+
+* AutoNBI
+	* We need the ``FoundationPlist`` module from [Munki](https://github.com/munki/munki)
+	* A OS X Mavericks 10.9 (or later) Installer Application
+* Xcode 6.0 or later (currently needed to build Imagr)
+
+
+### Automatic Creation Using Make
+
+The included ``Makefile`` makes the process of creating a NetInstall near painless. We currently have a few defaults that you might wish to override. Defaults listed below descriptions.
+ 
+* ``URL`` - The URL to your Imagr Configuration plist.
+* ``APP`` - The path to your OS X installer. Quote this path when using command line arguments.
+* ``OUTPUT`` - The output path of your NBI file. Do _not_ quote this path when using relative paths.
+* ``NBI`` - The output name of your NBI file.
+
+```
+# Defaults
+URL="http://192.168.178.135/imagr_config.plist"
+APP=/Applications/Install\ OS\ X\ Yosemite.app
+OUTPUT=~/Desktop
+NBI="Imagr"
+```
+
+You can change these default variables in the ``Makefile`` or via command line arguments. Just make sure and follow the including quote formatting, it is very important! The quotes might change when using command line arguments so please reference the examples below.
+
+
+**Command Line Argument Examples:**
+
+```
+$ make nbi
+$ make nbi URL="http://my_server/imagr_config.plist"
+$ make nbi URL="http://my_server/imagr_config.plist" OUTPUT=~/Documents
+$ make nbi URL="http://my_server/imagr_config.plist" APP="/Applications/Install\ OS\ X\ Mavericks.app" OUTPUT=/Volumes/data/temp/ NBI="myImagr"
+```
+
+### Manual Build Creation
+
+Basic instructions for creating this NetInstall manually are located below.
 
 1. Download and build Imagr. (Xcode 6.0 or later will need to be installed).
 
 	```
+	$ bash
 	$ git clone https://github.com/grahamgilbert/imagr.git
 	$ cd imagr
-	$ xcodebuild
+	$ xcodebuild -configuration Release
 	```
 
 	We should now have a running copy of Imagr located in the build/Release folder.
@@ -164,10 +206,11 @@ Imagr was designed to work in a NetInstall environment created by [AutoNBI](http
 	$ curl -fsSL https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py -o ./AutoNBI.py
 	$ chmod 755 ./AutoNBI.py
 	```
-1. Download and install Munkitools (needed for FoundationPlist for AutoNBI)
+1. Download ``FoundationPlist.py`` to the current directory for AutoNBI.
 
 	```
-	curl https://raw.githubusercontent.com/n8felton/Mac-OS-X-Scripts/master/munki/latest2_stable_admin.sh | bash
+	$ curl -fsSL https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py -o ./FoundationPlist.py
+	$ chmod 755 FoundationPlist.py
 	```
 
 1. Create a Packages/Extras directory. This is necessary to make Imagr auto launch when your NetInstall has loaded.
@@ -179,7 +222,7 @@ Imagr was designed to work in a NetInstall environment created by [AutoNBI](http
 1. Create a ``rc.imaging`` file inside of the Extras directory. For greater details regarding the ``rc.imaging`` file visit this [blog post](http://grahamgilbert.com/blog/2015/04/13/more-fun-with-autonbi/).
 
 	```
-	$ printf '%s\n%s' '#!/bin/bash' '/System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr' >> Packages/Extras/rc.imaging
+	$ printf '%s\n%s' '#!/bin/bash' '/System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr' > Packages/Extras/rc.imaging
 	```
 
 1. Copy ``Imagr.app`` into the Packages directory.
@@ -216,4 +259,4 @@ Imagr was designed to work in a NetInstall environment created by [AutoNBI](http
 	$ sudo ./AutoNBI.py -e -p -s /Applications/Install\ OS\ X\ Yosemite.app -f Packages -d ~/Desktop -n Imagr
 	```
 
-	This process will takes a few minutes to build the environment.
+	This process will take a few minutes to build the environment.
