@@ -158,8 +158,8 @@ By default, Imagr will bless the target volume to set it as the startup volume. 
 
 ### Automatic Creation Using Make
 
-The included ``Makefile`` makes the process of creating a NetInstall near painless. We currently have a few defaults that you might wish to override. Defaults listed below descriptions.
- 
+The included ``Makefile`` makes the process of creating a NetInstall near painless. You will need Xcode 6.0 or later installed. We currently have a few defaults that you might wish to override. Defaults listed below descriptions.
+
 * ``URL`` - The URL to your Imagr Configuration plist.
 * ``APP`` - The path to your OS X installer. Quote this path when using command line arguments.
 * ``OUTPUT`` - The output path of your NBI file. Do _not_ quote this path when using relative paths.

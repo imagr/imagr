@@ -61,3 +61,16 @@ nbi: clean-pkgs build autonbi foundation config
 	sudo chown -R root:wheel Packages/*
 	sudo chmod -R 755 Packages/*
 	sudo ./AutoNBI.py -e -p -s $(APP) -f Packages -d $(OUTPUT) -n $(NBI)
+	if [ -f ./FoundationPlist.py ]; then \
+		sudo rm FoundationPlist.py; \
+	fi
+	if [ -f ./FoundationPlist.pyc ]; then \
+		sudo rm FoundationPlist.pyc; \
+	fi
+	if [ -f ./AutoNBI.py ]; then \
+		sudo rm AutoNBI.py; \
+	fi
+	if [ -f ./com.grahamgilbert.Imagr.plist ]; then \
+		rm com.grahamgilbert.Imagr.plist; \
+	fi
+	sudo rm -rf Packages
