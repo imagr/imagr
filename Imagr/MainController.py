@@ -20,7 +20,6 @@ import macdisk
 import urllib2
 import Utils
 import PyObjCTools
-import xml.sax.saxutils
 
 class MainController(NSObject):
 
@@ -515,11 +514,7 @@ class MainController(NSObject):
         script_count = len(scripts_to_run)
         counter = 0.0
         for item in scripts_to_run:
-            script = os.path.basename(item['content'])
-
-            # replace the placeholders in the script
-            script = script.replace("{{target_volume}}", self.workVolume.mountpoint)
-            script = xml.sax.saxutils.escape(script)
+            script = item['content']
             Utils.runScript(
                 script, self.workVolume.mountpoint,
                 progress_method=self.updateProgressTitle_Percent_Detail_)

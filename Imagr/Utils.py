@@ -21,6 +21,7 @@ from Cocoa import *
 import tempfile
 import subprocess
 import sys
+import xml.sax.saxutils
 
 from gurl import Gurl
 
@@ -225,6 +226,9 @@ def runScript(script, target, progress_method=None):
     """
     Runs a script on a specific volume
     """
+    # replace the placeholders in the script
+    script = script.replace("{{target_volume}}", target)
+    script = xml.sax.saxutils.unescape(script)
     NSLog("Running script on %@", target)
     NSLog("Script: %@", script)
 
