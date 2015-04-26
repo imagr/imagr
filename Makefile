@@ -10,7 +10,7 @@ NBI="Imagr"
 #################################################
 
 
-build:
+build: clean
 	xcodebuild -configuration Release
 
 autonbi:
