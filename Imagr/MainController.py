@@ -454,7 +454,6 @@ class MainController(NSObject):
                 message = ""
             if percent == 0:
                 percent = 0.001
-            NSLog(str(message))
             self.updateProgressTitle_Percent_Detail_(None, percent, message)
 
         (unused_stdout, stderr) = task.communicate()
