@@ -413,7 +413,7 @@ def copyFirstBoot(root):
     if not os.path.exists(launchAgent_dir):
         os.makedirs(launchAgent_dir)
 
-    if not os.path.exists(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.plist'))
+    if not os.path.exists(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.plist')):
         shutil.copy(os.path.join(script_dir, 'se.gu.it.LoginLog.plist'),
         os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.plist'))
         # Set the permisisons
