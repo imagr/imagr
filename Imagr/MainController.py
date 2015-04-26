@@ -484,9 +484,6 @@ class MainController(NSObject):
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
 
-        packages_dir = os.path.join(self.workVolume.mountpoint, 'usr/local/first-boot/')
-        if not os.path.exists(packages_dir):
-            os.makedirs(packages_dir)
         pkgs_to_install = [item for item in self.selectedWorkflow['components']
                            if item.get('type') == 'package' and not item.get('pre_first_boot')]
         package_count = len(pkgs_to_install)
@@ -499,6 +496,9 @@ class MainController(NSObject):
                                   progress_method=self.updateProgressTitle_Percent_Detail_)
         if package_count:
             # copy bits for first boot script
+            packages_dir = os.path.join(self.workVolume.mountpoint, 'usr/local/first-boot/')
+            if not os.path.exists(packages_dir):
+                os.makedirs(packages_dir)
             Utils.copyFirstBoot(self.workVolume.mountpoint)
 
     @objc.IBAction
