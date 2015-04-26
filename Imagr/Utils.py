@@ -20,6 +20,7 @@ from AppKit import *
 from Cocoa import *
 import tempfile
 import subprocess
+import sys
 
 from gurl import Gurl
 
@@ -105,7 +106,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         NSLog('Headers: %@', str(connection.headers))
         if os.path.exists(tempdownloadpath):
             os.remove(tempdownloadpath)
-        raise GurlError(connection.error.code(), 
+        raise GurlError(connection.error.code(),
                         connection.error.localizedDescription())
 
     if connection.response != None:
@@ -263,7 +264,7 @@ def installPkg(pkg, target, progress_method=None):
                 NSLog(msg)
                 if progress_method:
                     progress_method(None, None, msg)
-        
+
     return proc.returncode
 
 
