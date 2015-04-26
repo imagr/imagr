@@ -31,6 +31,9 @@ clean-all: clean clean-pkgs
 	rm -rf FoundationPlist.py
 	rm -rf FoundationPlist.pyc
 
+run: build
+	sudo build/Release/Imagr.app/Contents/MacOS/Imagr
+
 config:
 	defaults write $(shell pwd)/com.grahamgilbert.Imagr serverurl $(URL)
 

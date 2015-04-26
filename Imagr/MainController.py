@@ -155,7 +155,7 @@ class MainController(NSObject):
         if self.alert:
             self.alert.window().orderOut_(self)
             self.alert = None
-            
+
         self.restartAction = 'restart'
         # This stops the console being spammed with: unlockFocus called too many times. Called on <NSButton
         NSGraphicsContext.saveGraphicsState()
@@ -243,8 +243,9 @@ class MainController(NSObject):
     @PyObjCTools.AppHelper.endSheetMethod
     def rescanAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
         self.progressText.setStringValue_("Reloading Volumes...")
-        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-            self.progressPanel, self.mainWindow, self, None, None)
+        self.theTabView.selectTabViewItem_(self.introTab)
+        # NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+        #     self.progressPanel, self.mainWindow, self, None, None)
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
 
 
@@ -453,6 +454,7 @@ class MainController(NSObject):
                 message = ""
             if percent == 0:
                 percent = 0.001
+            NSLog(str(message))
             self.updateProgressTitle_Percent_Detail_(None, percent, message)
 
         (unused_stdout, stderr) = task.communicate()
