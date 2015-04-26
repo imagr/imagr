@@ -20,6 +20,7 @@ import macdisk
 import urllib2
 import Utils
 import PyObjCTools
+import xml.sax.saxutils
 
 class MainController(NSObject):
 
@@ -366,9 +367,11 @@ class MainController(NSObject):
                 self.blessTarget = self.selectedWorkflow['bless_target']
             else:
                 self.blessTarget = True
+
             self.restoreImage()
             self.downloadAndInstallPackages()
             self.downloadAndCopyPackages()
+            self.runPreFirstBootScript()
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.processWorkflowOnThreadComplete, None, YES)
@@ -500,6 +503,27 @@ class MainController(NSObject):
             if not os.path.exists(packages_dir):
                 os.makedirs(packages_dir)
             Utils.copyFirstBoot(self.workVolume.mountpoint)
+
+    def runPreFirstBootScript(self):
+        self.updateProgressTitle_Percent_Detail_(
+            'Preparing to run scripts...', -1, '')
+        # mount the target
+        if not self.workVolume.Mounted():
+            self.workVolume.Mount()
+        scripts_to_run = [item for item in self.selectedWorkflow['components']
+                           if item.get('type') == 'script' and item.get('pre_first_boot')]
+        script_count = len(scripts_to_run)
+        counter = 0.0
+        for item in scripts_to_run:
+            script = os.path.basename(item['content'])
+
+            # replace the placeholders in the script
+            script = script.replace("{{target_volume}}", self.workVolume.mountpoint)
+            script = xml.sax.saxutils.escape(script)
+            Utils.runScript(
+                script, self.workVolume.mountpoint,
+                progress_method=self.updateProgressTitle_Percent_Detail_)
+
 
     @objc.IBAction
     def restartButtonClicked_(self, sender):

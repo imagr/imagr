@@ -7,14 +7,14 @@
 	<key>IDESourceControlProjectIdentifier</key>
 	<string>F29AA680-383C-4D1A-8009-FF3228D62FE3</string>
 	<key>IDESourceControlProjectName</key>
-	<string>Imagr</string>
+	<string>project</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>651FC2078177C78C27A5BB36611E9556B9870DC4</key>
 		<string>https://github.com/grahamgilbert/imagr.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>Imagr.xcodeproj</string>
+	<string>Imagr.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>651FC2078177C78C27A5BB36611E9556B9870DC4</key>
