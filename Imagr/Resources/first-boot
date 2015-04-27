@@ -121,10 +121,10 @@ Imagr First Boot %s
     if packages_done and scripts_done:
         sleep_time=1
         cleanup()
-
-    # We're done, reboot. Wait 20 seconds so the log window can be read.
-    time.sleep(sleep_time)
-    subprocess.call(['/sbin/reboot'])
+    else:
+        # We're done, reboot. Wait 20 seconds so the log window can be read.
+        time.sleep(sleep_time)
+        subprocess.call(['/sbin/reboot'])
 
 if __name__ == '__main__':
     main()
