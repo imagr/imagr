@@ -193,7 +193,7 @@ The included ``Makefile`` makes the process of creating a NetInstall near painle
 ```
 # Defaults
 URL="http://192.168.178.135/imagr_config.plist"
-APP=/Applications/Install\ OS\ X\ Yosemite.app
+APP="/Applications/Install OS X Yosemite.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
 ```
@@ -207,7 +207,7 @@ You can change these default variables in the ``Makefile`` or via command line a
 $ make nbi
 $ make nbi URL="http://my_server/imagr_config.plist"
 $ make nbi URL="http://my_server/imagr_config.plist" OUTPUT=~/Documents
-$ make nbi URL="http://my_server/imagr_config.plist" APP="/Applications/Install\ OS\ X\ Mavericks.app" OUTPUT=/Volumes/data/temp/ NBI="myImagr"
+$ make nbi URL="http://my_server/imagr_config.plist" APP="/Applications/Install OS X Mavericks.app" OUTPUT=/Volumes/data/temp/ NBI="myImagr"
 ```
 
 ### Manual Build Creation
