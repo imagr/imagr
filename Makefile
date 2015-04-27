@@ -35,7 +35,7 @@ run: build
 	sudo build/Release/Imagr.app/Contents/MacOS/Imagr
 
 config:
-	defaults write $(shell pwd)/com.grahamgilbert.Imagr serverurl $(URL)
+	defaults write "$(shell pwd)/com.grahamgilbert.Imagr" serverurl "$(URL)"
 
 deps: autonbi foundation
 
@@ -47,7 +47,7 @@ dmg: build
 	cp -r ./build/Release/Imagr.app /Volumes/Imagr
 	hdiutil detach /Volumes/Imagr
 	hdiutil convert Imagr.dmg -format UDZO -o Imagr-compressed.dmg
-	mv Imagr-compressed.dmg Imagr-$(shell /usr/bin/defaults read `pwd`/build/Release/Imagr.app/Contents/Info.plist CFBundleShortVersionString).dmg
+	mv Imagr-compressed.dmg "Imagr-$(shell /usr/bin/defaults read $$(pwd)/build/Release/Imagr.app/Contents/Info.plist" CFBundleShortVersionString).dmg
 	rm Imagr.dmg
 
 foundation:
@@ -63,7 +63,7 @@ nbi: clean-pkgs build autonbi foundation config
 	cp -r ./build/Release/Imagr.app ./Packages
 	sudo chown -R root:wheel Packages/*
 	sudo chmod -R 755 Packages/*
-	sudo ./AutoNBI.py -e -p -s $(APP) -f Packages -d $(OUTPUT) -n $(NBI)
+	sudo ./AutoNBI.py -e -p -s "$(APP)" -f Packages -d "$(OUTPUT)" -n "$(NBI)"
 	if [ -f ./FoundationPlist.py ]; then \
 		sudo rm FoundationPlist.py; \
 	fi
