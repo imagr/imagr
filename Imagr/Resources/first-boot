@@ -97,11 +97,10 @@ Imagr First Boot %s
                     os.remove(package_path)
                 except:
                     shutil.rmtree(package_path)
-
-
     # if there aren't any packages, remove everything we've put in
     else:
         packages_done = True
+        
     if not os.path.exists(scripts_dir):
         os.makedirs(scripts_dir)
     if os.listdir(scripts_dir):
