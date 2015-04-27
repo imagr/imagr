@@ -107,10 +107,10 @@ Imagr First Boot %s
     if os.listdir(scripts_dir):
         for script in os.listdir(scripts_dir):
             log.info(('Running %s...') % script)
-            log_path = open(logfile, 'a')  # so that data written to it will be appended
-            task = subprocess.Popen(script, stdout=log_path, stderr=log_path, shell=True)
-            task.communicate()
             script_path = os.path.join(scripts_dir, script)
+            log_path = open(logfile, 'a')  # so that data written to it will be appended
+            task = subprocess.Popen(script_path, stdout=log_path, stderr=log_path, shell=True)
+            task.communicate()
             try:
                 os.remove(script_path)
             except:
