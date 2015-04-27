@@ -105,7 +105,7 @@ First Boot Package Installer %s
         for script in os.listdir(scripts_dir):
             log.info(('Running %s...') % script)
             log_path = open(logfile, 'a')  # so that data written to it will be appended
-            task = subprocess.Popen(command, stdout=log_path, stderr=log_path), shell=True
+            task = subprocess.Popen(command, stdout=log_path, stderr=log_path, shell=True)
             task.communicate()
             script_path = os.path.join(scripts_dir, script)
             try:
