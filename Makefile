@@ -35,20 +35,16 @@ run: build
 	sudo build/Release/Imagr.app/Contents/MacOS/Imagr
 
 config:
-	defaults write "$(shell pwd)/com.grahamgilbert.Imagr" serverurl "$(URL)"
+	rm -f com.grahamgilbert.Imagr.plist
+	/usr/libexec/PlistBuddy -c 'Add :serverurl string "$(URL)"' com.grahamgilbert.Imagr.plist
 
 deps: autonbi foundation
 
 dmg: build
-	rm -f ./Imagr.dmg
-	rm -f ./Imagr-compressed.dmg
-	hdiutil create -size 32m -fs HFS+ -volname "Imagr" Imagr.dmg
-	hdiutil attach Imagr.dmg
-	cp -r ./build/Release/Imagr.app /Volumes/Imagr
-	hdiutil detach /Volumes/Imagr
-	hdiutil convert Imagr.dmg -format UDZO -o Imagr-compressed.dmg
-	mv Imagr-compressed.dmg "Imagr-$(shell /usr/bin/defaults read $$(pwd)/build/Release/Imagr.app/Contents/Info.plist" CFBundleShortVersionString).dmg
-	rm Imagr.dmg
+	rm -f ./Imagr*.dmg
+	hdiutil create -srcfolder ./build/Release/Imagr.app -volname "Imagr" -format UDZO -o Imagr.dmg
+	mv Imagr.dmg \
+		"Imagr-$(shell /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "./build/Release/Imagr.app/Contents/Info.plist").dmg"
 
 foundation:
 	if [ ! -f ./FoundationPlist.py ]; then \
