@@ -34,7 +34,7 @@ def ip_addresses():
     return proc.communicate()[0].replace('\n', '')
 
 def cleanup():
-    log.info('No more packages have been found to install, cleaning up.')
+    log.info('No more packages or scripts have been found, cleaning up.')
     # remove launchdaemon
     os.remove('/Library/LaunchDaemons/com.grahamgilbert.first-boot-pkg.plist')
     # remove launchagent
@@ -47,7 +47,7 @@ def cleanup():
 def main():
     log.info(('''
 ######################################################
-First Boot Package Installer %s
+Imagr First Boot %s
 ######################################################
 ''') % time.strftime("%Y-%m-%d %H:%M:%S"))
     plist_opts = plistlib.readPlist(config_plist)
@@ -63,6 +63,8 @@ First Boot Package Installer %s
                 time.sleep(10)
     retry_limit = plist_opts.get('RetryCount')
     # if the packages dir isn't empty, loop over them
+    if not os.path.exists(packages_dir):
+        os.makedirs(packages_dir)
     if os.listdir(packages_dir):
         # We're installing, wait to see the output
         sleep_time = 20
@@ -100,12 +102,13 @@ First Boot Package Installer %s
     # if there aren't any packages, remove everything we've put in
     else:
         packages_done = True
-
+    if not os.path.exists(scripts_dir):
+        os.makedirs(scripts_dir)
     if os.listdir(scripts_dir):
         for script in os.listdir(scripts_dir):
             log.info(('Running %s...') % script)
             log_path = open(logfile, 'a')  # so that data written to it will be appended
-            task = subprocess.Popen(command, stdout=log_path, stderr=log_path, shell=True)
+            task = subprocess.Popen(script, stdout=log_path, stderr=log_path, shell=True)
             task.communicate()
             script_path = os.path.join(scripts_dir, script)
             try:
