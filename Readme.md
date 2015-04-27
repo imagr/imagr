@@ -12,6 +12,7 @@ This is pre-release code and under heavy development. There are bugs if you don'
 	* [Workflows](#workflows)
 	* [Imaging](#imaging)
 	* [Packages](#packages)
+	* [Scripts](#scripts)
 * [Configuration](#configuration)
 	* [The configuration plist](#the-configuration-plist)
 	* [Password](#password)
