@@ -129,15 +129,15 @@ Seen above as ``imagr_config.plist``. This file can be named anything but needs 
             <key>url</key>
             <string>http://192.168.178.135/clearReg.pkg</string>
         </dict>
-				<dict>
-					<key>type</key>
-					<string>script</string>
-					<key>content</key>
-					<string>#!/bin/bash
+        <dict>
+          <key>type</key>
+          <string>script</string>
+          <key>content</key>
+          <string>#!/bin/bash
 echo "&lt;"
 echo "{{target_volume}}"
 /usr/bin/touch "{{target_volume}}/some_file"</string>
-				</dict>
+        </dict>
       </array>
     </dict>
   </array>
