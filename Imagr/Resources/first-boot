@@ -10,6 +10,9 @@ import shutil
 firstboot_dir = '/usr/local/first-boot'
 config_plist = os.path.join(firstboot_dir, 'config.plist')
 packages_dir = os.path.join(firstboot_dir, 'packages')
+packages_done = None
+scripts_dir = os.path.join(firstboot_dir, 'scripts')
+scripts_done = None
 installer = '/usr/sbin/installer'
 logfile = '/var/log/first-boot.log'
 
@@ -92,13 +95,30 @@ First Boot Package Installer %s
                     os.remove(package_path)
                 except:
                     shutil.rmtree(package_path)
-                
+
 
     # if there aren't any packages, remove everything we've put in
     else:
+        packages_done = True
+
+    if os.listdir(scripts_dir):
+        for script in os.listdir(scripts_dir):
+            log.info(('Running %s...') % script)
+            log_path = open(logfile, 'a')  # so that data written to it will be appended
+            task = subprocess.Popen(command, stdout=log_path, stderr=log_path), shell=True
+            task.communicate()
+            script_path = os.path.join(scripts_dir, script)
+            try:
+                os.remove(script_path)
+            except:
+                shutil.rmtree(script_path)
+    else:
+        scripts_done = True
+
+    if packages_done and scripts_done:
         sleep_time=1
         cleanup()
-    
+
     # We're done, reboot. Wait 20 seconds so the log window can be read.
     time.sleep(sleep_time)
     subprocess.call(['/sbin/reboot'])

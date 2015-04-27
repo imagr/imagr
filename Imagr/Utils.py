@@ -224,13 +224,45 @@ def downloadAndInstallPackage(url, target, progress_method=None):
 
 def runScript(script, target, progress_method=None):
     """
-    Runs a script on a specific volume
+    Replaces placeholders in a script and then runs it.
     """
     # replace the placeholders in the script
     script = script.replace("{{target_volume}}", target)
     script = xml.sax.saxutils.unescape(script)
     NSLog("Running script on %@", target)
     NSLog("Script: %@", script)
+    if progress_method:
+        progress_method("Running script...", 0, '')
+    proc = subprocess.Popen(script, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    while proc.poll() is None:
+        output = proc.stdout.readline().strip().decode('UTF-8')
+        if progress_method:
+            progress_method(None, None, output)
+
+    return proc.returncode
+
+def copyScript(script, target, number, progress_method=None):
+    """
+    Copies a
+     script to a specific volume
+    """
+    NSLog("Copying script to %@", target)
+    NSLog("Script: %@", script)
+    dest_dir = os.path.join(target, 'usr/local/first-boot/scripts')
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+    dest_file = os.path.join(dest_dir, "%03d" % number)
+    if progress_method:
+        progress_method("Copying script to %s" % dest_file, 0, '')
+    # convert placeholders
+    script = script.replace("{{target_volume}}", target)
+    script = xml.sax.saxutils.unescape(script)
+    # write file
+    with open(dest_file, "w") as text_file:
+        text_file.write(script)
+    # make executable
+    os.chmod(dest_file, 0755)
+    return dest_file
 
 def installPkg(pkg, target, progress_method=None):
     """
@@ -393,11 +425,12 @@ def copyFirstBoot(root):
     config_plist['Network'] = network
     config_plist['RetryCount'] = retry_count
     firstboot_dir = 'usr/local/first-boot'
+    if not os.path.exists(os.path.join(root, firstboot_dir)):
+        os.makedirs(os.path.join(root, firstboot_dir))
     plistlib.writePlist(config_plist, os.path.join(root, firstboot_dir, 'config.plist'))
 
     # Copy the LaunchDaemon, LaunchAgent and Log.app to the right places
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    NSLog(str(script_dir))
     launchDaemon_dir = os.path.join(root, 'Library', 'LaunchDaemons')
     if not os.path.exists(launchDaemon_dir):
         os.makedirs(launchDaemon_dir)

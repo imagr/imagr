@@ -370,6 +370,7 @@ class MainController(NSObject):
             self.restoreImage()
             self.downloadAndInstallPackages()
             self.downloadAndCopyPackages()
+            self.copyFirstBootScripts()
             self.runPreFirstBootScript()
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
@@ -503,6 +504,23 @@ class MainController(NSObject):
                 os.makedirs(packages_dir)
             Utils.copyFirstBoot(self.workVolume.mountpoint)
 
+    def copyFirstBootScripts(self):
+        if not self.workVolume.Mounted():
+            self.workVolume.Mount()
+
+        scripts_to_run = [item for item in self.selectedWorkflow['components']
+                           if item.get('type') == 'script' and not item.get('pre_first_boot')]
+        script_count = len(scripts_to_run)
+        counter = 0.0
+        NSLog(str(scripts_to_run))
+        for item in scripts_to_run:
+            counter = counter + 1.0
+            script = item['content']
+            Utils.copyScript(
+                script, self.workVolume.mountpoint, counter,
+                progress_method=self.updateProgressTitle_Percent_Detail_)
+        Utils.copyFirstBoot(self.workVolume.mountpoint)
+
     def runPreFirstBootScript(self):
         self.updateProgressTitle_Percent_Detail_(
             'Preparing to run scripts...', -1, '')
@@ -513,6 +531,7 @@ class MainController(NSObject):
                            if item.get('type') == 'script' and item.get('pre_first_boot')]
         script_count = len(scripts_to_run)
         counter = 0.0
+        NSLog(str(scripts_to_run))
         for item in scripts_to_run:
             script = item['content']
             Utils.runScript(

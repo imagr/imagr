@@ -46,7 +46,23 @@ Packages can either be installed at first boot (the default) or pre first boot b
 </dict>
 ```
 
-Packages installed at first boot (currently) need to be flat packages.
+### Scripts
+
+Scripts can either be run at first boot (the default) or pre first boot by using the following in the component in the configuration plist:
+
+``` xml
+<dict>
+    <key>type</key>
+    <string>script</string>
+    <key>content</key>
+    <string>#!/bin/bash
+/usr/bin/touch "{{target_volume}}/some_file"</string>
+    <key>pre_first_boot</key>
+    <true/>
+</dict>
+```
+
+Any non-xml safe characters will need to be encoded, and if you need to refer to the target volume, use ``{{ target_volume}}``.
 
 ## Configuration
 
@@ -112,6 +128,15 @@ Seen above as ``imagr_config.plist``. This file can be named anything but needs 
             <key>url</key>
             <string>http://192.168.178.135/clearReg.pkg</string>
         </dict>
+				<dict>
+					<key>type</key>
+					<string>script</string>
+					<key>content</key>
+					<string>#!/bin/bash
+echo "&lt;"
+echo "{{target_volume}}"
+/usr/bin/touch "{{target_volume}}/some_file"</string>
+				</dict>
       </array>
     </dict>
   </array>
