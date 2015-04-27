@@ -12,6 +12,7 @@ This is pre-release code and under heavy development. There are bugs if you don'
 	* [Workflows](#workflows)
 	* [Imaging](#imaging)
 	* [Packages](#packages)
+	* [Scripts](#scripts)
 * [Configuration](#configuration)
 	* [The configuration plist](#the-configuration-plist)
 	* [Password](#password)
@@ -62,7 +63,7 @@ Scripts can either be run at first boot (the default) or pre first boot by using
 </dict>
 ```
 
-Any non-xml safe characters will need to be encoded, and if you need to refer to the target volume, use ``{{ target_volume}}``.
+Any non-xml safe characters will need to be encoded, and if you need to refer to the target volume, use ``{{target_volume}}``.
 
 ## Configuration
 

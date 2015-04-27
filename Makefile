@@ -3,7 +3,7 @@
 #################################################
 
 URL="http://192.168.178.135/imagr_config.plist"
-APP=/Applications/Install\ OS\ X\ Yosemite.app
+APP="/Applications/Install OS X Yosemite.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
 
@@ -63,7 +63,7 @@ nbi: clean-pkgs build autonbi foundation config
 	cp -r ./build/Release/Imagr.app ./Packages
 	sudo chown -R root:wheel Packages/*
 	sudo chmod -R 755 Packages/*
-	sudo ./AutoNBI.py -e -p -s "$(APP)" -f Packages -d "$(OUTPUT)" -n "$(NBI)"
+	sudo ./AutoNBI.py -e -p -s $(APP) -f Packages -d $(OUTPUT) -n $(NBI)
 	if [ -f ./FoundationPlist.py ]; then \
 		sudo rm FoundationPlist.py; \
 	fi
