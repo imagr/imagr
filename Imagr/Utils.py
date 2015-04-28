@@ -20,6 +20,8 @@ from AppKit import *
 from Cocoa import *
 import tempfile
 import subprocess
+import threading
+import time
 import sys
 import xml.sax.saxutils
 
@@ -30,6 +32,21 @@ class GurlError(Exception):
 
 class HTTPError(Exception):
     pass
+
+class CustomThread(threading.Thread):
+    '''Class for running a process in its own thread'''
+
+    cmd = None
+
+    def __init__(self, cmd=cmd):
+        threading.Thread.__init__(self)
+        self.cmd = cmd
+
+
+    def run(self):
+        proc = subprocess.call(self.cmd)
+        pass
+
 
 def get_url(url, destinationpath, message=None, follow_redirects=False,
             progress_method=None):
@@ -221,6 +238,16 @@ def downloadAndInstallPackage(url, target, progress_method=None):
         installPkg(downloaded_file, target, progress_method=progress_method)
         # Clean up after ourselves
         shutil.rmtree(temp_dir)
+
+def launchApp(cmd):
+    thread = CustomThread(cmd)
+    thread.daemon = True
+    thread.start()
+    time.sleep(1)
+    if '.app' in cmd:
+        app_path = ''.join(cmd.partition('.app')[0:2])
+        NSWorkspace.sharedWorkspace().launchApplication_(app_path)
+
 
 def runScript(script, target, progress_method=None):
     """
