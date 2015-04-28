@@ -186,7 +186,7 @@
 							<string key="NSName">_NSAppleMenu</string>
 						</object>
 					</object>
-					<object class="NSMenuItem" id="911306124">
+					<object class="NSMenuItem" id="210252055">
 						<reference key="NSMenu" ref="649796088"/>
 						<string key="NSTitle">Utilities</string>
 						<string key="NSKeyEquiv"/>
@@ -195,20 +195,20 @@
 						<reference key="NSOnImage" ref="715147791"/>
 						<reference key="NSMixedImage" ref="897496305"/>
 						<string key="NSAction">submenuAction:</string>
-						<reference key="NSTarget" ref="1051042822"/>
-						<object class="NSMenu" key="NSSubmenu" id="1051042822">
+						<reference key="NSTarget" ref="348727561"/>
+						<object class="NSMenu" key="NSSubmenu" id="348727561">
 							<string key="NSTitle">Utilities</string>
 							<array class="NSMutableArray" key="NSMenuItems">
-								<object class="NSMenuItem" id="189041977">
-									<reference key="NSMenu" ref="1051042822"/>
+								<object class="NSMenuItem" id="1005443245">
+									<reference key="NSMenu" ref="348727561"/>
 									<string key="NSTitle">Terminal</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
 									<reference key="NSOnImage" ref="715147791"/>
 									<reference key="NSMixedImage" ref="897496305"/>
 								</object>
-								<object class="NSMenuItem" id="239476515">
-									<reference key="NSMenu" ref="1051042822"/>
+								<object class="NSMenuItem" id="717111955">
+									<reference key="NSMenu" ref="348727561"/>
 									<string key="NSTitle">Disk Utility</string>
 									<string key="NSKeyEquiv"/>
 									<int key="NSMnemonicLoc">2147483647</int>
@@ -1571,7 +1571,7 @@
 					<object class="IBActionConnection" key="connection">
 						<string key="label">runDiskUtility:</string>
 						<reference key="source" ref="1061118799"/>
-						<reference key="destination" ref="239476515"/>
+						<reference key="destination" ref="717111955"/>
 					</object>
 					<int key="connectionID">903</int>
 				</object>
@@ -1579,7 +1579,7 @@
 					<object class="IBActionConnection" key="connection">
 						<string key="label">runTerminal:</string>
 						<reference key="source" ref="1061118799"/>
-						<reference key="destination" ref="189041977"/>
+						<reference key="destination" ref="1005443245"/>
 					</object>
 					<int key="connectionID">904</int>
 				</object>
@@ -1616,7 +1616,7 @@
 						<array class="NSMutableArray" key="children">
 							<reference ref="391199113"/>
 							<reference ref="694149608"/>
-							<reference ref="911306124"/>
+							<reference ref="210252055"/>
 						</array>
 						<reference key="parent" ref="0"/>
 						<string key="objectName">MainMenu</string>
@@ -2273,30 +2273,30 @@
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">898</int>
-						<reference key="object" ref="911306124"/>
+						<reference key="object" ref="210252055"/>
 						<array class="NSMutableArray" key="children">
-							<reference ref="1051042822"/>
+							<reference ref="348727561"/>
 						</array>
 						<reference key="parent" ref="649796088"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">899</int>
-						<reference key="object" ref="1051042822"/>
+						<reference key="object" ref="348727561"/>
 						<array class="NSMutableArray" key="children">
-							<reference ref="189041977"/>
-							<reference ref="239476515"/>
+							<reference ref="1005443245"/>
+							<reference ref="717111955"/>
 						</array>
-						<reference key="parent" ref="911306124"/>
+						<reference key="parent" ref="210252055"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">900</int>
-						<reference key="object" ref="189041977"/>
-						<reference key="parent" ref="1051042822"/>
+						<reference key="object" ref="1005443245"/>
+						<reference key="parent" ref="348727561"/>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">901</int>
-						<reference key="object" ref="239476515"/>
-						<reference key="parent" ref="1051042822"/>
+						<reference key="object" ref="717111955"/>
+						<reference key="parent" ref="348727561"/>
 					</object>
 				</array>
 			</object>
