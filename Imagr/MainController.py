@@ -583,7 +583,6 @@ class MainController(NSObject):
             self.chooseWorkflowDropDown.setEnabled_(True)
             self.chooseImagingTarget_(contextinfo)
 
-
     def enableAllButtons_(self, sender):
         self.cancelAndRestartButton.setEnabled_(True)
         self.runWorkflowButton.setEnabled_(True)
@@ -591,3 +590,11 @@ class MainController(NSObject):
     def disableAllButtons(self, sender):
         self.cancelAndRestartButton.setEnabled_(False)
         self.runWorkflowButton.setEnabled_(False)
+
+    @objc.IBAction
+    def runDiskUtility_(self, sender):
+        NSWorkspace.sharedWorkspace().launchApplication_("/Applications/Utilities/Disk Utility.app")
+
+    @objc.IBAction
+    def runTerminal_(self, sender):
+        NSWorkspace.sharedWorkspace().launchApplication_("/Applications/Utilities/Terminal.app")
