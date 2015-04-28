@@ -33,7 +33,14 @@ def ip_addresses():
     proc = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
     return proc.communicate()[0].replace('\n', '')
 
+def all_done():
+    if not os.listdir(packages_dir) and not os.listdir(scripts_dir):
+        sleep_time=1
+        cleanup()
+        subprocess.call(['/sbin/reboot'])
+
 def cleanup():
+    log_path = open(logfile, 'a')
     log.info('No more packages or scripts have been found, cleaning up.')
     # remove launchdaemon
     os.remove('/Library/LaunchDaemons/com.grahamgilbert.first-boot-pkg.plist')
@@ -65,6 +72,9 @@ Imagr First Boot %s
     # if the packages dir isn't empty, loop over them
     if not os.path.exists(packages_dir):
         os.makedirs(packages_dir)
+
+    if not os.path.exists(scripts_dir):
+        os.makedirs(scripts_dir)
     if os.listdir(packages_dir):
         # We're installing, wait to see the output
         sleep_time = 20
@@ -97,12 +107,8 @@ Imagr First Boot %s
                     os.remove(package_path)
                 except:
                     shutil.rmtree(package_path)
-    # if there aren't any packages, remove everything we've put in
-    else:
-        packages_done = True
-        
-    if not os.path.exists(scripts_dir):
-        os.makedirs(scripts_dir)
+            all_done()
+
     if os.listdir(scripts_dir):
         for script in os.listdir(scripts_dir):
             log.info(('Running %s...') % script)
@@ -114,16 +120,12 @@ Imagr First Boot %s
                 os.remove(script_path)
             except:
                 shutil.rmtree(script_path)
-    else:
-        scripts_done = True
+            all_done()
 
-    if packages_done and scripts_done:
-        sleep_time=1
-        cleanup()
-    else:
-        # We're done, reboot. Wait 20 seconds so the log window can be read.
-        time.sleep(sleep_time)
-        subprocess.call(['/sbin/reboot'])
+    # We're done, reboot. Wait 20 seconds so the log window can be read.
+    time.sleep(sleep_time)
+    all_done()
+    subprocess.call(['/sbin/reboot'])
 
 if __name__ == '__main__':
     main()
