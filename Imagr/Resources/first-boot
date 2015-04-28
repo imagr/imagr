@@ -17,7 +17,7 @@ installer = '/usr/sbin/installer'
 logfile = '/var/log/first-boot.log'
 
 # Logging Config
-log = logging.getLogger('first-boot')
+log = logging.getLogger('imagr-first-boot')
 log.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(message)s')
 handler_stream = logging.StreamHandler()

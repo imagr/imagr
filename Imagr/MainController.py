@@ -520,7 +520,8 @@ class MainController(NSObject):
             Utils.copyScript(
                 script, self.workVolume.mountpoint, counter,
                 progress_method=self.updateProgressTitle_Percent_Detail_)
-        Utils.copyFirstBoot(self.workVolume.mountpoint)
+        if scripts_to_run:
+            Utils.copyFirstBoot(self.workVolume.mountpoint)
 
     def runPreFirstBootScript(self):
         self.updateProgressTitle_Percent_Detail_(
