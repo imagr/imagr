@@ -228,9 +228,9 @@ class MainController(NSObject):
         if returncode == NSAlertDefaultReturn:
             self.setStartupDisk_(None)
         else:
-            # cmd = ['/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility']
-            # proc = subprocess.call(cmd)
-            NSWorkspace.sharedWorkspace().launchApplication_("/Applications/Utilities/Disk Utility.app")
+            cmd = ['/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility']
+            proc = subprocess.call(cmd)
+            #NSWorkspace.sharedWorkspace().launchApplication_("/Applications/Utilities/Disk Utility.app")
             alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
                 NSLocalizedString(u"Rescan for volumes", None),
                 NSLocalizedString(u"Rescan", None),
