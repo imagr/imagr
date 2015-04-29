@@ -24,6 +24,7 @@ Support Mailing List: [imagr-discuss](https://groups.google.com/group/imagr-disc
 	* [Startup Disk](#startup-disk)
 * [Building a NetInstall](#building-a-netinstall)
 	* [Automatic Creation Using Make](#automatic-creation-using-make)
+	* [Updating a NetInstall](#updating-a-netinstall)
 	* [Manual Build Creation](#manual-build-creation)
 
 ## Features
@@ -214,6 +215,16 @@ $ make nbi URL="http://my_server/imagr_config.plist"
 $ make nbi URL="http://my_server/imagr_config.plist" OUTPUT=~/Documents
 $ make nbi URL="http://my_server/imagr_config.plist" APP="/Applications/Install OS X Mavericks.app" OUTPUT=/Volumes/data/temp/ NBI="myImagr"
 ```
+
+###Updating a NetInstall
+
+With the fast development of Imagr you will eventually need to update Imagr.app on your NetInstall. With AutoNBI you are able to update your "Packages" directory containing your configuration plist, rc.imaging file, and Imagr.app without having to rebuild your entire NetInstall. Run the following command to update:
+
+```
+$ make update
+```
+
+Note: This command uses the ``OUTPUT`` and ``NBI`` variables from above to locate your already built NetInstall. If you have moved your NetInstall you can pass command line arguments to located the moved directory.
 
 ### Manual Build Creation
 
