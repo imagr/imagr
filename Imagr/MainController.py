@@ -754,11 +754,11 @@ class MainController(NSObject):
 
     @objc.IBAction
     def runDiskUtility_(self, sender):
-        Utils.launchApp("/Applications/Utilities/Disk Utility.app")
+        Utils.launchApp("/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility")
 
     @objc.IBAction
     def runTerminal_(self, sender):
-        Utils.launchApp("/Applications/Utilities/Terminal.app")
+        Utils.launchApp("/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal")
 
     def installPkg(self, pkg, target, progress_method=None):
         """
