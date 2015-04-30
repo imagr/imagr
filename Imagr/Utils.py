@@ -208,14 +208,18 @@ def getServerURL():
         pass
 
 
-def launchApp(cmd):
-    thread = CustomThread(cmd)
+def launchApp(app_path):
+    # Get the binary path so we can launch it using a threaded subprocess
+    try:
+        app_plist = FoundationPlist.readPlist(os.path.join(app_path, 'Contents', 'Info.plist'))
+        binary = app_plist['CFBundleExecutable']
+    except:
+        NSLog("Failed to get app binary location, cannot launch.")
+    thread = CustomThread(os.path.join(app_path,'Contents', 'MacOS', binary))
     thread.daemon = True
     thread.start()
     time.sleep(1)
-    if '.app' in cmd:
-        app_path = ''.join(cmd.partition('.app')[0:2])
-        NSWorkspace.sharedWorkspace().launchApplication_(app_path)
+    NSWorkspace.sharedWorkspace().launchApplication_(app_path)
 
 def get_hardware_info():
     '''Uses system profiler to get hardware info for this machine'''
