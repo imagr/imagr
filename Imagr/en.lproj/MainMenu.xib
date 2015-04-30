@@ -3,12 +3,12 @@
 	<data>
 		<int key="IBDocument.SystemTarget">1050</int>
 		<string key="IBDocument.SystemVersion">14D136</string>
-		<string key="IBDocument.InterfaceBuilderVersion">6751</string>
+		<string key="IBDocument.InterfaceBuilderVersion">7531</string>
 		<string key="IBDocument.AppKitVersion">1347.57</string>
 		<string key="IBDocument.HIToolboxVersion">758.70</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.CocoaPlugin</string>
-			<string key="NS.object.0">6751</string>
+			<string key="NS.object.0">7531</string>
 		</object>
 		<array key="IBDocument.IntegratedClassDependencies">
 			<string>NSButton</string>
@@ -283,7 +283,6 @@
 							<string key="NSFrame">{{-77, -1}, {457, 502}}</string>
 							<reference key="NSSuperview" ref="367560152"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView"/>
 							<double key="NSViewAlphaValue">0.5</double>
 							<string key="NSHuggingPriority">{251, 251}</string>
 							<bool key="NSEnabled">YES</bool>
@@ -308,7 +307,6 @@
 							<string key="NSFrame">{{7, 8}, {680, 487}}</string>
 							<reference key="NSSuperview" ref="367560152"/>
 							<reference key="NSWindow"/>
-							<reference key="NSNextKeyView" ref="22249470"/>
 							<string key="NSReuseIdentifierKey">_NS:9</string>
 							<array class="NSMutableArray" key="NSTabViewItems">
 								<object class="NSTabViewItem" id="671669968">
@@ -518,7 +516,6 @@
 												<string key="NSFrame">{{442, 13}, {134, 32}}</string>
 												<reference key="NSSuperview" ref="22249470"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView"/>
 												<string key="NSHuggingPriority">{250, 750}</string>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="389625284">
@@ -544,7 +541,6 @@
 												<string key="NSFrame">{{442, 327}, {126, 32}}</string>
 												<reference key="NSSuperview" ref="22249470"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView"/>
 												<string key="NSReuseIdentifierKey">_NS:9</string>
 												<bool key="NSEnabled">YES</bool>
 												<object class="NSButtonCell" key="NSCell" id="837689253">
@@ -651,7 +647,7 @@
 																<string key="NSFrameSize">{442, 260}</string>
 																<reference key="NSSuperview" ref="1019754332"/>
 																<reference key="NSWindow"/>
-																<reference key="NSNextKeyView" ref="375661957"/>
+																<reference key="NSNextKeyView" ref="723861177"/>
 																<string key="NSReuseIdentifierKey">_NS:13</string>
 																<object class="NSTextContainer" key="NSTextContainer" id="784039287">
 																	<object class="NSLayoutManager" key="NSLayoutManager">
@@ -768,7 +764,7 @@
 												<string key="NSFrame">{{118, 61}, {444, 262}}</string>
 												<reference key="NSSuperview" ref="22249470"/>
 												<reference key="NSWindow"/>
-												<reference key="NSNextKeyView" ref="723861177"/>
+												<reference key="NSNextKeyView" ref="1019754332"/>
 												<string key="NSReuseIdentifierKey">_NS:9</string>
 												<int key="NSsFlags">133138</int>
 												<reference key="NSVScroller" ref="375661957"/>
@@ -818,7 +814,7 @@
 					<reference key="NSNextKeyView" ref="461199512"/>
 					<bool key="NSViewIsLayerTreeHost">YES</bool>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1280, 800}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1440, 877}}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<bool key="NSWindowIsRestorable">NO</bool>
 			</object>
@@ -832,7 +828,7 @@
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
 				<object class="NSView" key="NSWindowView" id="797659792">
-					<reference key="NSNextResponder"/>
+					<nil key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<array class="NSMutableArray" key="NSSubviews">
 						<object class="NSTextField" id="615142721">
@@ -840,7 +836,6 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 49}, {422, 17}}</string>
 							<reference key="NSSuperview" ref="797659792"/>
-							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="114446665"/>
 							<string key="NSHuggingPriority">{251, 750}</string>
 							<bool key="NSEnabled">YES</bool>
@@ -861,7 +856,6 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 17}, {342, 26}}</string>
 							<reference key="NSSuperview" ref="797659792"/>
-							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="541947500"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSPopUpButtonCell" key="NSCell" id="465124819">
@@ -929,7 +923,6 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{359, 13}, {85, 32}}</string>
 							<reference key="NSSuperview" ref="797659792"/>
-							<reference key="NSWindow"/>
 							<string key="NSHuggingPriority">{250, 750}</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="380942625">
@@ -950,11 +943,9 @@
 						</object>
 					</array>
 					<string key="NSFrameSize">{458, 86}</string>
-					<reference key="NSSuperview"/>
-					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="615142721"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1280, 800}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1440, 877}}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<bool key="NSWindowIsRestorable">NO</bool>
 			</object>
@@ -968,7 +959,7 @@
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
 				<object class="NSView" key="NSWindowView" id="995259204">
-					<reference key="NSNextResponder"/>
+					<nil key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<array class="NSMutableArray" key="NSSubviews">
 						<object class="NSTextField" id="24214049">
@@ -976,7 +967,6 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 59}, {93, 17}}</string>
 							<reference key="NSSuperview" ref="995259204"/>
-							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="555067212"/>
 							<string key="NSHuggingPriority">{251, 750}</string>
 							<bool key="NSEnabled">YES</bool>
@@ -997,7 +987,6 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 27}, {260, 26}}</string>
 							<reference key="NSSuperview" ref="995259204"/>
-							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="1049495274"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSPopUpButtonCell" key="NSCell" id="862068476">
@@ -1065,7 +1054,6 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{369, 23}, {129, 32}}</string>
 							<reference key="NSSuperview" ref="995259204"/>
-							<reference key="NSWindow"/>
 							<string key="NSHuggingPriority">{250, 750}</string>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSButtonCell" key="NSCell" id="601744127">
@@ -1089,7 +1077,6 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{287, 23}, {83, 32}}</string>
 							<reference key="NSSuperview" ref="995259204"/>
-							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="959641603"/>
 							<string key="NSHuggingPriority">{250, 750}</string>
 							<bool key="NSEnabled">YES</bool>
@@ -1111,11 +1098,9 @@
 						</object>
 					</array>
 					<string key="NSFrameSize">{512, 96}</string>
-					<reference key="NSSuperview"/>
-					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="24214049"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1280, 800}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1440, 877}}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<bool key="NSWindowIsRestorable">NO</bool>
 			</object>
@@ -1129,7 +1114,7 @@
 				<nil key="NSViewClass"/>
 				<nil key="NSUserInterfaceItemIdentifier"/>
 				<object class="NSView" key="NSWindowView" id="976016814">
-					<reference key="NSNextResponder"/>
+					<nil key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
 					<array class="NSMutableArray" key="NSSubviews">
 						<object class="NSProgressIndicator" id="344777478">
@@ -1137,7 +1122,6 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{20, 39}, {426, 20}}</string>
 							<reference key="NSSuperview" ref="976016814"/>
-							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="893580892"/>
 							<string key="NSHuggingPriority">{250, 250}</string>
 							<int key="NSpiFlags">16399</int>
@@ -1148,7 +1132,6 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{17, 66}, {431, 17}}</string>
 							<reference key="NSSuperview" ref="976016814"/>
-							<reference key="NSWindow"/>
 							<reference key="NSNextKeyView" ref="344777478"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="743351425">
@@ -1168,7 +1151,6 @@
 							<int key="NSvFlags">268</int>
 							<string key="NSFrame">{{18, 20}, {431, 17}}</string>
 							<reference key="NSSuperview" ref="976016814"/>
-							<reference key="NSWindow"/>
 							<bool key="NSEnabled">YES</bool>
 							<object class="NSTextFieldCell" key="NSCell" id="186590015">
 								<int key="NSCellFlags">68157504</int>
@@ -1188,11 +1170,9 @@
 						</object>
 					</array>
 					<string key="NSFrameSize">{466, 98}</string>
-					<reference key="NSSuperview"/>
-					<reference key="NSWindow"/>
 					<reference key="NSNextKeyView" ref="29244736"/>
 				</object>
-				<string key="NSScreenRect">{{0, 0}, {1280, 800}}</string>
+				<string key="NSScreenRect">{{0, 0}, {1440, 877}}</string>
 				<string key="NSMaxSize">{10000000000000, 10000000000000}</string>
 				<bool key="NSWindowIsRestorable">NO</bool>
 			</object>
@@ -1583,6 +1563,14 @@
 					</object>
 					<int key="connectionID">904</int>
 				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBOutletConnection" key="connection">
+						<string key="label">utilities_menu</string>
+						<reference key="source" ref="1061118799"/>
+						<reference key="destination" ref="348727561"/>
+					</object>
+					<int key="connectionID">908</int>
+				</object>
 			</array>
 			<object class="IBMutableOrderedSet" key="objectRecords">
 				<array key="orderedObjects">
@@ -1636,7 +1624,6 @@
 							<reference ref="374024848"/>
 						</array>
 						<reference key="parent" ref="649796088"/>
-						<string key="objectName">1</string>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">106</int>
@@ -1645,7 +1632,6 @@
 							<reference ref="238773614"/>
 						</array>
 						<reference key="parent" ref="391199113"/>
-						<string key="objectName">2</string>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">111</int>
@@ -2507,7 +2493,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">904</int>
+			<int key="maxID">908</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -2633,6 +2619,7 @@
 						<string key="startupDiskDropdown">id</string>
 						<string key="startupDiskRestartButton">id</string>
 						<string key="theTabView">id</string>
+						<string key="utilities_menu">id</string>
 						<string key="workflowDescription">id</string>
 						<string key="workflowDescriptionView">id</string>
 					</dictionary>
@@ -2755,6 +2742,10 @@
 						</object>
 						<object class="IBToOneOutletInfo" key="theTabView">
 							<string key="name">theTabView</string>
+							<string key="candidateClassName">id</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="utilities_menu">
+							<string key="name">utilities_menu</string>
 							<string key="candidateClassName">id</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="workflowDescription">
