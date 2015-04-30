@@ -230,7 +230,7 @@ class MainController(NSObject):
         if returncode == NSAlertDefaultReturn:
             self.setStartupDisk_(None)
         else:
-            Utils.launchApp('/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility')
+            Utils.launchApp('/Applications/Utilities/Disk Utility.app')
             # cmd = ['/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility']
             # proc = subprocess.call(cmd)
             #NSWorkspace.sharedWorkspace().launchApplication_("/Applications/Utilities/Disk Utility.app")
@@ -754,11 +754,11 @@ class MainController(NSObject):
 
     @objc.IBAction
     def runDiskUtility_(self, sender):
-        Utils.launchApp("/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility")
+        Utils.launchApp("/Applications/Utilities/Disk Utility.app")
 
     @objc.IBAction
     def runTerminal_(self, sender):
-        Utils.launchApp("/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal")
+        Utils.launchApp("/Applications/Utilities/Terminal.app")
 
     def installPkg(self, pkg, target, progress_method=None):
         """

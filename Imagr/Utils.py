@@ -208,14 +208,30 @@ def getServerURL():
         pass
 
 
-def launchApp(cmd):
-    thread = CustomThread(cmd)
-    thread.daemon = True
-    thread.start()
-    time.sleep(1)
-    if '.app' in cmd:
-        app_path = ''.join(cmd.partition('.app')[0:2])
-        NSWorkspace.sharedWorkspace().launchApplication_(app_path)
+def launchApp(app_path):
+    # Get the binary path so we can launch it using a threaded subprocess
+    try:
+        app_plist = FoundationPlist.readPlist(os.path.join(app_path, 'Contents', 'Info.plist'))
+        binary = app_plist['CFBundleExecutable']
+    except:
+        NSLog("Failed to get app binary location, cannot launch.")
+
+    app_list =  NSWorkspace.sharedWorkspace().runningApplications()
+    # Before launching the app, check to see if it is already running
+    app_running = False
+    for app in app_list:
+        if app_plist['CFBundleIdentifier'] == app.bundleIdentifier():
+            app_running = True
+
+    # Only launch the app if it isn't already running
+    if not app_running:
+        thread = CustomThread(os.path.join(app_path,'Contents', 'MacOS', binary))
+        thread.daemon = True
+        thread.start()
+        time.sleep(1)
+
+    # Bring application to the front as they launch in the background in Netboot for some reason
+    NSWorkspace.sharedWorkspace().launchApplication_(app_path)
 
 def get_hardware_info():
     '''Uses system profiler to get hardware info for this machine'''
