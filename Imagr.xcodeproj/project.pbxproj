@@ -51,6 +51,7 @@
 		FCEA81081AD018E500DBA039 /* wifi_network_order.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80ED1AD018E500DBA039 /* wifi_network_order.py */; };
 		FCEA81091AD018E500DBA039 /* wifi_network_order_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80EE1AD018E500DBA039 /* wifi_network_order_test.py */; };
 		FCEA810B1AD02C9A00DBA039 /* Utils.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA810A1AD02C9A00DBA039 /* Utils.py */; };
+		FCEDFD961AF289E900743302 /* imagr_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = FCEDFD951AF289E900743302 /* imagr_icon.png */; };
 		FCF6B30F1AD1D73E00311D3A /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCF6B30D1AD1D73E00311D3A /* Installer.icns */; };
 		FCF6B3101AD1D73E00311D3A /* package.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCF6B30E1AD1D73E00311D3A /* package.icns */; };
 /* End PBXBuildFile section */
@@ -105,6 +106,7 @@
 		FCEA80ED1AD018E500DBA039 /* wifi_network_order.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = wifi_network_order.py; sourceTree = "<group>"; };
 		FCEA80EE1AD018E500DBA039 /* wifi_network_order_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = wifi_network_order_test.py; sourceTree = "<group>"; };
 		FCEA810A1AD02C9A00DBA039 /* Utils.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Utils.py; sourceTree = "<group>"; };
+		FCEDFD951AF289E900743302 /* imagr_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = imagr_icon.png; sourceTree = "<group>"; };
 		FCF6B30D1AD1D73E00311D3A /* Installer.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Installer.icns; sourceTree = "<group>"; };
 		FCF6B30E1AD1D73E00311D3A /* package.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = package.icns; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -187,6 +189,7 @@
 		FCEA80B51AD0101100DBA039 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				FCEDFD951AF289E900743302 /* imagr_icon.png */,
 				C06979C11AE83F3500914535 /* gurl.py */,
 				FC98DA1E1AD6B2DC00F90405 /* Resources */,
 				FCF6B30D1AD1D73E00311D3A /* Installer.icns */,
@@ -326,6 +329,7 @@
 				FCEA81081AD018E500DBA039 /* wifi_network_order.py in Resources */,
 				FCEA80C21AD0101100DBA039 /* AppDelegate.py in Resources */,
 				FCEA81021AD018E500DBA039 /* profiles.py in Resources */,
+				FCEDFD961AF289E900743302 /* imagr_icon.png in Resources */,
 				FCEA80F61AD018E500DBA039 /* cocoadialog.py in Resources */,
 				FCEA81041AD018E500DBA039 /* systemconfig.py in Resources */,
 				FCEA80C01AD0101100DBA039 /* main.py in Resources */,
