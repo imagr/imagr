@@ -20,6 +20,8 @@ import macdisk
 import urllib2
 import Utils
 import PyObjCTools
+import tempfile
+import shutil
 
 class MainController(NSObject):
 
@@ -370,10 +372,14 @@ class MainController(NSObject):
                 self.blessTarget = True
 
             self.restoreImage()
-            self.downloadAndInstallPackages()
-            self.downloadAndCopyPackages()
-            self.copyFirstBootScripts()
-            self.runPreFirstBootScript()
+            if not self.errorMessage:
+                self.downloadAndInstallPackages()
+            if not self.errorMessage:
+                self.downloadAndCopyPackages()
+            if not self.errorMessage:
+                self.copyFirstBootScripts()
+            if not self.errorMessage:
+                self.runPreFirstBootScript()
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.processWorkflowOnThreadComplete, None, YES)
@@ -383,7 +389,10 @@ class MainController(NSObject):
         '''Done running workflow, restart to imaged volume'''
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
-        if self.restartAction == 'restart' or self.restartAction == 'shutdown':
+        if self.errorMessage:
+            self.theTabView.selectTabViewItem_(self.errorTab)
+            self.errorPanel(self.errorMessage)
+        elif self.restartAction == 'restart' or self.restartAction == 'shutdown':
             self.restartToImagedVolume()
         else:
             self.openEndWorkflowPanel()
@@ -464,7 +473,7 @@ class MainController(NSObject):
         (unused_stdout, stderr) = task.communicate()
 
         if task.returncode:
-            raise macdisk.MacDiskError("Cloning Error: %s" % stderr)
+            self.errorMessage = "Cloning Error: %s" % stderr
         if task.poll() == 0:
             return True
 
@@ -478,9 +487,56 @@ class MainController(NSObject):
                            if item.get('type') == 'package' and item.get('pre_first_boot')]
         for item in pkgs_to_install:
             package_name = os.path.basename(item['url'])
-            Utils.downloadAndInstallPackage(
+            self.downloadAndInstallPackage(
                 item['url'], self.workVolume.mountpoint,
                 progress_method=self.updateProgressTitle_Percent_Detail_)
+
+    def downloadAndInstallPackage(self, url, target, progress_method=None):
+        if os.path.basename(url).endswith('.dmg'):
+            error = None
+            # We're going to mount the dmg
+            try:
+                dmgmountpoints = Utils.mountdmg(url)
+                dmgmountpoint = Utils.dmgmountpoints[0]
+            except:
+                self.errorMessage = "Couldn't mount %s" % url
+                return False
+
+            # Now we're going to go over everything that ends .pkg or
+            # .mpkg and install it
+            for package in os.listdir(dmgmountpoint):
+                if package.endswith('.pkg') or package.endswith('.mpkg'):
+                    pkg = os.path.join(dmgmountpoint, package)
+                    retcode = self.installPkg(pkg, target, progress_method=progress_method)
+                    if retcode != 0:
+                        self.errorMessage = "Couldn't install %s" % pkg
+                        return False
+
+            # Unmount it
+            try:
+                Utils.unmountdmg(dmgmountpoint)
+            except:
+                self.errorMessage = "Couldn't unmount %s" % dmgmountpoint
+                return False
+
+        if os.path.basename(url).endswith('.pkg'):
+
+            # Make our temp directory on the target
+            temp_dir = tempfile.mkdtemp(dir=target)
+            # Download it
+            packagename = os.path.basename(url)
+            (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(temp_dir,
+                                                            packagename))
+            if error:
+                self.errorMessage = "Couldn't download - %s %s" % (url, error)
+                return None
+            # Install it
+            retcode = self.installPkg(downloaded_file, target, progress_method=progress_method)
+            if retcode != 0:
+                self.errorMessage = "Couldn't install %s" % pkg
+                return None
+            # Clean up after ourselves
+            shutil.rmtree(temp_dir)
 
     def downloadAndCopyPackages(self):
         self.updateProgressTitle_Percent_Detail_(
@@ -497,14 +553,71 @@ class MainController(NSObject):
         for item in pkgs_to_install:
             counter = counter + 1.0
             package_name = os.path.basename(item['url'])
-            Utils.downloadPackage(item['url'], self.workVolume.mountpoint, counter,
+            (output, error) = self.downloadPackage(item['url'], self.workVolume.mountpoint, counter,
                                   progress_method=self.updateProgressTitle_Percent_Detail_)
+            if error:
+                self.errorMessage = "Error copying first boot package %s - %s" % (item['url'], error)
+                break
         if package_count:
             # copy bits for first boot script
             packages_dir = os.path.join(self.workVolume.mountpoint, 'usr/local/first-boot/')
             if not os.path.exists(packages_dir):
                 os.makedirs(packages_dir)
             Utils.copyFirstBoot(self.workVolume.mountpoint)
+
+    def downloadPackage(self, url, target, number, progress_method=None):
+        error = None
+        dest_dir = os.path.join(target, 'usr/local/first-boot/packages')
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+
+        if os.path.basename(url).endswith('.dmg'):
+            NSLog("Copying pkg(s) from %@", url)
+            (output, error) = self.copyPkgFromDmg(url, dest_dir, number)
+        else:
+            NSLog("Downloading pkg %@", url)
+            package_name = "%03d-%s" % (number, os.path.basename(url))
+            os.umask(0002)
+            file = os.path.join(dest_dir, package_name)
+            (output, error) = Utils.downloadChunks(url, file, progress_method=progress_method)
+
+        return output, error
+
+    def copyPkgFromDmg(self, url, dest_dir, number):
+        error = None
+        # We're going to mount the dmg
+        try:
+            dmgmountpoints = Utils.mountdmg(url)
+            dmgmountpoint = Utils.dmgmountpoints[0]
+        except:
+            self.errorMessage = "Couldn't mount %s" % url
+            return False
+
+        # Now we're going to go over everything that ends .pkg or
+        # .mpkg and install it
+        pkg_list = []
+        for package in os.listdir(dmgmountpoint):
+            if package.endswith('.pkg') or package.endswith('.mpkg'):
+                pkg = os.path.join(dmgmountpoint, package)
+                dest_file = os.path.join(dest_dir, "%03d-%s" % (number, os.path.basename(pkg)))
+                try:
+                    if os.path.isfile(pkg):
+                        shutil.copy(pkg, dest_file)
+                    else:
+                        shutil.copytree(pkg, dest_file)
+                except:
+                    error = "Couldn't copy %s" % pkg
+                    return None, error
+                pkg_list.append(dest_file)
+
+        # Unmount it
+        try:
+            Utils.unmountdmg(dmgmountpoint)
+        except:
+            self.errorMessage = "Couldn't unmount %s" % dmgmountpoint
+            return False
+
+        return pkg_list, None
 
     def copyFirstBootScripts(self):
         if not self.workVolume.Mounted():
@@ -518,9 +631,13 @@ class MainController(NSObject):
         for item in scripts_to_run:
             counter = counter + 1.0
             script = item['content']
-            Utils.copyScript(
-                script, self.workVolume.mountpoint, counter,
-                progress_method=self.updateProgressTitle_Percent_Detail_)
+            try:
+                self.copyScript(
+                    script, self.workVolume.mountpoint, counter,
+                    progress_method=self.updateProgressTitle_Percent_Detail_)
+            except:
+                self.errorMessage = "Coun't copy script %s" % str(counter)
+                break
         if scripts_to_run:
             Utils.copyFirstBoot(self.workVolume.mountpoint)
 
@@ -534,13 +651,55 @@ class MainController(NSObject):
                            if item.get('type') == 'script' and item.get('pre_first_boot')]
         script_count = len(scripts_to_run)
         counter = 0.0
-        NSLog(str(scripts_to_run))
         for item in scripts_to_run:
             script = item['content']
-            Utils.runScript(
+            counter = counter + 1.0
+            retcode = self.runScript(
                 script, self.workVolume.mountpoint,
                 progress_method=self.updateProgressTitle_Percent_Detail_)
+            if retcode != 0:
+                self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
+                break
 
+    def runScript(self, script, target, progress_method=None):
+        """
+        Replaces placeholders in a script and then runs it.
+        """
+        # replace the placeholders in the script
+        script = Utils.replacePlaceholders(script, target)
+        NSLog("Running script on %@", target)
+        NSLog("Script: %@", script)
+        if progress_method:
+            progress_method("Running script...", 0, '')
+        proc = subprocess.Popen(script, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        while proc.poll() is None:
+            output = proc.stdout.readline().strip().decode('UTF-8')
+            if progress_method:
+                progress_method(None, None, output)
+
+        return proc.returncode
+
+    def copyScript(self, script, target, number, progress_method=None):
+        """
+        Copies a
+         script to a specific volume
+        """
+        NSLog("Copying script to %@", target)
+        NSLog("Script: %@", script)
+        dest_dir = os.path.join(target, 'usr/local/first-boot/scripts')
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+        dest_file = os.path.join(dest_dir, "%03d" % number)
+        if progress_method:
+            progress_method("Copying script to %s" % dest_file, 0, '')
+        # convert placeholders
+        script = Utils.replacePlaceholders(script, target)
+        # write file
+        with open(dest_file, "w") as text_file:
+            text_file.write(script)
+        # make executable
+        os.chmod(dest_file, 0755)
+        return dest_file
 
     @objc.IBAction
     def restartButtonClicked_(self, sender):
@@ -600,3 +759,48 @@ class MainController(NSObject):
     @objc.IBAction
     def runTerminal_(self, sender):
         Utils.launchApp("/Applications/Utilities/Terminal.app")
+
+    def installPkg(self, pkg, target, progress_method=None):
+        """
+        Installs a package on a specific volume
+        """
+        NSLog("Installing %@ to %@", pkg, target)
+        if progress_method:
+            progress_method("Installing %s" % os.path.basename(pkg), 0, '')
+        cmd = ['/usr/sbin/installer', '-pkg', pkg, '-target', target, '-verboseR']
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        while proc.poll() is None:
+            output = proc.stdout.readline().strip().decode('UTF-8')
+            if output.startswith("installer:"):
+                msg = output[10:].rstrip("\n")
+                if msg.startswith("PHASE:"):
+                    phase = msg[6:]
+                    if phase:
+                        NSLog(phase)
+                        if progress_method:
+                            progress_method(None, None, phase)
+                elif msg.startswith("STATUS:"):
+                    status = msg[7:]
+                    if status:
+                        NSLog(status)
+                        if progress_method:
+                            progress_method(None, None, status)
+                elif msg.startswith("%"):
+                    percent = float(msg[1:])
+                    NSLog("%@ percent complete", percent)
+                    if progress_method:
+                        progress_method(None, percent, None)
+                elif msg.startswith(" Error"):
+                    NSLog(msg)
+                    if progress_method:
+                        progress_method(None, None, msg)
+                elif msg.startswith(" Cannot install"):
+                    NSLog(msg)
+                    if progress_method:
+                        progress_method(None, None, msg)
+                else:
+                    NSLog(msg)
+                    if progress_method:
+                        progress_method(None, None, msg)
+
+        return proc.returncode
