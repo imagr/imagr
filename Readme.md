@@ -67,7 +67,7 @@ Scripts can either be run at first boot (the default) or pre first boot by using
 </dict>
 ```
 
-Any non-xml safe characters will need to be encoded, and if you need to refer to the target volume, use ``{{target_volume}}``.
+Any non-xml safe characters will need to be encoded, and if you need to refer to the target volume, use ``{{target_volume}}``. You also have access to the machine's serial number (``{{serial_number}}``) and model (``{{machine_model}}``).
 
 ## Configuration
 

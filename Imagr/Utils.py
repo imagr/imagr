@@ -7,11 +7,9 @@
 #  Copyright (c) 2015 Graham Gilbert. All rights reserved.
 #
 
-#import urllib2
 import hashlib
 import os
 import FoundationPlist
-#import math
 import plistlib
 import shutil
 from SystemConfiguration import *
@@ -248,14 +246,41 @@ def launchApp(cmd):
         app_path = ''.join(cmd.partition('.app')[0:2])
         NSWorkspace.sharedWorkspace().launchApplication_(app_path)
 
+def get_hardware_info():
+    '''Uses system profiler to get hardware info for this machine'''
+    cmd = ['/usr/sbin/system_profiler', 'SPHardwareDataType', '-xml']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    try:
+        plist = FoundationPlist.readPlistFromString(output)
+        # system_profiler xml is an array
+        sp_dict = plist[0]
+        items = sp_dict['_items']
+        sp_hardware_dict = items[0]
+        return sp_hardware_dict
+    except Exception:
+        return {}
+
+def replacePlaceholders(script, target):
+    hardware_info = get_hardware_info()
+    placeholders = {
+        "{{target_volume}}": target,
+        "{{serial_number}}": hardware_info.get('serial_number', 'UNKNOWN'),
+        "{{machine_model}}": hardware_info.get('machine_model', 'UNKNOWN')
+    }
+    for placeholder, value in placeholders.iteritems():
+        script = script.replace(placeholder, value)
+    script = xml.sax.saxutils.unescape(script)
+    return script
 
 def runScript(script, target, progress_method=None):
     """
     Replaces placeholders in a script and then runs it.
     """
     # replace the placeholders in the script
-    script = script.replace("{{target_volume}}", target)
-    script = xml.sax.saxutils.unescape(script)
+    script = replacePlaceholders(script, target)
     NSLog("Running script on %@", target)
     NSLog("Script: %@", script)
     if progress_method:
@@ -282,8 +307,7 @@ def copyScript(script, target, number, progress_method=None):
     if progress_method:
         progress_method("Copying script to %s" % dest_file, 0, '')
     # convert placeholders
-    script = script.replace("{{target_volume}}", target)
-    script = xml.sax.saxutils.unescape(script)
+    script = replacePlaceholders(script, target)
     # write file
     with open(dest_file, "w") as text_file:
         text_file.write(script)
