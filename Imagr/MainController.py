@@ -767,7 +767,8 @@ class MainController(NSObject):
     def runUtilityFromMenu_(self, sender):
         app_name = sender.title()
         app_path = os.path.join('/Applications/Utilities/', app_name + '.app')
-        Utils.launchApp(app_path)
+        if os.path.exists(app_path):
+            Utils.launchApp(app_path)
     
     def buildUtilitiesMenu(self):
         self.utilities_menu.removeAllItems()
