@@ -215,10 +215,22 @@ def launchApp(app_path):
         binary = app_plist['CFBundleExecutable']
     except:
         NSLog("Failed to get app binary location, cannot launch.")
-    thread = CustomThread(os.path.join(app_path,'Contents', 'MacOS', binary))
-    thread.daemon = True
-    thread.start()
-    time.sleep(1)
+
+    app_list =  NSWorkspace.sharedWorkspace().runningApplications()
+    # Before launching the app, check to see if it is already running
+    app_running = False
+    for app in app_list:
+        if app_plist['CFBundleIdentifier'] == app.bundleIdentifier():
+            app_running = True
+
+    # Only launch the app if it isn't already running
+    if not app_running:
+        thread = CustomThread(os.path.join(app_path,'Contents', 'MacOS', binary))
+        thread.daemon = True
+        thread.start()
+        time.sleep(1)
+
+    # Bring application to the front as they launch in the background in Netboot for some reason
     NSWorkspace.sharedWorkspace().launchApplication_(app_path)
 
 def get_hardware_info():
