@@ -22,6 +22,7 @@ import Utils
 import PyObjCTools
 import tempfile
 import shutil
+import Quartz
 
 class MainController(NSObject):
 
@@ -169,6 +170,8 @@ class MainController(NSObject):
             if Utils.getPasswordHash(password_value) != self.passwordHash or password_value == "":
                 self.errorField.setEnabled_(sender)
                 self.errorField.setStringValue_("Incorrect password")
+                self.shakeWindow()
+
             else:
                 self.theTabView.selectTabViewItem_(self.mainTab)
                 self.chooseImagingTarget_(None)
@@ -853,3 +856,20 @@ class MainController(NSObject):
                         progress_method(None, None, msg)
 
         return proc.returncode
+    
+    def shakeWindow(self):
+        shake = {'count': 1, 'duration': 0.3, 'vigor': 0.04}
+        shakeAnim = Quartz.CAKeyframeAnimation.animation()
+        shakePath = Quartz.CGPathCreateMutable()
+        frame = self.mainWindow.frame()
+        Quartz.CGPathMoveToPoint(shakePath, None, NSMinX(frame), NSMinY(frame))
+        shakeLeft = NSMinX(frame) - frame.size.width * shake['vigor']
+        shakeRight = NSMinX(frame) + frame.size.width * shake['vigor']
+        for i in range(shake['count']):
+            Quartz.CGPathAddLineToPoint(shakePath, None, shakeLeft, NSMinY(frame))
+            Quartz.CGPathAddLineToPoint(shakePath, None, shakeRight, NSMinY(frame))
+            Quartz.CGPathCloseSubpath(shakePath)
+        shakeAnim._['path'] = shakePath
+        shakeAnim._['duration'] = shake['duration']
+        self.mainWindow.setAnimations_(NSDictionary.dictionaryWithObject_forKey_(shakeAnim, "frameOrigin"))
+        self.mainWindow.animator().setFrameOrigin_(frame.origin)
