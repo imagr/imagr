@@ -331,6 +331,8 @@ class MainController(NSObject):
         '''Set up the selected workflow to run on secondary thread'''
         self.imagingProgress.setHidden_(False)
         self.imagingLabel.setHidden_(False)
+        self.reloadWorkflowsButton.setEnabled_(False)
+        self.reloadWorkflowsMenuItem.setEnabled_(False)
         self.cancelAndRestartButton.setEnabled_(False)
         self.chooseWorkflowLabel.setEnabled_(True)
         self.chooseWorkflowDropDown.setEnabled_(False)
@@ -770,6 +772,8 @@ class MainController(NSObject):
             self.restartToImagedVolume()
         elif returncode == 0:
             self.chooseWorkflowDropDown.setEnabled_(True)
+            self.reloadWorkflowsButton.setEnabled_(True)
+            self.reloadWorkflowsMenuItem.setEnabled_(True)
             self.chooseImagingTarget_(contextinfo)
 
     def enableAllButtons_(self, sender):
