@@ -26,6 +26,8 @@ import shutil
 class MainController(NSObject):
 
     mainWindow = objc.IBOutlet()
+    
+    utilities_menu = objc.IBOutlet()
 
     theTabView = objc.IBOutlet()
     introTab = objc.IBOutlet()
@@ -99,6 +101,7 @@ class MainController(NSObject):
         self.progressIndicator.setIndeterminate_(True)
         self.progressIndicator.setUsesThreadedAnimation_(True)
         self.progressIndicator.startAnimation_(self)
+        self.buildUtilitiesMenu()
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
 
     def loadData(self):
@@ -759,6 +762,23 @@ class MainController(NSObject):
     @objc.IBAction
     def runTerminal_(self, sender):
         Utils.launchApp("/Applications/Utilities/Terminal.app")
+    
+    @objc.IBAction
+    def runUtilityFromMenu_(self, sender):
+        app_name = sender.title()
+        app_path = os.path.join('/Applications/Utilities/', app_name + '.app')
+        if os.path.exists(app_path):
+            Utils.launchApp(app_path)
+    
+    def buildUtilitiesMenu(self):
+        self.utilities_menu.removeAllItems()
+        for item in os.listdir('/Applications/Utilities'):
+            if item.endswith('.app'):
+                item_name = os.path.splitext(item)[0]
+                new_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+                    item_name, self.runUtilityFromMenu_, u'')
+                new_item.setTarget_(self)
+                self.utilities_menu.addItem_(new_item)
 
     def installPkg(self, pkg, target, progress_method=None):
         """
