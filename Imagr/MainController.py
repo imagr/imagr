@@ -56,6 +56,8 @@ class MainController(NSObject):
     chooseTargetPanelSelectTarget = objc.IBOutlet()
 
     cancelAndRestartButton = objc.IBOutlet()
+    reloadWorkflowsButton = objc.IBOutlet()
+    reloadWorkflowsMenuItem = objc.IBOutlet()
     chooseWorkflowDropDown = objc.IBOutlet()
     chooseWorkflowLabel = objc.IBOutlet()
 
@@ -69,6 +71,7 @@ class MainController(NSObject):
     imagingProgressDetail = objc.IBOutlet()
 
     # former globals, now instance variables
+    hasLoggedIn = None
     volumes = None
     passwordHash = None
     workflows = None
@@ -136,12 +139,28 @@ class MainController(NSObject):
         del pool
 
     def loadDataComplete(self):
+        self.reloadWorkflowsMenuItem.setEnabled_(True)
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
         else:
-            self.theTabView.selectTabViewItem_(self.loginTab)
-            self.mainWindow.makeFirstResponder_(self.password)
+            if self.hasLoggedIn:
+                self.theTabView.selectTabViewItem_(self.mainTab)
+                self.chooseImagingTarget_(None)
+                self.enableAllButtons_(self)
+            else:
+                self.theTabView.selectTabViewItem_(self.loginTab)
+                self.mainWindow.makeFirstResponder_(self.password)
+
+    @objc.IBAction
+    def reloadWorkflows_(self, sender):
+        self.reloadWorkflowsMenuItem.setEnabled_(False)
+        self.progressText.setStringValue_("Reloading workflows...")
+        self.progressIndicator.setIndeterminate_(True)
+        self.progressIndicator.setUsesThreadedAnimation_(True)
+        self.progressIndicator.startAnimation_(self)
+        self.theTabView.selectTabViewItem_(self.introTab)
+        NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
 
     @objc.IBAction
     def login_(self, sender):
@@ -152,8 +171,9 @@ class MainController(NSObject):
                 self.errorField.setStringValue_("Incorrect password")
             else:
                 self.theTabView.selectTabViewItem_(self.mainTab)
-                self.chooseImagingTarget_(sender)
+                self.chooseImagingTarget_(None)
                 self.enableAllButtons_(self)
+                self.hasLoggedIn = True
 
     @objc.IBAction
     def setStartupDisk_(self, sender):
