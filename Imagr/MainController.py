@@ -26,7 +26,7 @@ import shutil
 class MainController(NSObject):
 
     mainWindow = objc.IBOutlet()
-    
+
     utilities_menu = objc.IBOutlet()
 
     theTabView = objc.IBOutlet()
@@ -161,21 +161,26 @@ class MainController(NSObject):
             self.alert.window().orderOut_(self)
             self.alert = None
 
-        self.restartAction = 'restart'
-        # This stops the console being spammed with: unlockFocus called too many times. Called on <NSButton
-        NSGraphicsContext.saveGraphicsState()
-        self.disableAllButtons(sender)
-        # clear out the default junk in the dropdown
-        self.startupDiskDropdown.removeAllItems()
-        list = []
-        for volume in self.volumes:
-            list.append(volume.mountpoint)
+        # Prefer to use the built in Startup disk pane
+        if os.path.exists("/Applications/Utilities/Startup Disk.app"):
+            Utils.launchApp("/Applications/Utilities/Startup Disk.app")
+        else:
+            self.restartAction = 'restart'
+            # This stops the console being spammed with: unlockFocus called too many times. Called on <NSButton
+            NSGraphicsContext.saveGraphicsState()
+            self.disableAllButtons(sender)
+            # clear out the default junk in the dropdown
+            self.startupDiskDropdown.removeAllItems()
+            list = []
+            for volume in self.volumes:
+                list.append(volume.mountpoint)
 
-        # Let's add the items to the popup
-        self.startupDiskDropdown.addItemsWithTitles_(list)
-        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-            self.startUpDiskPanel, self.mainWindow, self, None, None)
-        NSGraphicsContext.restoreGraphicsState()
+            # Let's add the items to the popup
+            self.startupDiskDropdown.addItemsWithTitles_(list)
+            NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                self.startUpDiskPanel, self.mainWindow, self, None, None)
+            NSGraphicsContext.restoreGraphicsState()
+
 
     @objc.IBAction
     def closeStartUpDisk_(self, sender):
@@ -762,14 +767,14 @@ class MainController(NSObject):
     @objc.IBAction
     def runTerminal_(self, sender):
         Utils.launchApp("/Applications/Utilities/Terminal.app")
-    
+
     @objc.IBAction
     def runUtilityFromMenu_(self, sender):
         app_name = sender.title()
         app_path = os.path.join('/Applications/Utilities/', app_name + '.app')
         if os.path.exists(app_path):
             Utils.launchApp(app_path)
-    
+
     def buildUtilitiesMenu(self):
         self.utilities_menu.removeAllItems()
         for item in os.listdir('/Applications/Utilities'):
