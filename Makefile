@@ -6,12 +6,11 @@ URL="http://192.168.178.135/imagr_config.plist"
 APP="/Applications/Install OS X Yosemite.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
-ARGS="-e -p"
+ARGS= -e -p
 
 -include config.mk
 
 #################################################
-
 
 build: clean
 	xcodebuild -configuration Release
@@ -54,6 +53,18 @@ foundation:
 		curl -fsSL https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py -o ./FoundationPlist.py; \
 		chmod 755 ./FoundationPlist.py; \
 	fi
+	
+clean-files:
+	if [ -f ./FoundationPlist.py ]; then \
+		sudo rm FoundationPlist.*; \
+	fi 												
+	if [ -f ./AutoNBI.py ]; then \
+		sudo rm AutoNBI.py; \
+	fi 												
+	if [ -f ./com.grahamgilbert.Imagr.plist ]; then \
+		rm com.grahamgilbert.Imagr.plist; \
+	fi 												
+	sudo rm -rf Packages
 
 nbi: clean-pkgs build autonbi foundation config
 	mkdir -p Packages/Extras
@@ -63,19 +74,7 @@ nbi: clean-pkgs build autonbi foundation config
 	sudo chown -R root:wheel Packages/*
 	sudo chmod -R 755 Packages/*
 	sudo ./AutoNBI.py $(ARGS) -s $(APP) -f Packages -d $(OUTPUT) -n $(NBI)
-	if [ -f ./FoundationPlist.py ]; then \
-		sudo rm FoundationPlist.py; \
-	fi
-	if [ -f ./FoundationPlist.pyc ]; then \
-		sudo rm FoundationPlist.pyc; \
-	fi
-	if [ -f ./AutoNBI.py ]; then \
-		sudo rm AutoNBI.py; \
-	fi
-	if [ -f ./com.grahamgilbert.Imagr.plist ]; then \
-		rm com.grahamgilbert.Imagr.plist; \
-	fi
-	sudo rm -rf Packages
+	$(MAKE) clean-files
 
 update: clean-pkgs build autonbi foundation config
 	mkdir -p Packages/Extras
@@ -84,17 +83,5 @@ update: clean-pkgs build autonbi foundation config
 	cp -r ./build/Release/Imagr.app ./Packages
 	sudo chown -R root:wheel Packages/*
 	sudo chmod -R 755 Packages/*
-	sudo ./AutoNBI.py -s $(OUTPUT)/$(NBI).nbi/NetInstall.dmg -f Packages 
-	if [ -f ./FoundationPlist.py ]; then \
-		sudo rm FoundationPlist.py; \
-	fi
-	if [ -f ./FoundationPlist.pyc ]; then \
-		sudo rm FoundationPlist.pyc; \
-	fi
-	if [ -f ./AutoNBI.py ]; then \
-		sudo rm AutoNBI.py; \
-	fi
-	if [ -f ./com.grahamgilbert.Imagr.plist ]; then \
-		rm com.grahamgilbert.Imagr.plist; \
-	fi
-	sudo rm -rf Packages
+	sudo ./AutoNBI.py -s $(OUTPUT)/$(NBI).nbi/NetInstall.dmg -f Packages
+	$(MAKE) clean-files
