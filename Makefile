@@ -6,7 +6,7 @@ URL="http://192.168.178.135/imagr_config.plist"
 APP="/Applications/Install OS X Yosemite.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
-ARGS="-e -p"
+ARGS=-e -p
 
 -include config.mk
 
