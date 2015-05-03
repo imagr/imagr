@@ -59,7 +59,10 @@ foundation:
 dl:
 	rm -f ./Imagr*.dmg
 	rm -rf Imagr.app
-	curl -sL -o ./Imagr.dmg --connect-timeout 30 $$(curl -s https://api.github.com/repos/grahamgilbert/imagr/releases | python -c 'import json,sys;obj=json.load(sys.stdin);print obj[0]["assets"][0]["browser_download_url"]')
+	curl -sL -o ./Imagr.dmg --connect-timeout 30 $$(curl -s \
+		https://api.github.com/repos/grahamgilbert/imagr/releases | \
+		python -c 'import json,sys;obj=json.load(sys.stdin); \
+		print obj[0]["assets"][0]["browser_download_url"]')
 	hdiutil attach Imagr.dmg
 	cp -r /Volumes/Imagr/Imagr.app .
 	hdiutil detach /Volumes/Imagr
