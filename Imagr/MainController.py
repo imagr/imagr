@@ -369,19 +369,40 @@ class MainController(NSObject):
                     self.workflowDescription.setString_("")
                 break
 
-    @objc.IBAction
-    def runWorkflow_(self, sender):
-        '''Set up the selected workflow to run on secondary thread'''
-        #self.imagingProgress.setHidden_(False)
-        #self.imagingLabel.setHidden_(False)
+    def enableWorkflowDescriptionView_(self, enabled):
+        # See https://developer.apple.com/library/mac/qa/qa1461/_index.html
+        self.workflowDescription.setSelectable_(enabled)
+        if enabled:
+            self.workflowDescription.setTextColor_(NSColor.controlTextColor())
+        else:
+            self.workflowDescription.setTextColor_(NSColor.disabledTextColor())
+
+    def disableWorkflowViewControls(self):
         self.reloadWorkflowsButton.setEnabled_(False)
         self.reloadWorkflowsMenuItem.setEnabled_(False)
         self.cancelAndRestartButton.setEnabled_(False)
-        self.chooseWorkflowLabel.setEnabled_(True)
+        self.chooseWorkflowLabel.setEnabled_(False)
+        self.chooseTargetDropDown.setEnabled_(False)
         self.chooseWorkflowDropDown.setEnabled_(False)
-        # self.workflowDescriptionView.setEnabled_(True)
+        self.enableWorkflowDescriptionView_(False)
         self.runWorkflowButton.setEnabled_(False)
         self.cancelAndRestartButton.setEnabled_(False)
+
+    def enableWorkflowViewControls(self):
+        self.reloadWorkflowsButton.setEnabled_(True)
+        self.reloadWorkflowsMenuItem.setEnabled_(True)
+        self.cancelAndRestartButton.setEnabled_(True)
+        self.chooseWorkflowLabel.setEnabled_(True)
+        self.chooseTargetDropDown.setEnabled_(True)
+        self.chooseWorkflowDropDown.setEnabled_(True)
+        self.enableWorkflowDescriptionView_(True)
+        self.runWorkflowButton.setEnabled_(True)
+        self.cancelAndRestartButton.setEnabled_(True)
+
+    @objc.IBAction
+    def runWorkflow_(self, sender):
+        '''Set up the selected workflow to run on secondary thread'''
+        self.disableWorkflowViewControls()
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
         self.imagingProgressDetail.setStringValue_('')
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
@@ -814,9 +835,7 @@ class MainController(NSObject):
             self.restartAction = 'restart'
             self.restartToImagedVolume()
         elif returncode == 0:
-            self.chooseWorkflowDropDown.setEnabled_(True)
-            self.reloadWorkflowsButton.setEnabled_(True)
-            self.reloadWorkflowsMenuItem.setEnabled_(True)
+            self.enableWorkflowViewControls()
             self.chooseImagingTarget_(contextinfo)
 
     def enableAllButtons_(self, sender):
