@@ -84,6 +84,7 @@ class MainController(NSObject):
     blessTarget = None
     errorMessage = None
     alert = None
+    workflow_is_running = False
 
     def errorPanel(self, error):
         errorText = str(error)
@@ -119,6 +120,8 @@ class MainController(NSObject):
             self, self.wsNotificationReceived, NSWorkspaceDidRenameVolumeNotification, None)
 
     def wsNotificationReceived(self, notification):
+        if self.workflow_is_running:
+            return
         notification_name = notification.name()
         user_info = notification.userInfo()
         NSLog("NSWorkspace notification was: %@", notification_name)
@@ -402,6 +405,7 @@ class MainController(NSObject):
     @objc.IBAction
     def runWorkflow_(self, sender):
         '''Set up the selected workflow to run on secondary thread'''
+        self.workflow_is_running = True
         self.disableWorkflowViewControls()
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
         self.imagingProgressDetail.setStringValue_('')
@@ -483,6 +487,7 @@ class MainController(NSObject):
         '''Done running workflow, restart to imaged volume'''
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
+        self.workflow_is_running = False
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
@@ -591,9 +596,9 @@ class MainController(NSObject):
             # We're going to mount the dmg
             try:
                 dmgmountpoints = Utils.mountdmg(url)
-                dmgmountpoint = Utils.dmgmountpoints[0]
-            except:
-                self.errorMessage = "Couldn't mount %s" % url
+                dmgmountpoint = dmgmountpoints[0]
+            except Exception, err:
+                self.errorMessage = "Couldn't mount %s: %s" % (url, err)
                 return False
 
             # Now we're going to go over everything that ends .pkg or
@@ -682,7 +687,7 @@ class MainController(NSObject):
         # We're going to mount the dmg
         try:
             dmgmountpoints = Utils.mountdmg(url)
-            dmgmountpoint = Utils.dmgmountpoints[0]
+            dmgmountpoint = dmgmountpoints[0]
         except:
             self.errorMessage = "Couldn't mount %s" % url
             return False

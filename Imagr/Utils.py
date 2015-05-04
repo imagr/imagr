@@ -282,6 +282,7 @@ def mountdmg(dmgpath):
         for entity in plist['system-entities']:
             if 'mount-point' in entity:
                 mountpoints.append(entity['mount-point'])
+        NSLog("Mount successful at %@", mountpoints)
 
     return mountpoints
 
