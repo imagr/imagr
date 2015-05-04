@@ -302,17 +302,8 @@ def unmountdmg(mountpoint):
         # try forcing the unmount
         retcode = subprocess.call(['/usr/bin/hdiutil', 'detach', mountpoint,
                                    '-force'])
-        print('Unmounting successful...')
         if retcode:
             print >> sys.stderr, 'Failed to unmount %s' % mountpoint
-
-    if not pkg_list:
-        NSLog("No packages found in %@", url)
-        result = False
-    else:
-        result = pkg_list
-
-    return result
 
 
 def downloadChunks(url, file, progress_method=None):
