@@ -530,7 +530,7 @@ class MainController(NSObject):
             # We're going to mount the dmg
             try:
                 dmgmountpoints = Utils.mountdmg(url)
-                dmgmountpoint = Utils.dmgmountpoints[0]
+                dmgmountpoint = dmgmountpoints[0]
             except:
                 self.errorMessage = "Couldn't mount %s" % url
                 return False
@@ -621,7 +621,7 @@ class MainController(NSObject):
         # We're going to mount the dmg
         try:
             dmgmountpoints = Utils.mountdmg(url)
-            dmgmountpoint = Utils.dmgmountpoints[0]
+            dmgmountpoint = dmgmountpoints[0]
         except:
             self.errorMessage = "Couldn't mount %s" % url
             return False
@@ -856,7 +856,7 @@ class MainController(NSObject):
                         progress_method(None, None, msg)
 
         return proc.returncode
-    
+
     def shakeWindow(self):
         shake = {'count': 1, 'duration': 0.3, 'vigor': 0.04}
         shakeAnim = Quartz.CAKeyframeAnimation.animation()
