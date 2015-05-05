@@ -597,8 +597,8 @@ class MainController(NSObject):
             try:
                 dmgmountpoints = Utils.mountdmg(url)
                 dmgmountpoint = dmgmountpoints[0]
-            except Exception, err:
-                self.errorMessage = "Couldn't mount %s: %s" % (url, err)
+            except:
+                self.errorMessage = "Couldn't mount %s" % url
                 return False
 
             # Now we're going to go over everything that ends .pkg or
@@ -920,7 +920,7 @@ class MainController(NSObject):
                         progress_method(None, None, msg)
 
         return proc.returncode
-    
+
     def shakeWindow(self):
         shake = {'count': 1, 'duration': 0.3, 'vigor': 0.04}
         shakeAnim = Quartz.CAKeyframeAnimation.animation()
