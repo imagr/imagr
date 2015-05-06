@@ -84,6 +84,7 @@ class MainController(NSObject):
     blessTarget = None
     errorMessage = None
     alert = None
+    workflow_is_running = False
 
     def errorPanel(self, error):
         errorText = str(error)
@@ -106,7 +107,56 @@ class MainController(NSObject):
         self.progressIndicator.setUsesThreadedAnimation_(True)
         self.progressIndicator.startAnimation_(self)
         self.buildUtilitiesMenu()
+        self.registerForWorkspaceNotifications()
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
+    
+    def registerForWorkspaceNotifications(self):
+        nc = NSWorkspace.sharedWorkspace().notificationCenter()
+        nc.addObserver_selector_name_object_(
+            self, self.wsNotificationReceived, NSWorkspaceDidMountNotification, None)
+        nc.addObserver_selector_name_object_(
+            self, self.wsNotificationReceived, NSWorkspaceDidUnmountNotification, None)
+        nc.addObserver_selector_name_object_(
+            self, self.wsNotificationReceived, NSWorkspaceDidRenameVolumeNotification, None)
+
+    def wsNotificationReceived(self, notification):
+        if self.workflow_is_running:
+            return
+        notification_name = notification.name()
+        user_info = notification.userInfo()
+        NSLog("NSWorkspace notification was: %@", notification_name)
+        if notification_name == NSWorkspaceDidMountNotification:
+            new_volume = user_info['NSDevicePath']
+            NSLog("%@ was mounted", new_volume)
+        elif notification_name == NSWorkspaceDidUnmountNotification:
+            removed_volume = user_info['NSDevicePath']
+            NSLog("%@ was unmounted", removed_volume)
+        elif notification_name == NSWorkspaceDidRenameVolumeNotification:
+            pass
+        # this repeats code elsewhere; this should really be factored out
+        # this next bit can take a bit and cause rainbow wheels; we should also
+        # do this differently.
+        self.volumes = macdisk.MountedVolumes()
+        self.chooseTargetDropDown.removeAllItems()
+        list = []
+        for volume in self.volumes:
+            if volume.mountpoint != '/':
+                if volume.mountpoint.startswith("/Volumes"):
+                    if volume.mountpoint != '/Volumes':
+                        if volume.writable:
+                            list.append(volume.mountpoint)
+        self.chooseTargetDropDown.addItemsWithTitles_(list)
+        # reselect previously selected target if possible
+        if self.targetVolume:
+            self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
+            self.targetVolume = self.chooseTargetDropDown.titleOfSelectedItem()
+        if not self.targetVolume:
+            self.targetVolume = list[0]
+            self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
+        for volume in self.volumes:
+            if str(volume.mountpoint) == str(self.targetVolume):
+                imaging_target = volume
+                self.workVolume = volume
 
     def loadData(self):
 
@@ -140,7 +190,7 @@ class MainController(NSObject):
         del pool
 
     def loadDataComplete(self):
-        self.reloadWorkflowsMenuItem.setEnabled_(True)
+        #self.reloadWorkflowsMenuItem.setEnabled_(True)
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
@@ -148,7 +198,7 @@ class MainController(NSObject):
             if self.hasLoggedIn:
                 self.theTabView.selectTabViewItem_(self.mainTab)
                 self.chooseImagingTarget_(None)
-                self.enableAllButtons_(self)
+                #self.enableAllButtons_(self)
             else:
                 self.theTabView.selectTabViewItem_(self.loginTab)
                 self.mainWindow.makeFirstResponder_(self.password)
@@ -218,8 +268,6 @@ class MainController(NSObject):
 
     @objc.IBAction
     def chooseImagingTarget_(self, sender):
-        self.disableAllButtons(sender)
-        NSGraphicsContext.saveGraphicsState()
         self.chooseTargetDropDown.removeAllItems()
         list = []
         for volume in self.volumes:
@@ -236,35 +284,27 @@ class MainController(NSObject):
                 NSLocalizedString(u"Open Disk Utility", None),
                 objc.nil,
                 NSLocalizedString(u"No writable volumes were found on this Mac.", None))
-
             alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
                 self.mainWindow, self, self.noVolAlertDidEnd_returnCode_contextInfo_, objc.nil)
-        # If there's only one volume, we're going to use that and move on to selecting the workflow
-        self.enableAllButtons_(self)
-        if len(list) == 1:
-            self.targetVolume = list[0]
-            self.selectWorkflow_(sender)
+        else:
+            self.chooseTargetDropDown.addItemsWithTitles_(list)
+            if self.targetVolume:
+                self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
+                self.targetVolume = self.chooseTargetDropDown.titleOfSelectedItem()
+            if not self.targetVolume:
+                self.targetVolume = list[0]
             for volume in self.volumes:
                 if str(volume.mountpoint) == str(self.targetVolume):
                     imaging_target = volume
                     self.workVolume = volume
-                    break
-            # We'll move on to the select workflow bit when it exists
-        else:
-            self.chooseTargetDropDown.addItemsWithTitles_(list)
-            NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-                self.chooseTargetPanel, self.mainWindow, self, None, None)
-        NSGraphicsContext.restoreGraphicsState()
-
+            self.selectWorkflow_(sender)
+        
     @PyObjCTools.AppHelper.endSheetMethod
     def noVolAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
         if returncode == NSAlertDefaultReturn:
             self.setStartupDisk_(None)
         else:
             Utils.launchApp('/Applications/Utilities/Disk Utility.app')
-            # cmd = ['/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility']
-            # proc = subprocess.call(cmd)
-            #NSWorkspace.sharedWorkspace().launchApplication_("/Applications/Utilities/Disk Utility.app")
             alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
                 NSLocalizedString(u"Rescan for volumes", None),
                 NSLocalizedString(u"Rescan", None),
@@ -277,11 +317,13 @@ class MainController(NSObject):
 
     @PyObjCTools.AppHelper.endSheetMethod
     def rescanAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
-        self.progressText.setStringValue_("Reloading Volumes...")
-        self.theTabView.selectTabViewItem_(self.introTab)
+        # NSWorkspaceNotifications should take care of updating our list of available volumes
+        pass
+        #self.progressText.setStringValue_("Reloading Volumes...")
+        #self.theTabView.selectTabViewItem_(self.introTab)
         # NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
         #     self.progressPanel, self.mainWindow, self, None, None)
-        NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
+        #NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
 
 
     @objc.IBAction
@@ -291,10 +333,11 @@ class MainController(NSObject):
             if str(volume.mountpoint) == str(self.targetVolume):
                 self.workVolume = volume
                 break
-        self.enableAllButtons_(sender)
-        NSApp.endSheet_(self.chooseTargetPanel)
-        self.chooseTargetPanel.orderOut_(self)
-        self.selectWorkflow_(self)
+        NSLog("Imaging target is %@", self.targetVolume)
+        #self.enableAllButtons_(sender)
+        #NSApp.endSheet_(self.chooseTargetPanel)
+        #self.chooseTargetPanel.orderOut_(self)
+        #self.selectWorkflow_(self)
 
 
     @objc.IBAction
@@ -312,10 +355,10 @@ class MainController(NSObject):
             list.append(workflow['name'])
 
         self.chooseWorkflowDropDown.addItemsWithTitles_(list)
-        self.chooseWorkflowLabel.setHidden_(False)
-        self.chooseWorkflowDropDown.setHidden_(False)
-        self.workflowDescriptionView.setHidden_(False)
-        self.runWorkflowButton.setHidden_(False)
+        #self.chooseWorkflowLabel.setHidden_(False)
+        #self.chooseWorkflowDropDown.setHidden_(False)
+        #self.workflowDescriptionView.setHidden_(False)
+        #self.runWorkflowButton.setHidden_(False)
         self.chooseWorkflowDropDownDidChange_(sender)
 
     @objc.IBAction
@@ -329,19 +372,41 @@ class MainController(NSObject):
                     self.workflowDescription.setString_("")
                 break
 
-    @objc.IBAction
-    def runWorkflow_(self, sender):
-        '''Set up the selected workflow to run on secondary thread'''
-        self.imagingProgress.setHidden_(False)
-        self.imagingLabel.setHidden_(False)
+    def enableWorkflowDescriptionView_(self, enabled):
+        # See https://developer.apple.com/library/mac/qa/qa1461/_index.html
+        self.workflowDescription.setSelectable_(enabled)
+        if enabled:
+            self.workflowDescription.setTextColor_(NSColor.controlTextColor())
+        else:
+            self.workflowDescription.setTextColor_(NSColor.disabledTextColor())
+
+    def disableWorkflowViewControls(self):
         self.reloadWorkflowsButton.setEnabled_(False)
         self.reloadWorkflowsMenuItem.setEnabled_(False)
         self.cancelAndRestartButton.setEnabled_(False)
-        self.chooseWorkflowLabel.setEnabled_(True)
+        self.chooseWorkflowLabel.setEnabled_(False)
+        self.chooseTargetDropDown.setEnabled_(False)
         self.chooseWorkflowDropDown.setEnabled_(False)
-        # self.workflowDescriptionView.setEnabled_(True)
+        self.enableWorkflowDescriptionView_(False)
         self.runWorkflowButton.setEnabled_(False)
         self.cancelAndRestartButton.setEnabled_(False)
+
+    def enableWorkflowViewControls(self):
+        self.reloadWorkflowsButton.setEnabled_(True)
+        self.reloadWorkflowsMenuItem.setEnabled_(True)
+        self.cancelAndRestartButton.setEnabled_(True)
+        self.chooseWorkflowLabel.setEnabled_(True)
+        self.chooseTargetDropDown.setEnabled_(True)
+        self.chooseWorkflowDropDown.setEnabled_(True)
+        self.enableWorkflowDescriptionView_(True)
+        self.runWorkflowButton.setEnabled_(True)
+        self.cancelAndRestartButton.setEnabled_(True)
+
+    @objc.IBAction
+    def runWorkflow_(self, sender):
+        '''Set up the selected workflow to run on secondary thread'''
+        self.workflow_is_running = True
+        self.disableWorkflowViewControls()
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
         self.imagingProgressDetail.setStringValue_('')
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
@@ -422,6 +487,7 @@ class MainController(NSObject):
         '''Done running workflow, restart to imaged volume'''
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
+        self.workflow_is_running = False
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
@@ -777,9 +843,7 @@ class MainController(NSObject):
             self.restartAction = 'restart'
             self.restartToImagedVolume()
         elif returncode == 0:
-            self.chooseWorkflowDropDown.setEnabled_(True)
-            self.reloadWorkflowsButton.setEnabled_(True)
-            self.reloadWorkflowsMenuItem.setEnabled_(True)
+            self.enableWorkflowViewControls()
             self.chooseImagingTarget_(contextinfo)
 
     def enableAllButtons_(self, sender):

@@ -21,3 +21,8 @@ class AppDelegate(NSObject):
         
         if NSApp.respondsToSelector_('disableRelaunchOnLogin'):
             NSApp.disableRelaunchOnLogin()
+
+    def applicationWillTerminate_(self, notification):
+        # be nice and remove our observers from NSWorkspace
+        nc = NSWorkspace.sharedWorkspace().notificationCenter()
+        nc.removeObserver_(self.mainController)
