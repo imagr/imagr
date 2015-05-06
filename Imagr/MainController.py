@@ -573,6 +573,7 @@ class MainController(NSObject):
 
         if task.returncode:
             self.errorMessage = "Cloning Error: %s" % stderr
+            return False
         if task.poll() == 0:
             return True
 
@@ -628,12 +629,12 @@ class MainController(NSObject):
                                                             packagename))
             if error:
                 self.errorMessage = "Couldn't download - %s %s" % (url, error)
-                return None
+                return False
             # Install it
             retcode = self.installPkg(downloaded_file, target, progress_method=progress_method)
             if retcode != 0:
                 self.errorMessage = "Couldn't install %s" % pkg
-                return None
+                return False
             # Clean up after ourselves
             shutil.rmtree(temp_dir)
 
@@ -656,6 +657,7 @@ class MainController(NSObject):
                                   progress_method=self.updateProgressTitle_Percent_Detail_)
             if error:
                 self.errorMessage = "Error copying first boot package %s - %s" % (item['url'], error)
+                return False
                 break
         if package_count:
             # copy bits for first boot script
@@ -714,7 +716,7 @@ class MainController(NSObject):
             Utils.unmountdmg(dmgmountpoint)
         except:
             self.errorMessage = "Couldn't unmount %s" % dmgmountpoint
-            return False
+            return False, self.errorMessage
 
         return pkg_list, None
 
@@ -736,6 +738,7 @@ class MainController(NSObject):
                     progress_method=self.updateProgressTitle_Percent_Detail_)
             except:
                 self.errorMessage = "Coun't copy script %s" % str(counter)
+                return False
                 break
         if scripts_to_run:
             Utils.copyFirstBoot(self.workVolume.mountpoint)

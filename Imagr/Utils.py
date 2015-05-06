@@ -304,6 +304,11 @@ def unmountdmg(mountpoint):
                                    '-force'])
         if retcode:
             print >> sys.stderr, 'Failed to unmount %s' % mountpoint
+            return False
+        else:
+            return True
+    else:
+        return True
 
 
 def downloadChunks(url, file, progress_method=None):
