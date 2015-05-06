@@ -89,6 +89,6 @@ nbi: clean-pkgs autonbi foundation config pkg-dir
 	sudo ./AutoNBI.py $(ARGS) -s $(APP) -f Packages -d $(OUTPUT) -n $(NBI)
 	$(MAKE) clean-all
 
-update: clean-pkgs build autonbi foundation config pkg-dir
+update: clean-pkgs autonbi foundation config pkg-dir
 	sudo ./AutoNBI.py -s $(OUTPUT)/$(NBI).nbi/NetInstall.dmg -f Packages
 	$(MAKE) clean-all
