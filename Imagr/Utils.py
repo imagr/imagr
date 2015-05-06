@@ -304,14 +304,12 @@ def unmountdmg(mountpoint):
         print('Unmounting successful...')
         if retcode:
             print >> sys.stderr, 'Failed to unmount %s' % mountpoint
-
-    if not pkg_list:
-        NSLog("No packages found in %@", url)
-        result = False
+            return False
+        else:
+            return True
     else:
-        result = pkg_list
+        return True
 
-    return result
 
 
 def downloadChunks(url, file, progress_method=None):
