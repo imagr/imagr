@@ -157,7 +157,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                         connection.headers.get('http_result_description', ''))
 
 def downloadFile(url):
-    temp_file = os.path.expanduser('~/Library/temporary_data')
+    temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
     try:
         headers = get_url(url, temp_file)
     except HTTPError, err:
@@ -175,6 +175,7 @@ def downloadFile(url):
         return False
     try:
         os.unlink(temp_file)
+        os.rmdir(os.path.dirname(temp_file))
     except (OSError, IOError):
         pass
     return data
