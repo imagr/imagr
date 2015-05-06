@@ -67,7 +67,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                'file': tempdownloadpath,
                'follow_redirects': follow_redirects,
                'logging_function': NSLog}
-    NSLog('gurl options: %@',  options)
+    NSLog('gurl options: %@', options)
 
     connection = Gurl.alloc().initWithOptions_(options)
     stored_percent_complete = -1
@@ -87,7 +87,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                 # now clear message so we don't display it again
                 message = None
             if (str(connection.status).startswith('2')
-                and connection.percentComplete != -1):
+                    and connection.percentComplete != -1):
                 if connection.percentComplete != stored_percent_complete:
                     # display percent done if it has changed
                     stored_percent_complete = connection.percentComplete
@@ -99,7 +99,9 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                 stored_bytes_received = connection.bytesReceived
                 NSLog('Bytes received: %@', stored_bytes_received)
                 if progress_method:
-                    progress_method(None, None, 'Bytes received: %s' % stored_bytes_received)
+                    progress_method(None, None,
+                                    'Bytes received: %s'
+                                    % stored_bytes_received)
             if connection_done:
                 break
 
@@ -118,7 +120,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         NSLog('Download error %@: %@', connection.error.code(),
               connection.error.localizedDescription())
         if connection.SSLerror:
-           NSLog('SSL error detail: %@', str(connection.SSLerror))
+            NSLog('SSL error detail: %@', str(connection.SSLerror))
         NSLog('Headers: %@', str(connection.headers))
         if os.path.exists(tempdownloadpath):
             os.remove(tempdownloadpath)
@@ -134,7 +136,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
     temp_download_exists = os.path.isfile(tempdownloadpath)
     connection.headers['http_result_code'] = str(connection.status)
     description = NSHTTPURLResponse.localizedStringForStatusCode_(
-                                                            connection.status)
+        connection.status)
     connection.headers['http_result_description'] = description
 
     if str(connection.status).startswith('2') and temp_download_exists:
@@ -152,7 +154,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
             except OSError:
                 pass
         raise HTTPError(connection.status,
-                        connection.headers.get('http_result_description',''))
+                        connection.headers.get('http_result_description', ''))
 
 def downloadFile(url):
     temp_file = os.path.expanduser('~/Library/temporary_data')
