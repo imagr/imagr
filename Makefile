@@ -46,9 +46,14 @@ deps: autonbi foundation
 
 dmg: build
 	rm -f ./Imagr*.dmg
-	hdiutil create -srcfolder ./build/Release/Imagr.app -volname "Imagr" -format UDZO -o Imagr.dmg
+	rm -rf /tmp/imagr-build
+	mkdir -p /tmp/imagr-build
+	cp ./Readme.md /tmp/imagr-build
+	cp -R ./build/Release/Imagr.app /tmp/imagr-build
+	hdiutil create -srcfolder /tmp/imagr-build -volname "Imagr" -format UDZO -o Imagr.dmg
 	mv Imagr.dmg \
 		"Imagr-$(shell /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "./build/Release/Imagr.app/Contents/Info.plist").dmg"
+	rm -rf /tmp/imagr-build
 
 foundation:
 	if [ ! -f ./FoundationPlist.py ]; then \
@@ -66,7 +71,7 @@ dl:
 	hdiutil attach Imagr.dmg
 	cp -r /Volumes/Imagr/Imagr.app .
 	hdiutil detach /Volumes/Imagr
-	rm ./Imagr.dmg	
+	rm ./Imagr.dmg
 
 pkg-dir:
 	mkdir -p Packages/Extras
