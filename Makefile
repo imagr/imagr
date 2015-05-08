@@ -8,6 +8,8 @@ OUTPUT=~/Desktop
 NBI="Imagr"
 ARGS= -e -p
 BUILD=Release
+AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
+FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py
 
 -include config.mk
 
@@ -18,7 +20,7 @@ build: clean
 
 autonbi:
 	if [ ! -f ./AutoNBI.py ]; then \
-		curl -fsSL https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py -o ./AutoNBI.py; \
+		curl -fsSL $(AUTONBIURL) -o ./AutoNBI.py; \
 		chmod 755 ./AutoNBI.py; \
 	fi
 
@@ -57,7 +59,7 @@ dmg: build
 
 foundation:
 	if [ ! -f ./FoundationPlist.py ]; then \
-		curl -fsSL https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py -o ./FoundationPlist.py; \
+		curl -fsSL $(FOUNDATIONPLISTURL) -o ./FoundationPlist.py; \
 		chmod 755 ./FoundationPlist.py; \
 	fi
 
