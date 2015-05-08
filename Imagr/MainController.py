@@ -109,7 +109,7 @@ class MainController(NSObject):
         self.buildUtilitiesMenu()
         self.registerForWorkspaceNotifications()
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
-    
+
     def registerForWorkspaceNotifications(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
         nc.addObserver_selector_name_object_(
@@ -298,7 +298,7 @@ class MainController(NSObject):
                     imaging_target = volume
                     self.workVolume = volume
             self.selectWorkflow_(sender)
-        
+
     @PyObjCTools.AppHelper.endSheetMethod
     def noVolAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
         if returncode == NSAlertDefaultReturn:
@@ -584,7 +584,7 @@ class MainController(NSObject):
             self.workVolume.Mount()
 
         pkgs_to_install = [item for item in self.selectedWorkflow['components']
-                           if item.get('type') == 'package' and item.get('pre_first_boot')]
+                           if item.get('type') == 'package' and not item.get('first_boot', True)]
         for item in pkgs_to_install:
             package_name = os.path.basename(item['url'])
             self.downloadAndInstallPackage(
@@ -646,7 +646,7 @@ class MainController(NSObject):
             self.workVolume.Mount()
 
         pkgs_to_install = [item for item in self.selectedWorkflow['components']
-                           if item.get('type') == 'package' and not item.get('pre_first_boot')]
+                           if item.get('type') == 'package' and item.get('first_boot', True)]
         package_count = len(pkgs_to_install)
         counter = 0.0
         # download packages to /usr/local/first-boot - prepend number
@@ -725,7 +725,7 @@ class MainController(NSObject):
             self.workVolume.Mount()
 
         scripts_to_run = [item for item in self.selectedWorkflow['components']
-                           if item.get('type') == 'script' and not item.get('pre_first_boot')]
+                           if item.get('type') == 'script' and item.get('first_boot', True)]
         script_count = len(scripts_to_run)
         counter = 0.0
         NSLog(str(scripts_to_run))
@@ -750,7 +750,7 @@ class MainController(NSObject):
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
         scripts_to_run = [item for item in self.selectedWorkflow['components']
-                           if item.get('type') == 'script' and item.get('pre_first_boot')]
+                           if item.get('type') == 'script' and not item.get('first_boot', True)]
         script_count = len(scripts_to_run)
         counter = 0.0
         for item in scripts_to_run:
