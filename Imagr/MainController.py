@@ -106,7 +106,6 @@ class MainController(NSObject):
         self.progressIndicator.setIndeterminate_(True)
         self.progressIndicator.setUsesThreadedAnimation_(True)
         self.progressIndicator.startAnimation_(self)
-        self.buildUtilitiesMenu()
         self.registerForWorkspaceNotifications()
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
 
@@ -223,6 +222,7 @@ class MainController(NSObject):
                 self.shakeWindow()
 
             else:
+                self.buildUtilitiesMenu()
                 self.theTabView.selectTabViewItem_(self.mainTab)
                 self.chooseImagingTarget_(None)
                 self.enableAllButtons_(self)
