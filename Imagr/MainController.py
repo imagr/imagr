@@ -222,7 +222,7 @@ class MainController(NSObject):
                 self.shakeWindow()
 
             else:
-                self.buildUtilitiesMenu()
+                dself.buildUtilitiesMenu()
                 self.theTabView.selectTabViewItem_(self.mainTab)
                 self.chooseImagingTarget_(None)
                 self.enableAllButtons_(self)
@@ -853,14 +853,6 @@ class MainController(NSObject):
     def disableAllButtons(self, sender):
         self.cancelAndRestartButton.setEnabled_(False)
         self.runWorkflowButton.setEnabled_(False)
-
-    @objc.IBAction
-    def runDiskUtility_(self, sender):
-        Utils.launchApp("/Applications/Utilities/Disk Utility.app")
-
-    @objc.IBAction
-    def runTerminal_(self, sender):
-        Utils.launchApp("/Applications/Utilities/Terminal.app")
 
     @objc.IBAction
     def runUtilityFromMenu_(self, sender):
