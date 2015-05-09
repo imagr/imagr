@@ -222,7 +222,7 @@ class MainController(NSObject):
                 self.shakeWindow()
 
             else:
-                dself.buildUtilitiesMenu()
+                self.buildUtilitiesMenu()
                 self.theTabView.selectTabViewItem_(self.mainTab)
                 self.chooseImagingTarget_(None)
                 self.enableAllButtons_(self)
