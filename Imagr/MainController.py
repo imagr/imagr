@@ -496,7 +496,7 @@ class MainController(NSObject):
                         self.downloadAndInstallPackages(item.get('url'))
                     # Download and copy package
                     elif item.get('type') == 'package' and item.get('first_boot', True):
-                        self.downloadAndCopyPackage(url, counter)
+                        self.downloadAndCopyPackage(item.get('url'), counter)
                         first_boot_items = True
                     # Copy first boot script
                     elif item.get('type') == 'script' and item.get('first_boot', True):
@@ -689,7 +689,7 @@ class MainController(NSObject):
 
     def downloadPackage(self, url, target, number, progress_method=None):
         error = None
-        dest_dir = os.path.join(target, 'usr/local/first-boot/packages')
+        dest_dir = os.path.join(target, 'usr/local/first-boot/items')
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
 
@@ -792,7 +792,7 @@ class MainController(NSObject):
         """
         NSLog("Copying script to %@", target)
         NSLog("Script: %@", script)
-        dest_dir = os.path.join(target, 'usr/local/first-boot/scripts')
+        dest_dir = os.path.join(target, 'usr/local/first-boot/items')
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
         dest_file = os.path.join(dest_dir, "%03d" % number)
