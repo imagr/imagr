@@ -33,7 +33,8 @@ def ip_addresses():
 
 def all_done():
     if not os.listdir(items_dir):
-        sleep_time=1
+        sleep_time=10
+        time.sleep(sleep_time)
         cleanup()
         subprocess.call(['/sbin/reboot'])
 
