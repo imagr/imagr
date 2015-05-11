@@ -469,15 +469,51 @@ class MainController(NSObject):
             else:
                 self.blessTarget = True
 
-            self.restoreImage()
-            if not self.errorMessage:
-                self.downloadAndInstallPackages()
-            if not self.errorMessage:
-                self.downloadAndCopyPackages()
-            if not self.errorMessage:
-                self.copyFirstBootScripts()
-            if not self.errorMessage:
-                self.runPreFirstBootScript()
+            # self.restoreImage()
+            # if not self.errorMessage:
+            #     self.downloadAndInstallPackages()
+            # if not self.errorMessage:
+            #     self.downloadAndCopyPackages()
+            # if not self.errorMessage:
+            #     self.copyFirstBootScripts()
+            # if not self.errorMessage:
+            #     self.runPreFirstBootScript()
+
+            # count all of the workflow items - are we still using this?
+            components = [item for item in self.selectedWorkflow['components']]
+            component_count = len(components)
+            counter = 0.0
+            first_boot_items = None
+            for item in self.selectedWorkflow['components']:
+                # No point carrying on if something is broken
+                if not self.errorMessage:
+                    counter = counter + 1.0
+                    # Restore image
+                    if item.get('type') == 'image' and item.get('url'):
+                        self.Clone(item.get('url'), self.targetVolume)
+                    # Download and install package
+                    elif item.get('type') == 'package' and not item.get('first_boot', True):
+                        self.downloadAndInstallPackages(item.get('url'))
+                    # Download and copy package
+                    elif item.get('type') == 'package' and item.get('first_boot', True):
+                        self.downloadAndCopyPackage(item.get('url'), counter)
+                        first_boot_items = True
+                    # Copy first boot script
+                    elif item.get('type') == 'script' and item.get('first_boot', True):
+                        self.copyFirstBootScript(item.get('content'), counter)
+                        first_boot_items = True
+                    # Run script
+                    elif item.get('type') == 'script' and not item.get('first_boot', True):
+                        self.runPreFirstBootScript(item.get('content'), counter)
+                    else:
+                        self.errorMessage = "Found an unknown workflow item."
+
+            if first_boot_items:
+                # copy bits for first boot script
+                packages_dir = os.path.join(self.workVolume.mountpoint, 'usr/local/first-boot/')
+                if not os.path.exists(packages_dir):
+                    os.makedirs(packages_dir)
+                Utils.copyFirstBoot(self.workVolume.mountpoint)
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.processWorkflowOnThreadComplete, None, YES)
@@ -496,11 +532,11 @@ class MainController(NSObject):
         else:
             self.openEndWorkflowPanel()
 
-    def restoreImage(self):
-        dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
-                           if item.get('type') == 'image' and item.get('url')]
-        if dmgs_to_restore:
-            self.Clone(dmgs_to_restore[0], self.targetVolume)
+    # def restoreImage(self):
+    #     dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
+    #                        if item.get('type') == 'image' and item.get('url')]
+    #     if dmgs_to_restore:
+    #         self.Clone(dmgs_to_restore[0], self.targetVolume)
 
     def Clone(self, source, target, erase=True, verify=True, show_activity=True):
         """A wrapper around 'asr' to clone one disk object onto another.
@@ -577,19 +613,16 @@ class MainController(NSObject):
         if task.poll() == 0:
             return True
 
-    def downloadAndInstallPackages(self):
+    def downloadAndInstallPackages(self, url):
         self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
         # mount the target
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
 
-        pkgs_to_install = [item for item in self.selectedWorkflow['components']
-                           if item.get('type') == 'package' and not item.get('first_boot', True)]
-        for item in pkgs_to_install:
-            package_name = os.path.basename(item['url'])
-            self.downloadAndInstallPackage(
-                item['url'], self.workVolume.mountpoint,
-                progress_method=self.updateProgressTitle_Percent_Detail_)
+        package_name = os.path.basename(url)
+        self.downloadAndInstallPackage(
+            url, self.workVolume.mountpoint,
+            progress_method=self.updateProgressTitle_Percent_Detail_)
 
     def downloadAndInstallPackage(self, url, target, progress_method=None):
         if os.path.basename(url).endswith('.dmg'):
@@ -638,37 +671,25 @@ class MainController(NSObject):
             # Clean up after ourselves
             shutil.rmtree(temp_dir)
 
-    def downloadAndCopyPackages(self):
+    def downloadAndCopyPackage(self, url, counter):
         self.updateProgressTitle_Percent_Detail_(
             'Copying packages for install on first boot...', -1, '')
         # mount the target
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
 
-        pkgs_to_install = [item for item in self.selectedWorkflow['components']
-                           if item.get('type') == 'package' and item.get('first_boot', True)]
-        package_count = len(pkgs_to_install)
-        counter = 0.0
-        # download packages to /usr/local/first-boot - prepend number
-        for item in pkgs_to_install:
-            counter = counter + 1.0
-            package_name = os.path.basename(item['url'])
-            (output, error) = self.downloadPackage(item['url'], self.workVolume.mountpoint, counter,
-                                  progress_method=self.updateProgressTitle_Percent_Detail_)
-            if error:
-                self.errorMessage = "Error copying first boot package %s - %s" % (item['url'], error)
-                return False
-                break
-        if package_count:
-            # copy bits for first boot script
-            packages_dir = os.path.join(self.workVolume.mountpoint, 'usr/local/first-boot/')
-            if not os.path.exists(packages_dir):
-                os.makedirs(packages_dir)
-            Utils.copyFirstBoot(self.workVolume.mountpoint)
+        package_name = os.path.basename(url)
+        (output, error) = self.downloadPackage(url, self.workVolume.mountpoint, counter,
+                              progress_method=self.updateProgressTitle_Percent_Detail_)
+        if error:
+            self.errorMessage = "Error copying first boot package %s - %s" % (url, error)
+            return False
+
+
 
     def downloadPackage(self, url, target, number, progress_method=None):
         error = None
-        dest_dir = os.path.join(target, 'usr/local/first-boot/packages')
+        dest_dir = os.path.join(target, 'usr/local/first-boot/items')
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
 
@@ -720,48 +741,31 @@ class MainController(NSObject):
 
         return pkg_list, None
 
-    def copyFirstBootScripts(self):
+    def copyFirstBootScript(self, script, counter):
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
 
-        scripts_to_run = [item for item in self.selectedWorkflow['components']
-                           if item.get('type') == 'script' and item.get('first_boot', True)]
-        script_count = len(scripts_to_run)
-        counter = 0.0
-        NSLog(str(scripts_to_run))
-        for item in scripts_to_run:
-            counter = counter + 1.0
-            script = item['content']
-            try:
-                self.copyScript(
-                    script, self.workVolume.mountpoint, counter,
-                    progress_method=self.updateProgressTitle_Percent_Detail_)
-            except:
-                self.errorMessage = "Coun't copy script %s" % str(counter)
-                return False
-                break
-        if scripts_to_run:
-            Utils.copyFirstBoot(self.workVolume.mountpoint)
+        try:
+            self.copyScript(
+                script, self.workVolume.mountpoint, counter,
+                progress_method=self.updateProgressTitle_Percent_Detail_)
+        except:
+            self.errorMessage = "Coun't copy script %s" % str(counter)
+            return False
 
-    def runPreFirstBootScript(self):
+    def runPreFirstBootScript(self, script, counter):
         self.updateProgressTitle_Percent_Detail_(
             'Preparing to run scripts...', -1, '')
         # mount the target
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
-        scripts_to_run = [item for item in self.selectedWorkflow['components']
-                           if item.get('type') == 'script' and not item.get('first_boot', True)]
-        script_count = len(scripts_to_run)
-        counter = 0.0
-        for item in scripts_to_run:
-            script = item['content']
-            counter = counter + 1.0
-            retcode = self.runScript(
-                script, self.workVolume.mountpoint,
-                progress_method=self.updateProgressTitle_Percent_Detail_)
-            if retcode != 0:
-                self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
-                break
+
+
+        retcode = self.runScript(
+            script, self.workVolume.mountpoint,
+            progress_method=self.updateProgressTitle_Percent_Detail_)
+        if retcode != 0:
+            self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
 
     def runScript(self, script, target, progress_method=None):
         """
@@ -788,7 +792,7 @@ class MainController(NSObject):
         """
         NSLog("Copying script to %@", target)
         NSLog("Script: %@", script)
-        dest_dir = os.path.join(target, 'usr/local/first-boot/scripts')
+        dest_dir = os.path.join(target, 'usr/local/first-boot/items')
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
         dest_file = os.path.join(dest_dir, "%03d" % number)
