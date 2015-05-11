@@ -505,6 +505,8 @@ class MainController(NSObject):
                     # Run script
                     elif item.get('type') == 'script' and not item.get('first_boot', True):
                         self.runPreFirstBootScript(item.get('content'), counter)
+                    elif item.get('type') == 'format':
+                        self.FormatTarget(item.get('partitions', None))
                     else:
                         self.errorMessage = "Found an unknown workflow item."
 
@@ -919,7 +921,59 @@ class MainController(NSObject):
                         progress_method(None, None, msg)
 
         return proc.returncode
+        
+    def FormatTarget(self, partitions=None, progress_method=None):
+        """
+        Formats a target disk according to specifications.
+        'partitions' is a list of dictionaries of partition mappings for names, sizes, formats.
+        """
+        # self.workVolume.mountpoint should be the actual volume we're targeting.
+        # self.workVolume should be the actual volume.
+        
+        # First, figure out what the parent device is for the target volume:
+        cmd = ['/usr/sbin/diskutil', 'info', '-plist', self.workVolume.mountpoint]
+        NSLog(str(cmd))
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (diskInfo, diskerr) = proc.communicate()
+        if diskerr:
+        	NSLog("Error occured: %s" % diskerr)
+			# How do we actually fail here?
+        converted_diskInfo = FoundationPlist.readPlistFromString(diskInfo)
+        whole_disk = converted_diskInfo.get('ParentWholeDisk')
+        NSLog("Parent disk: %s" % whole_disk)
+        
+        #Determine size of disk:
+        statvfs = os.statvfs(self.workVolume.mountpoint)
+        size_in_bytes = statvfs.f_frsize * statvfs.f_blocks
 
+        numPartitions = 0
+        cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk]
+        partitionCmdList = list()
+        if partitions:
+            for partition in partitions:
+                target = list()
+                # Default format type is "Journaled HFS+, case-insensitive"
+                target.append(partition.get('format_type', 'Journaled HFS+'))
+                # Default name is "Macintosh HD"
+                target.append(partition.get('name', 'Macintosh HD'))
+                # Default partition size is 100% of the disk size
+                target.append(partition.get('size', '100%'))
+                partitionCmdList.extend(target)
+                numPartitions += 1
+            cmd.append(str(numPartitions))
+            cmd.extend(partitionCmdList)
+        else:
+        	# No partition list was provided, so we use the default
+        	cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk,
+        			'1', 'Journaled HFS+', 'Macintosh HD', '100%']
+        NSLog(str(cmd))
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (partOut, partErr) = proc.communicate()
+        NSLog(partOut)
+        # what happens at the end? How do we verify it worked?
+        # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
+             
+        
     def shakeWindow(self):
         shake = {'count': 1, 'duration': 0.3, 'vigor': 0.04}
         shakeAnim = Quartz.CAKeyframeAnimation.animation()
