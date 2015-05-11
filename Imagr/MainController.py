@@ -936,8 +936,8 @@ class MainController(NSObject):
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (diskInfo, diskerr) = proc.communicate()
         if diskerr:
-        	NSLog("Error occured: %s" % diskerr)
-			# How do we actually fail here?
+            NSLog("Error occured: %s" % diskerr)
+            # How do we actually fail here?
         converted_diskInfo = FoundationPlist.readPlistFromString(diskInfo)
         whole_disk = converted_diskInfo.get('ParentWholeDisk')
         NSLog("Parent disk: %s" % whole_disk)
@@ -963,9 +963,9 @@ class MainController(NSObject):
             cmd.append(str(numPartitions))
             cmd.extend(partitionCmdList)
         else:
-        	# No partition list was provided, so we use the default
-        	cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk,
-        			'1', 'Journaled HFS+', 'Macintosh HD', '100%']
+            # No partition list was provided, so we use the default
+            cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk,
+                    '1', 'Journaled HFS+', 'Macintosh HD', '100%']
         NSLog(str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
