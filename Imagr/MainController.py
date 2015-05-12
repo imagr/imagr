@@ -964,7 +964,7 @@ class MainController(NSObject):
                 target.append(partition.get('size', '100%'))
                 NSLog("Appended size.")
                 partitionCmdList.extend(target)
-                NSLog("Current partition command list: %s" % partitionCmdList)
+                #NSLog("Current partition command list: %s" % partitionCmdList)
                 numPartitions += 1
                 NSLog("Added 1 to number of partitions.")
             NSLog("Appending numPartitions to cmd.")
