@@ -926,6 +926,7 @@ class MainController(NSObject):
         """
         Formats a target disk according to specifications.
         'partitions' is a list of dictionaries of partition mappings for names, sizes, formats.
+        'partition_map' is a volume map type - MBR, GPT, or APM.
         """
         # self.workVolume.mountpoint should be the actual volume we're targeting.
         # self.workVolume should be the actual volume.
@@ -936,8 +937,8 @@ class MainController(NSObject):
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (diskInfo, diskerr) = proc.communicate()
         if diskerr:
-            NSLog("Error occured: %s" % diskerr)
-            # How do we actually fail here?
+            NSLog("Error occurred: %s" % diskerr)
+            self.errorMessage = diskerr
         converted_diskInfo = FoundationPlist.readPlistFromString(diskInfo)
         whole_disk = converted_diskInfo.get('ParentWholeDisk')
         NSLog("Parent disk: %s" % whole_disk)
@@ -972,6 +973,9 @@ class MainController(NSObject):
         NSLog(str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
+		if partErr:
+			NSLog("Error occurred: %s" % partErr)
+			self.errorMessage = partErr
         NSLog(partOut)
         # what happens at the end? How do we verify it worked?
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
