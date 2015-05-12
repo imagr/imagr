@@ -943,8 +943,6 @@ class MainController(NSObject):
         whole_disk = converted_diskInfo.get('ParentWholeDisk')
         NSLog("Parent disk: %s" % whole_disk)
 
-		NSLog("Partition map: %s" % partition_map)
-        
         #Determine size of disk:
         statvfs = os.statvfs(self.workVolume.mountpoint)
         size_in_bytes = statvfs.f_frsize * statvfs.f_blocks
@@ -973,9 +971,9 @@ class MainController(NSObject):
         NSLog(str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
-		if partErr:
-			NSLog("Error occurred: %s" % partErr)
-			self.errorMessage = partErr
+        if partErr:
+            NSLog("Error occurred: %s" % partErr)
+            self.errorMessage = partErr
         NSLog(partOut)
         # what happens at the end? How do we verify it worked?
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
