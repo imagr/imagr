@@ -552,16 +552,18 @@ class MainController(NSObject):
             # Eventually we will get the existing name, but for now...
             if component.get('use_serial', False):
                 self.computerName = hardware_info.get('serial_number', 'UNKNOWN')
+            self.theTabView.selectTabViewItem_(self.mainTab)
             self.workflowOnThreadPrep()
-        if component.get('use_serial', False):
-            self.computerNameInput.setStringValue_(hardware_info.get('serial_number', ''))
-        elif component.get('prefix', None):
-            self.computerNameInput.setStringValue_(component.get('prefix'))
         else:
-            self.computerNameInput.setStringValue_('')
+            if component.get('use_serial', False):
+                self.computerNameInput.setStringValue_(hardware_info.get('serial_number', ''))
+            elif component.get('prefix', None):
+                self.computerNameInput.setStringValue_(component.get('prefix'))
+            else:
+                self.computerNameInput.setStringValue_('')
 
-        # Switch to the computer name tab
-        self.theTabView.selectTabViewItem_(self.computerNameTab)
+            # Switch to the computer name tab
+            self.theTabView.selectTabViewItem_(self.computerNameTab)
 
     @objc.IBAction
     def setComputerName_(self, sender):
