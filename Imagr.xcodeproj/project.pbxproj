@@ -51,6 +51,7 @@
 		FCEA81081AD018E500DBA039 /* wifi_network_order.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80ED1AD018E500DBA039 /* wifi_network_order.py */; };
 		FCEA81091AD018E500DBA039 /* wifi_network_order_test.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80EE1AD018E500DBA039 /* wifi_network_order_test.py */; };
 		FCEA810B1AD02C9A00DBA039 /* Utils.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA810A1AD02C9A00DBA039 /* Utils.py */; };
+		FCED84651B0201B20072AC1C /* set_computer_name.sh in Resources */ = {isa = PBXBuildFile; fileRef = FCED84641B0201B20072AC1C /* set_computer_name.sh */; };
 		FCEDFD961AF289E900743302 /* imagr_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = FCEDFD951AF289E900743302 /* imagr_icon.png */; };
 		FCF6B30F1AD1D73E00311D3A /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCF6B30D1AD1D73E00311D3A /* Installer.icns */; };
 		FCF6B3101AD1D73E00311D3A /* package.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCF6B30E1AD1D73E00311D3A /* package.icns */; };
@@ -106,6 +107,7 @@
 		FCEA80ED1AD018E500DBA039 /* wifi_network_order.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = wifi_network_order.py; sourceTree = "<group>"; };
 		FCEA80EE1AD018E500DBA039 /* wifi_network_order_test.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = wifi_network_order_test.py; sourceTree = "<group>"; };
 		FCEA810A1AD02C9A00DBA039 /* Utils.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = Utils.py; sourceTree = "<group>"; };
+		FCED84641B0201B20072AC1C /* set_computer_name.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = set_computer_name.sh; sourceTree = "<group>"; };
 		FCEDFD951AF289E900743302 /* imagr_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = imagr_icon.png; sourceTree = "<group>"; };
 		FCF6B30D1AD1D73E00311D3A /* Installer.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Installer.icns; sourceTree = "<group>"; };
 		FCF6B30E1AD1D73E00311D3A /* package.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = package.icns; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 		FC98DA1E1AD6B2DC00F90405 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				FCED84641B0201B20072AC1C /* set_computer_name.sh */,
 				FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */,
 				FC98DA201AD6B2DC00F90405 /* first-boot */,
 				FC98DA211AD6B2DC00F90405 /* LoginLog.app */,
@@ -304,6 +307,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FCED84651B0201B20072AC1C /* set_computer_name.sh in Resources */,
 				C06979C21AE83F3500914535 /* gurl.py in Resources */,
 				FCEA81061AD018E500DBA039 /* timer.py in Resources */,
 				FC98DA251AD6B2DC00F90405 /* LoginLog.app in Resources */,

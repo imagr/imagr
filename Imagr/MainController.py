@@ -35,6 +35,7 @@ class MainController(NSObject):
     loginTab = objc.IBOutlet()
     mainTab = objc.IBOutlet()
     errorTab = objc.IBOutlet()
+    computerNameTab = objc.IBOutlet()
 
     password = objc.IBOutlet()
     passwordLabel = objc.IBOutlet()
@@ -71,6 +72,9 @@ class MainController(NSObject):
     imagingProgressPanel = objc.IBOutlet()
     imagingProgressDetail = objc.IBOutlet()
 
+    computerNameInput = objc.IBOutlet()
+    computerNameButton = objc.IBOutlet()
+
     # former globals, now instance variables
     hasLoggedIn = None
     volumes = None
@@ -85,6 +89,7 @@ class MainController(NSObject):
     errorMessage = None
     alert = None
     workflow_is_running = False
+    computerName = None
 
     def errorPanel(self, error):
         errorText = str(error)
@@ -355,10 +360,6 @@ class MainController(NSObject):
             list.append(workflow['name'])
 
         self.chooseWorkflowDropDown.addItemsWithTitles_(list)
-        #self.chooseWorkflowLabel.setHidden_(False)
-        #self.chooseWorkflowDropDown.setHidden_(False)
-        #self.workflowDescriptionView.setHidden_(False)
-        #self.runWorkflowButton.setHidden_(False)
         self.chooseWorkflowDropDownDidChange_(sender)
 
     @objc.IBAction
@@ -406,6 +407,33 @@ class MainController(NSObject):
     def runWorkflow_(self, sender):
         '''Set up the selected workflow to run on secondary thread'''
         self.workflow_is_running = True
+        selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
+        # let's get the workflow
+        self.selectedWorkflow = None
+        for workflow in self.workflows:
+            if selected_workflow == workflow['name']:
+                self.selectedWorkflow = workflow
+                break
+        if self.selectedWorkflow:
+            if 'restart_action' in self.selectedWorkflow:
+                self.restartAction = self.selectedWorkflow['restart_action']
+            if 'bless_target' in self.selectedWorkflow:
+                self.blessTarget = self.selectedWorkflow['bless_target']
+            else:
+                self.blessTarget = True
+
+            # Show the computer name tab if needed. I hate waiting to put in the
+            # name in DS.
+            settingName = False
+            for item in self.selectedWorkflow['components']:
+                if item.get('type') == 'computer_name':
+                    self.getComputerName_(item)
+                    settingName = True
+                    break
+        if not settingName:
+            self.workflowOnThreadPrep()
+
+    def workflowOnThreadPrep(self):
         self.disableWorkflowViewControls()
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
         self.imagingProgressDetail.setStringValue_('')
@@ -454,31 +482,7 @@ class MainController(NSObject):
     def processWorkflowOnThread(self, sender):
         '''Process the selected workflow'''
         pool = NSAutoreleasePool.alloc().init()
-        selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
-        # let's get the workflow
-        self.selectedWorkflow = None
-        for workflow in self.workflows:
-            if selected_workflow == workflow['name']:
-                self.selectedWorkflow = workflow
-                break
         if self.selectedWorkflow:
-            if 'restart_action' in self.selectedWorkflow:
-                self.restartAction = self.selectedWorkflow['restart_action']
-            if 'bless_target' in self.selectedWorkflow:
-                self.blessTarget = self.selectedWorkflow['bless_target']
-            else:
-                self.blessTarget = True
-
-            # self.restoreImage()
-            # if not self.errorMessage:
-            #     self.downloadAndInstallPackages()
-            # if not self.errorMessage:
-            #     self.downloadAndCopyPackages()
-            # if not self.errorMessage:
-            #     self.copyFirstBootScripts()
-            # if not self.errorMessage:
-            #     self.runPreFirstBootScript()
-
             # count all of the workflow items - are we still using this?
             components = [item for item in self.selectedWorkflow['components']]
             component_count = len(components)
@@ -505,6 +509,15 @@ class MainController(NSObject):
                     # Run script
                     elif item.get('type') == 'script' and not item.get('first_boot', True):
                         self.runPreFirstBootScript(item.get('content'), counter)
+
+                    elif item.get('type') == 'computer_name':
+                        if self.computerName:
+                            script_dir = os.path.dirname(os.path.realpath(__file__))
+                            with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
+                                script=script.read()
+                            self.copyFirstBootScript(script, counter)
+                            first_boot_items = True
+
                     else:
                         self.errorMessage = "Found an unknown workflow item."
 
@@ -532,11 +545,29 @@ class MainController(NSObject):
         else:
             self.openEndWorkflowPanel()
 
-    # def restoreImage(self):
-    #     dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
-    #                        if item.get('type') == 'image' and item.get('url')]
-    #     if dmgs_to_restore:
-    #         self.Clone(dmgs_to_restore[0], self.targetVolume)
+    def getComputerName_(self, component):
+        auto_run = component.get('auto', False)
+        hardware_info = Utils.get_hardware_info()
+        if auto_run:
+            # Eventually we will get the existing name, but for now...
+            if component.get('use_serial', False):
+                self.computerName = hardware_info.get('serial_number', 'UNKNOWN')
+            return
+        if component.get('use_serial', False):
+            self.computerNameInput.setStringValue_(hardware_info.get('serial_number', ''))
+        elif component.get('prefix', None):
+            self.computerNameInput.setStringValue_(component.get('prefix'))
+        else:
+            self.computerNameInput.setStringValue_('')
+
+        # Switch to the computer name tab
+        self.theTabView.selectTabViewItem_(self.computerNameTab)
+
+    @objc.IBAction
+    def setComputerName_(self, sender):
+        self.computerName = self.computerNameInput.stringValue()
+        self.theTabView.selectTabViewItem_(self.mainTab)
+        self.workflowOnThreadPrep()
 
     def Clone(self, source, target, erase=True, verify=True, show_activity=True):
         """A wrapper around 'asr' to clone one disk object onto another.
@@ -799,7 +830,10 @@ class MainController(NSObject):
         if progress_method:
             progress_method("Copying script to %s" % dest_file, 0, '')
         # convert placeholders
-        script = Utils.replacePlaceholders(script, target)
+        if self.computerName:
+            script = Utils.replacePlaceholders(script, target, self.computerName)
+        else:
+            script = Utils.replacePlaceholders(script, target)
         # write file
         with open(dest_file, "w") as text_file:
             text_file.write(script)

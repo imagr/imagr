@@ -253,12 +253,13 @@ def get_hardware_info():
     except Exception:
         return {}
 
-def replacePlaceholders(script, target):
+def replacePlaceholders(script, target, computer_name=None):
     hardware_info = get_hardware_info()
     placeholders = {
         "{{target_volume}}": target,
         "{{serial_number}}": hardware_info.get('serial_number', 'UNKNOWN'),
-        "{{machine_model}}": hardware_info.get('machine_model', 'UNKNOWN')
+        "{{machine_model}}": hardware_info.get('machine_model', 'UNKNOWN'),
+        "{{computer_name}}": computer_name
     }
     for placeholder, value in placeholders.iteritems():
         script = script.replace(placeholder, value)
