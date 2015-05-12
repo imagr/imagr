@@ -552,7 +552,7 @@ class MainController(NSObject):
             # Eventually we will get the existing name, but for now...
             if component.get('use_serial', False):
                 self.computerName = hardware_info.get('serial_number', 'UNKNOWN')
-            return
+            self.workflowOnThreadPrep()
         if component.get('use_serial', False):
             self.computerNameInput.setStringValue_(hardware_info.get('serial_number', ''))
         elif component.get('prefix', None):
