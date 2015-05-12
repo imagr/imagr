@@ -951,24 +951,33 @@ class MainController(NSObject):
         cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk]
         partitionCmdList = list()
         if partitions:
+            NSLog("Partition list found.")
             for partition in partitions:
                 target = list()
                 # Default format type is "Journaled HFS+, case-insensitive"
                 target.append(partition.get('format_type', 'Journaled HFS+'))
+                NSLog("Appended format type.")
                 # Default name is "Macintosh HD"
                 target.append(partition.get('name', 'Macintosh HD'))
+                NSLog("Appended name.")
                 # Default partition size is 100% of the disk size
                 target.append(partition.get('size', '100%'))
+                NSLog("Appended size.")
                 partitionCmdList.extend(target)
+                NSLog("Current partition command list: %s" % partitionCmdList)
                 numPartitions += 1
+                NSLog("Added 1 to number of partitions.")
+            NSLog("Appending numPartitions to cmd.")
             cmd.append(str(numPartitions))
+            NSLog("Appending partition map to cmd.")
             cmd.append(str(partition_map))
+            NSLog("Extending command with partition command list.")
             cmd.extend(partitionCmdList)
         else:
             # No partition list was provided, so we use the default
             cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk,
                     '1', partition_map, 'Journaled HFS+', 'Macintosh HD', '100%']
-        NSLog(str(cmd))
+        NSLog(' '.join(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
         if partErr:
