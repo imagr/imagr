@@ -506,7 +506,7 @@ class MainController(NSObject):
                     elif item.get('type') == 'script' and not item.get('first_boot', True):
                         self.runPreFirstBootScript(item.get('content'), counter)
                     elif item.get('type') == 'format':
-                        self.FormatTarget(item.get('partitions', None))
+                        self.FormatTarget(item.get('partitions', None), item.get('map', 'GPTFormat'))
                     else:
                         self.errorMessage = "Found an unknown workflow item."
 
@@ -922,7 +922,7 @@ class MainController(NSObject):
 
         return proc.returncode
         
-    def FormatTarget(self, partitions=None, progress_method=None):
+    def FormatTarget(self, partitions=None, partition_map="GPTFormat", progress_method=None):
         """
         Formats a target disk according to specifications.
         'partitions' is a list of dictionaries of partition mappings for names, sizes, formats.
@@ -941,6 +941,8 @@ class MainController(NSObject):
         converted_diskInfo = FoundationPlist.readPlistFromString(diskInfo)
         whole_disk = converted_diskInfo.get('ParentWholeDisk')
         NSLog("Parent disk: %s" % whole_disk)
+
+		NSLog("Partition map: %s" % partition_map)
         
         #Determine size of disk:
         statvfs = os.statvfs(self.workVolume.mountpoint)
@@ -961,11 +963,12 @@ class MainController(NSObject):
                 partitionCmdList.extend(target)
                 numPartitions += 1
             cmd.append(str(numPartitions))
+            cmd.append(str(partition_map))
             cmd.extend(partitionCmdList)
         else:
             # No partition list was provided, so we use the default
             cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk,
-                    '1', 'Journaled HFS+', 'Macintosh HD', '100%']
+                    '1', partition_map, 'Journaled HFS+', 'Macintosh HD', '100%']
         NSLog(str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
