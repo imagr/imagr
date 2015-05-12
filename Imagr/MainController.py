@@ -975,10 +975,9 @@ class MainController(NSObject):
             NSLog("Extending command with partition command list.")
             cmd.extend(partitionCmdList)
         else:
-            # No partition list was provided, so we use the default
-            cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk,
-                    '1', partition_map, 'Journaled HFS+', 'Macintosh HD', '100%']
-        NSLog([x.replace("%","%%") for x in cmd])
+            # No partition list was provided, so we just format the target volume with name 'Macintosh HD'
+            cmd = ['/usr/sbin/diskutil', 'eraseVolume', 'Journaled HFS+', 
+            		'Macintosh HD', self.workVolume.mountpoint]
         NSLog(str([x.replace("%","%%") for x in cmd]))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
