@@ -964,7 +964,8 @@ class MainController(NSObject):
                 target.append(partition.get('size', '100%'))
                 NSLog("Appended size.")
                 partitionCmdList.extend(target)
-                #NSLog("Current partition command list: %s" % partitionCmdList)
+                #NSLog() doesn't allow for a single '%' to be in a string, it must be escaped with '%%'
+                NSLog("Current partition command list: %s" % [x.replace("%","%%") for x in partitionCmdList])
                 numPartitions += 1
                 NSLog("Added 1 to number of partitions.")
             NSLog("Appending numPartitions to cmd.")
@@ -977,7 +978,7 @@ class MainController(NSObject):
             # No partition list was provided, so we use the default
             cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk,
                     '1', partition_map, 'Journaled HFS+', 'Macintosh HD', '100%']
-        NSLog(' '.join(cmd))
+        NSLog([x.replace("%","%%") for x in cmd])
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
         if partErr:
