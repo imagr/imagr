@@ -29,7 +29,8 @@ class MainController(NSObject):
     mainWindow = objc.IBOutlet()
 
     utilities_menu = objc.IBOutlet()
-
+    help_menu = objc.IBOutlet()
+    
     theTabView = objc.IBOutlet()
     introTab = objc.IBOutlet()
     loginTab = objc.IBOutlet()
@@ -972,3 +973,7 @@ class MainController(NSObject):
         shakeAnim._['duration'] = shake['duration']
         self.mainWindow.setAnimations_(NSDictionary.dictionaryWithObject_forKey_(shakeAnim, "frameOrigin"))
         self.mainWindow.animator().setFrameOrigin_(frame.origin)
+
+    @objc.IBAction
+    def showHelp_(self, sender):
+        NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://github.com/grahamgilbert/imagr/wiki"))
