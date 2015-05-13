@@ -935,7 +935,7 @@ class MainController(NSObject):
         NSLog("Parent disk: %@", self.workVolume.Info()['ParentWholeDisk'])
 
         numPartitions = 0
-        cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk]
+        cmd = ['/usr/sbin/diskutil', 'partitionDisk', str(self.workVolume.Info()['ParentWholeDisk'])]
         partitionCmdList = list()
         if partitions:
             # A partition map was provided, so use that to repartition the disk
@@ -955,7 +955,7 @@ class MainController(NSObject):
         else:
             # No partition list was provided, so we just partition the target disk 
             # with one volume, named 'Macintosh HD', using JHFS+
-            cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk, 
+            cmd = ['/usr/sbin/diskutil', 'partitionDisk', str(self.workVolume.Info()['ParentWholeDisk']), 
                     '1', 'Journaled HFS+', 'Macintosh HD', '100%']
         NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
