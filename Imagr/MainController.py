@@ -87,6 +87,7 @@ class MainController(NSObject):
     restartAction = None
     blessTarget = None
     errorMessage = None
+    errorRecoverable = True
     alert = None
     workflow_is_running = False
     computerName = None
@@ -99,9 +100,14 @@ class MainController(NSObject):
             objc.nil,
             objc.nil,
             NSLocalizedString(u"", None))
-
-        self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
-            self.mainWindow, self, self.setStartupDisk_, objc.nil)
+        if self.errorRecoverable:
+            # This is an error that can be recovered from. Go back to main Tab
+            self.errorMessage = None
+            self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                self.mainWindow, self, self.loadDataComplete, objc.nil)
+        else:
+            self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                self.mainWindow, self, self.setStartupDisk_, objc.nil)
 
     def runStartupTasks(self):
         self.mainWindow.center()
@@ -196,10 +202,13 @@ class MainController(NSObject):
     def loadDataComplete(self):
         #self.reloadWorkflowsMenuItem.setEnabled_(True)
         if self.errorMessage:
+            # errors here aren't recoverable
+            self.errorRecoverable = False
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
         else:
             if self.hasLoggedIn:
+                self.enableWorkflowViewControls()
                 self.theTabView.selectTabViewItem_(self.mainTab)
                 self.chooseImagingTarget_(None)
                 #self.enableAllButtons_(self)
@@ -794,10 +803,10 @@ class MainController(NSObject):
         if not self.workVolume.Mounted():
             self.workVolume.Mount()
 
-
         retcode = self.runScript(
             script, self.workVolume.mountpoint,
             progress_method=self.updateProgressTitle_Percent_Detail_)
+
         if retcode != 0:
             self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
 
@@ -807,8 +816,7 @@ class MainController(NSObject):
         """
         # replace the placeholders in the script
         script = Utils.replacePlaceholders(script, target)
-        NSLog("Running script on %@", target)
-        NSLog("Script: %@", script)
+
         if progress_method:
             progress_method("Running script...", 0, '')
         proc = subprocess.Popen(script, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -824,8 +832,6 @@ class MainController(NSObject):
         Copies a
          script to a specific volume
         """
-        NSLog("Copying script to %@", target)
-        NSLog("Script: %@", script)
         dest_dir = os.path.join(target, 'usr/local/first-boot/items')
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
@@ -891,7 +897,7 @@ class MainController(NSObject):
         self.cancelAndRestartButton.setEnabled_(True)
         self.runWorkflowButton.setEnabled_(True)
 
-    def disableAllButtons(self, sender):
+    def disableAllButtons_(self, sender):
         self.cancelAndRestartButton.setEnabled_(False)
         self.runWorkflowButton.setEnabled_(False)
 

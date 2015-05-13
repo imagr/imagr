@@ -258,9 +258,12 @@ def replacePlaceholders(script, target, computer_name=None):
     placeholders = {
         "{{target_volume}}": target,
         "{{serial_number}}": hardware_info.get('serial_number', 'UNKNOWN'),
-        "{{machine_model}}": hardware_info.get('machine_model', 'UNKNOWN'),
-        "{{computer_name}}": computer_name
+        "{{machine_model}}": hardware_info.get('machine_model', 'UNKNOWN')
     }
+
+    if computer_name:
+        placeholders['{{computer_name}}'] = computer_name
+
     for placeholder, value in placeholders.iteritems():
         script = script.replace(placeholder, value)
     script = xml.sax.saxutils.unescape(script)
