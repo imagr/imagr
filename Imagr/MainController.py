@@ -639,7 +639,8 @@ class MainController(NSObject):
             self.updateProgressTitle_Percent_Detail_(None, percent, message)
 
         (unused_stdout, stderr) = task.communicate()
-
+        if not self.workVolume.Mounted():
+            self.workVolume.Mount()
         if task.returncode:
             self.errorMessage = "Cloning Error: %s" % stderr
             return False
