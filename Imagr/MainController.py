@@ -484,6 +484,7 @@ class MainController(NSObject):
             component_count = len(components)
             counter = 0.0
             first_boot_items = None
+            self.should_update_volume_list = False
             for item in self.selectedWorkflow['components']:
                 # No point carrying on if something is broken
                 if not self.errorMessage:
@@ -534,7 +535,17 @@ class MainController(NSObject):
         elif self.restartAction == 'restart' or self.restartAction == 'shutdown':
             self.restartToImagedVolume()
         else:
-            self.openEndWorkflowPanel()
+            if self.should_update_volume_list == True:
+            # again, this needs to be refactored
+				self.volumes = macdisk.MountedVolumes()
+				list = []
+				for volume in self.volumes:
+					if volume.mountpoint != '/':
+						if volume.mountpoint.startswith("/Volumes"):
+							if volume.mountpoint != '/Volumes':
+								if volume.writable:
+									list.append(volume.mountpoint)
+			self.openEndWorkflowPanel()
 
     # def restoreImage(self):
     #     dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
@@ -965,7 +976,7 @@ class MainController(NSObject):
             self.errorMessage = partErr
         NSLog(partOut)
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
-        
+		self.should_update_volume_list = True
         
     def eraseTargetVolume(self, name='Macintosh HD', format='Journaled HFS+', progress_method=None):
         """
@@ -983,7 +994,9 @@ class MainController(NSObject):
             self.errorMessage = eraseErr
         NSLog(eraseOut)
         # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
-        #self.workVolume.mount = '/Volumes/' + str(name)
+        if name != 'Macintosh HD':
+        	# If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
+        	self.should_update_volume_list = True
              
         
     def shakeWindow(self):
