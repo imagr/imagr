@@ -344,13 +344,8 @@ class MainController(NSObject):
     @PyObjCTools.AppHelper.endSheetMethod
     def rescanAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
         # NSWorkspaceNotifications should take care of updating our list of available volumes
-        pass
-        #self.progressText.setStringValue_("Reloading Volumes...")
-        #self.theTabView.selectTabViewItem_(self.introTab)
-        # NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-        #     self.progressPanel, self.mainWindow, self, None, None)
-        #NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
-
+        # Need to reload workflows
+        self.reloadWorkflows_(self)
 
     @objc.IBAction
     def selectImagingTarget_(self, sender):
