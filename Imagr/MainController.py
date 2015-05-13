@@ -932,7 +932,7 @@ class MainController(NSObject):
         """
         # self.workVolume.mountpoint should be the actual volume we're targeting.
         # self.workVolume should be the target disk.
-        """
+        
         # First, figure out what the parent device is for the target volume:
         cmd = ['/usr/sbin/diskutil', 'info', '-plist', self.workVolume.mountpoint]
         NSLog(str(cmd))
@@ -944,8 +944,9 @@ class MainController(NSObject):
         converted_diskInfo = FoundationPlist.readPlistFromString(diskInfo)
         whole_disk = converted_diskInfo.get('ParentWholeDisk')
         NSLog("Parent disk: %s" % whole_disk)
-        """
-        NSLog("Parent disk: %s" % self.workVolume)
+        # macdisk.Disk object doesn't seem to map to an actual device - /dev/diskX
+        # We may not be able to use self.WorkVolume at all for this.
+        #NSLog("Parent disk: %s" % self.workVolume)
 
         numPartitions = 0
         cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk]
@@ -968,7 +969,7 @@ class MainController(NSObject):
         else:
             # No partition list was provided, so we just partition the target disk 
             # with one volume, named 'Macintosh HD', using JHFS+
-            cmd = ['/usr/sbin/diskutil', 'partitionDisk', self.workVolume, 
+            cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk, 
                     '1', 'Journaled HFS+', 'Macintosh HD', '100%']
         NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
