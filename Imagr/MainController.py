@@ -97,7 +97,7 @@ class MainController(NSObject):
         errorText = str(error)
         self.alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
             NSLocalizedString(errorText, None),
-            NSLocalizedString(u"Restart", None),
+            NSLocalizedString(u"Choose Startup Disk", None),
             NSLocalizedString(u"Reload Workflows", None),
             objc.nil,
             NSLocalizedString(u"", None))
@@ -105,20 +105,22 @@ class MainController(NSObject):
             # This is an error that can be recovered from. Go back to main Tab
             self.errorMessage = None
             self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
-                self.mainWindow, self, self.loadDataComplete, objc.nil)
+                self.mainWindow, self, self.errorPanelDidEnd_returnCode_contextInfo_, objc.nil)
         else:
             self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
-                self.mainWindow, self, self.errorPanelDidEnd_returnCode_contextInfo_, objc.nil)
+                self.mainWindow, self, setStartupDisk_, objc.nil)
 
     @PyObjCTools.AppHelper.endSheetMethod
     def errorPanelDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
         # 0 = reload workflows
         # 1 = Restart
+        NSLog(str(returncode))
         if returncode == 0:
             self.errorMessage = None
             self.reloadWorkflows_(self)
-        if returncode == 1:
+        else:
             self.setStartupDisk_(self)
+
     def runStartupTasks(self):
         self.mainWindow.center()
         # Run app startup - get the images, password, volumes - anything that takes a while
