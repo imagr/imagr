@@ -120,7 +120,7 @@ class MainController(NSObject):
 
     def wsNotificationReceived(self, notification):
         if self.workflow_is_running:
-        	self.should_update_volume_list = True
+            self.should_update_volume_list = True
             return
         notification_name = notification.name()
         user_info = notification.userInfo()
