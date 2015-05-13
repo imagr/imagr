@@ -931,22 +931,8 @@ class MainController(NSObject):
         'partition_map' is a volume map type - MBR, GPT, or APM.
         """
         # self.workVolume.mountpoint should be the actual volume we're targeting.
-        # self.workVolume should be the target disk.
-        
-        # First, figure out what the parent device is for the target volume:
-        cmd = ['/usr/sbin/diskutil', 'info', '-plist', self.workVolume.mountpoint]
-        NSLog(str(cmd))
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (diskInfo, diskerr) = proc.communicate()
-        if diskerr:
-            NSLog("Error occurred: %s" % diskerr)
-            self.errorMessage = diskerr
-        converted_diskInfo = FoundationPlist.readPlistFromString(diskInfo)
-        whole_disk = converted_diskInfo.get('ParentWholeDisk')
-        NSLog("Parent disk: %s" % whole_disk)
-        # macdisk.Disk object doesn't seem to map to an actual device - /dev/diskX
-        # We may not be able to use self.WorkVolume at all for this.
-        #NSLog("Parent disk: %s" % self.workVolume)
+        # self.workVolume is the macdisk object that can be queried for its parent disk
+        NSLog("Parent disk: %@", self.workVolume.Info()['ParentWholeDisk'])
 
         numPartitions = 0
         cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk]
@@ -975,10 +961,11 @@ class MainController(NSObject):
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
         if partErr:
-            NSLog("Error occurred: %s" % partErr)
+            NSLog("Error occurred: %@", partErr)
             self.errorMessage = partErr
         NSLog(partOut)
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
+        
         
     def eraseTargetVolume(self, name='Macintosh HD', format='Journaled HFS+', progress_method=None):
         """
@@ -992,10 +979,11 @@ class MainController(NSObject):
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (eraseOut, eraseErr) = proc.communicate()
         if eraseErr:
-            NSLog("Error occured when erasing volume: %s" % eraseErr)
+            NSLog("Error occured when erasing volume: %@", eraseErr)
             self.errorMessage = eraseErr
         NSLog(eraseOut)
         # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
+        #self.workVolume.mount = '/Volumes/' + str(name)
              
         
     def shakeWindow(self):
