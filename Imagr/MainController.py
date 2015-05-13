@@ -508,7 +508,7 @@ class MainController(NSObject):
                     elif item.get('type') == 'partition':
                         self.partitionTargetDisk(item.get('partitions'), item.get('map'))
                     elif item.get('type') == 'eraseVolume':
-                    	self.eraseTargetVolume(item.get('name'), item.get('format'))
+                        self.eraseTargetVolume(item.get('name'), item.get('format'))
                     else:
                         self.errorMessage = "Found an unknown workflow item."
 
@@ -944,8 +944,8 @@ class MainController(NSObject):
         converted_diskInfo = FoundationPlist.readPlistFromString(diskInfo)
         whole_disk = converted_diskInfo.get('ParentWholeDisk')
         NSLog("Parent disk: %s" % whole_disk)
-		"""
-		NSLog("Parent disk: %s" % self.workVolume)
+        """
+        NSLog("Parent disk: %s" % self.workVolume)
 
         numPartitions = 0
         cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk]
@@ -969,7 +969,7 @@ class MainController(NSObject):
             # No partition list was provided, so we just partition the target disk 
             # with one volume, named 'Macintosh HD', using JHFS+
             cmd = ['/usr/sbin/diskutil', 'partitionDisk', self.workVolume, 
-            		'1', 'Journaled HFS+', 'Macintosh HD', '100%']
+                    '1', 'Journaled HFS+', 'Macintosh HD', '100%']
         NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
@@ -980,21 +980,21 @@ class MainController(NSObject):
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
         
     def eraseTargetVolume(self, name='Macintosh HD', format='Journaled HFS+', progress_method=None):
-    	"""
-    	Erases the target volume.
-    	'name' can be used to rename the volume on reformat.
-    	'format' can be used to specify a format type.
-    	If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
-    	"""
-    	cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.workVolume.mountpoint ]
-    	NSLog(str(cmd))
-    	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    	(eraseOut, eraseErr) = proc.communicate()
-    	if eraseErr:
-    		NSLog("Error occured when erasing volume: %s" % eraseErr)
-    		self.errorMessage = eraseErr
-    	NSLog(eraseOut)
-    	# Reload possible targets, because '/Volumes/Macintosh HD' might not exist
+        """
+        Erases the target volume.
+        'name' can be used to rename the volume on reformat.
+        'format' can be used to specify a format type.
+        If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
+        """
+        cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.workVolume.mountpoint ]
+        NSLog(str(cmd))
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (eraseOut, eraseErr) = proc.communicate()
+        if eraseErr:
+            NSLog("Error occured when erasing volume: %s" % eraseErr)
+            self.errorMessage = eraseErr
+        NSLog(eraseOut)
+        # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
              
         
     def shakeWindow(self):
