@@ -538,6 +538,7 @@ class MainController(NSObject):
             if self.should_update_volume_list == True:
             # again, this needs to be refactored
                 self.volumes = macdisk.MountedVolumes()
+                self.chooseTargetDropDown.removeAllItems()
                 list = []
                 for volume in self.volumes:
                     if volume.mountpoint != '/':
@@ -545,6 +546,7 @@ class MainController(NSObject):
                             if volume.mountpoint != '/Volumes':
                                 if volume.writable:
                                     list.append(volume.mountpoint)
+                self.chooseTargetDropDown.addItemsWithTitles_(list)
             self.openEndWorkflowPanel()
 
     # def restoreImage(self):
