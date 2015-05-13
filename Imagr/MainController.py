@@ -505,8 +505,10 @@ class MainController(NSObject):
                     # Run script
                     elif item.get('type') == 'script' and not item.get('first_boot', True):
                         self.runPreFirstBootScript(item.get('content'), counter)
-                    elif item.get('type') == 'format':
-                        self.FormatTarget(item.get('partitions', None), item.get('map', 'GPTFormat'))
+                    elif item.get('type') == 'partition':
+                        self.partitionTargetDisk(item.get('partitions'), item.get('map'))
+                    elif item.get('type') == 'eraseVolume':
+                    	self.eraseTargetVolume(item.get('name'), item.get('format'))
                     else:
                         self.errorMessage = "Found an unknown workflow item."
 
@@ -922,15 +924,15 @@ class MainController(NSObject):
 
         return proc.returncode
         
-    def FormatTarget(self, partitions=None, partition_map="GPTFormat", progress_method=None):
+    def partitionTargetDisk(self, partitions=None, partition_map="GPTFormat", progress_method=None):
         """
         Formats a target disk according to specifications.
         'partitions' is a list of dictionaries of partition mappings for names, sizes, formats.
         'partition_map' is a volume map type - MBR, GPT, or APM.
         """
         # self.workVolume.mountpoint should be the actual volume we're targeting.
-        # self.workVolume should be the actual volume.
-        
+        # self.workVolume should be the target disk.
+        """
         # First, figure out what the parent device is for the target volume:
         cmd = ['/usr/sbin/diskutil', 'info', '-plist', self.workVolume.mountpoint]
         NSLog(str(cmd))
@@ -942,43 +944,33 @@ class MainController(NSObject):
         converted_diskInfo = FoundationPlist.readPlistFromString(diskInfo)
         whole_disk = converted_diskInfo.get('ParentWholeDisk')
         NSLog("Parent disk: %s" % whole_disk)
-
-        #Determine size of disk:
-        statvfs = os.statvfs(self.workVolume.mountpoint)
-        size_in_bytes = statvfs.f_frsize * statvfs.f_blocks
+		"""
+		NSLog("Parent disk: %s" % self.workVolume)
 
         numPartitions = 0
         cmd = ['/usr/sbin/diskutil', 'partitionDisk', whole_disk]
         partitionCmdList = list()
         if partitions:
-            NSLog("Partition list found.")
+            # A partition map was provided, so use that to repartition the disk
             for partition in partitions:
                 target = list()
                 # Default format type is "Journaled HFS+, case-insensitive"
                 target.append(partition.get('format_type', 'Journaled HFS+'))
-                NSLog("Appended format type.")
                 # Default name is "Macintosh HD"
                 target.append(partition.get('name', 'Macintosh HD'))
-                NSLog("Appended name.")
                 # Default partition size is 100% of the disk size
                 target.append(partition.get('size', '100%'))
-                NSLog("Appended size.")
                 partitionCmdList.extend(target)
-                #NSLog() doesn't allow for a single '%' to be in a string, it must be escaped with '%%'
-                NSLog("Current partition command list: %s" % [x.replace("%","%%") for x in partitionCmdList])
                 numPartitions += 1
-                NSLog("Added 1 to number of partitions.")
-            NSLog("Appending numPartitions to cmd.")
             cmd.append(str(numPartitions))
-            NSLog("Appending partition map to cmd.")
             cmd.append(str(partition_map))
-            NSLog("Extending command with partition command list.")
             cmd.extend(partitionCmdList)
         else:
-            # No partition list was provided, so we just format the target volume with name 'Macintosh HD'
-            cmd = ['/usr/sbin/diskutil', 'eraseVolume', 'Journaled HFS+', 
-            		'Macintosh HD', self.workVolume.mountpoint]
-        NSLog(str([x.replace("%","%%") for x in cmd]))
+            # No partition list was provided, so we just partition the target disk 
+            # with one volume, named 'Macintosh HD', using JHFS+
+            cmd = ['/usr/sbin/diskutil', 'partitionDisk', self.workVolume, 
+            		'1', 'Journaled HFS+', 'Macintosh HD', '100%']
+        NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
         if partErr:
@@ -987,6 +979,23 @@ class MainController(NSObject):
         NSLog(partOut)
         # what happens at the end? How do we verify it worked?
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
+        
+    def eraseTargetVolume(self, name='Macintosh HD', format='Journaled HFS+', progress_method=None):
+    	"""
+    	Erases the target volume.
+    	'name' can be used to rename the volume on reformat.
+    	'format' can be used to specify a format type.
+    	If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
+    	"""
+    	cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.workVolume.mountpoint ]
+    	NSLog(str(cmd))
+    	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    	(eraseOut, eraseErr) = proc.communicate()
+    	if eraseErr:
+    		NSLog("Error occured when erasing volume: %s" % eraseErr)
+    		self.errorMessage = eraseErr
+    	NSLog(eraseOut)
+    	
              
         
     def shakeWindow(self):
