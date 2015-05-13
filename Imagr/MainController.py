@@ -599,7 +599,7 @@ class MainController(NSObject):
 
         self.updateProgressTitle_Percent_Detail_('Restoring %s' % source, -1, '')
 
-        NSLog(str(command))
+        NSLog("%@", str(command))
         task = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         message = ""
@@ -976,7 +976,7 @@ class MainController(NSObject):
         if partErr:
             NSLog("Error occurred: %@", partErr)
             self.errorMessage = partErr
-        NSLog(partOut)
+        NSLog("%@", partOut)
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
         self.should_update_volume_list = True
         
@@ -988,13 +988,13 @@ class MainController(NSObject):
         If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
         """
         cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.workVolume.mountpoint ]
-        NSLog(str(cmd))
+        NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (eraseOut, eraseErr) = proc.communicate()
         if eraseErr:
             NSLog("Error occured when erasing volume: %@", eraseErr)
             self.errorMessage = eraseErr
-        NSLog(eraseOut)
+        NSLog("%@", eraseOut)
         # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
         if name != 'Macintosh HD':
             # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
