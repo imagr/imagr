@@ -96,8 +96,8 @@ class MainController(NSObject):
         errorText = str(error)
         self.alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
             NSLocalizedString(errorText, None),
-            NSLocalizedString(u"Okay", None),
-            objc.nil,
+            NSLocalizedString(u"Restart", None),
+            NSLocalizedString(u"Reload Workflows", None),
             objc.nil,
             NSLocalizedString(u"", None))
         if self.errorRecoverable:
@@ -107,8 +107,17 @@ class MainController(NSObject):
                 self.mainWindow, self, self.loadDataComplete, objc.nil)
         else:
             self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
-                self.mainWindow, self, self.setStartupDisk_, objc.nil)
+                self.mainWindow, self, self.errorPanelDidEnd_returnCode_contextInfo_, objc.nil)
 
+    @PyObjCTools.AppHelper.endSheetMethod
+    def errorPanelDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
+        # 0 = reload workflows
+        # 1 = Restart
+        if returncode == 0:
+            self.errorMessage = None
+            self.reloadWorkflows_(self)
+        if returncode == 1:
+            self.setStartupDisk_(self)
     def runStartupTasks(self):
         self.mainWindow.center()
         # Run app startup - get the images, password, volumes - anything that takes a while
@@ -255,7 +264,7 @@ class MainController(NSObject):
             self.restartAction = 'restart'
             # This stops the console being spammed with: unlockFocus called too many times. Called on <NSButton
             NSGraphicsContext.saveGraphicsState()
-            self.disableAllButtons(sender)
+            self.disableAllButtons_(sender)
             # clear out the default junk in the dropdown
             self.startupDiskDropdown.removeAllItems()
             list = []
