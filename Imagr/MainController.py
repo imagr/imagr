@@ -548,6 +548,8 @@ class MainController(NSObject):
                                 if volume.writable:
                                     list.append(volume.mountpoint)
                 self.chooseTargetDropDown.addItemsWithTitles_(list)
+                self.targetVolume = list[0]
+                self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
             self.openEndWorkflowPanel()
 
     # def restoreImage(self):
