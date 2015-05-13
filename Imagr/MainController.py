@@ -507,8 +507,10 @@ class MainController(NSObject):
                     # Run script
                     elif item.get('type') == 'script' and not item.get('first_boot', True):
                         self.runPreFirstBootScript(item.get('content'), counter)
+                    # Partition a disk
                     elif item.get('type') == 'partition':
                         self.partitionTargetDisk(item.get('partitions'), item.get('map'))
+                    # Format a volume
                     elif item.get('type') == 'eraseVolume':
                         self.eraseTargetVolume(item.get('name'), item.get('format'))
                     else:
