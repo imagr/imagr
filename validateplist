@@ -21,6 +21,8 @@ import os
 import sys
 import argparse
 import subprocess
+import tempfile
+import shutil
 if os.path.exists(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Imagr')):
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Imagr'))
 elif os.path.exists('/usr/local/munki/munkilib'):
@@ -69,8 +71,9 @@ def validateComponent(component, workflow):
             fail("'content' is a required key in a 'script' component. Not found in %s" % workflow['name'])
 
 def main():
+    temp_plist = None
     parser = argparse.ArgumentParser()
-    parser.add_argument('plist', help='Path to your Imagr config plist')
+    parser.add_argument('plist', help='Path or URL to your Imagr config plist')
     args = parser.parse_args()
 
     if 'plist' not in args:
@@ -79,7 +82,15 @@ def main():
     plist = args.plist
 
     if plist.startswith('http://') or plist.startswith('https://'):
+        temp_dir = tempfile.mkdtemp()
+        cmd = ['/usr/bin/curl', '-fsSL', plist, '-o', os.path.join(temp_dir, 'config.plist')]
+        task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = task.communicate()[0]
 
+        if task.returncode != 0:
+            fail(proc)
+        temp_plist = os.path.join(temp_dir, 'config.plist')
+        plist = temp_plist
     if not os.path.exists(plist):
         fail("Couldn't find configuration plist at %s" % plist)
 
@@ -96,6 +107,8 @@ def main():
     except:
         fail("Couldn't read plist. Make sure it's a valid ")
 
+    if temp_plist:
+        shutil.rmtree(temp_dir)
     # Rule 1
     if 'password' not in config:
         fail('There must be a password set.')

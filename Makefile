@@ -10,6 +10,7 @@ ARGS= -e -p
 BUILD=Release
 AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
 FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py
+VALIDATE=True
 
 -include config.mk
 
@@ -42,6 +43,9 @@ run: build
 
 config:
 	rm -f com.grahamgilbert.Imagr.plist
+ifeq ($(VALIDATE),True)
+	./validateplist $(URL)
+endif
 	/usr/libexec/PlistBuddy -c 'Add :serverurl string "$(URL)"' com.grahamgilbert.Imagr.plist
 
 deps: autonbi foundation
@@ -52,6 +56,7 @@ dmg: build
 	mkdir -p /tmp/imagr-build
 	cp ./Readme.md /tmp/imagr-build
 	cp -R ./build/Release/Imagr.app /tmp/imagr-build
+	cp ./validateplist /tmp/imagr-build
 	hdiutil create -srcfolder /tmp/imagr-build -volname "Imagr" -format UDZO -o Imagr.dmg
 	mv Imagr.dmg \
 		"Imagr-$(shell /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "./build/Release/Imagr.app/Contents/Info.plist").dmg"
