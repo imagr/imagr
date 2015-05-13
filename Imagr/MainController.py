@@ -292,9 +292,9 @@ class MainController(NSObject):
 
     @objc.IBAction
     def chooseImagingTarget_(self, sender):
-        if self.workVolume:
-            if not self.workVolume.Mounted():
-                self.workVolume.Mount()
+        for volume in self.volumes:
+            if not volume.Mounted():
+                volume.Mount()
         self.chooseTargetDropDown.removeAllItems()
         list = []
         for volume in self.volumes:

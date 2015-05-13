@@ -78,6 +78,8 @@ def main():
 
     plist = args.plist
 
+    if plist.startswith('http://') or plist.startswith('https://'):
+
     if not os.path.exists(plist):
         fail("Couldn't find configuration plist at %s" % plist)
 
