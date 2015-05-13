@@ -30,7 +30,7 @@ class MainController(NSObject):
 
     utilities_menu = objc.IBOutlet()
     help_menu = objc.IBOutlet()
-    
+
     theTabView = objc.IBOutlet()
     introTab = objc.IBOutlet()
     loginTab = objc.IBOutlet()
@@ -292,6 +292,9 @@ class MainController(NSObject):
 
     @objc.IBAction
     def chooseImagingTarget_(self, sender):
+        if self.workVolume:
+            if not self.workVolume.Mounted():
+                self.workVolume.Mount()
         self.chooseTargetDropDown.removeAllItems()
         list = []
         for volume in self.volumes:
@@ -658,8 +661,6 @@ class MainController(NSObject):
             self.updateProgressTitle_Percent_Detail_(None, percent, message)
 
         (unused_stdout, stderr) = task.communicate()
-        if not self.workVolume.Mounted():
-            self.workVolume.Mount()
         if task.returncode:
             self.errorMessage = "Cloning Error: %s" % stderr
             return False
