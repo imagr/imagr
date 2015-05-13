@@ -977,7 +977,6 @@ class MainController(NSObject):
             NSLog("Error occurred: %s" % partErr)
             self.errorMessage = partErr
         NSLog(partOut)
-        # what happens at the end? How do we verify it worked?
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
         
     def eraseTargetVolume(self, name='Macintosh HD', format='Journaled HFS+', progress_method=None):
@@ -995,7 +994,7 @@ class MainController(NSObject):
     		NSLog("Error occured when erasing volume: %s" % eraseErr)
     		self.errorMessage = eraseErr
     	NSLog(eraseOut)
-    	
+    	# Reload possible targets, because '/Volumes/Macintosh HD' might not exist
              
         
     def shakeWindow(self):
