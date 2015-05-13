@@ -537,15 +537,15 @@ class MainController(NSObject):
         else:
             if self.should_update_volume_list == True:
             # again, this needs to be refactored
-				self.volumes = macdisk.MountedVolumes()
-				list = []
-				for volume in self.volumes:
-					if volume.mountpoint != '/':
-						if volume.mountpoint.startswith("/Volumes"):
-							if volume.mountpoint != '/Volumes':
-								if volume.writable:
-									list.append(volume.mountpoint)
-			self.openEndWorkflowPanel()
+                self.volumes = macdisk.MountedVolumes()
+                list = []
+                for volume in self.volumes:
+                    if volume.mountpoint != '/':
+                        if volume.mountpoint.startswith("/Volumes"):
+                            if volume.mountpoint != '/Volumes':
+                                if volume.writable:
+                                    list.append(volume.mountpoint)
+            self.openEndWorkflowPanel()
 
     # def restoreImage(self):
     #     dmgs_to_restore = [item.get('url') for item in self.selectedWorkflow['components']
@@ -976,7 +976,7 @@ class MainController(NSObject):
             self.errorMessage = partErr
         NSLog(partOut)
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
-		self.should_update_volume_list = True
+        self.should_update_volume_list = True
         
     def eraseTargetVolume(self, name='Macintosh HD', format='Journaled HFS+', progress_method=None):
         """
@@ -995,8 +995,8 @@ class MainController(NSObject):
         NSLog(eraseOut)
         # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
         if name != 'Macintosh HD':
-        	# If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
-        	self.should_update_volume_list = True
+            # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
+            self.should_update_volume_list = True
              
         
     def shakeWindow(self):
