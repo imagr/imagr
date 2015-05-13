@@ -510,6 +510,9 @@ class MainController(NSObject):
                     # Partition a disk
                     elif item.get('type') == 'partition':
                         self.partitionTargetDisk(item.get('partitions'), item.get('map'))
+                        # If a partition task is done, no other tasks can be parsed. 
+                        # Another workflow must be selected.
+                        break
                     # Format a volume
                     elif item.get('type') == 'eraseVolume':
                         self.eraseTargetVolume(item.get('name'), item.get('format'))
