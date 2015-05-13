@@ -53,10 +53,11 @@ deps: autonbi foundation
 dmg: build
 	rm -f ./Imagr*.dmg
 	rm -rf /tmp/imagr-build
-	mkdir -p /tmp/imagr-build
+	mkdir -p /tmp/imagr-build/Tools
 	cp ./Readme.md /tmp/imagr-build
+	cp ./Makefile /tmp/imagr-build/Tools
 	cp -R ./build/Release/Imagr.app /tmp/imagr-build
-	cp ./validateplist /tmp/imagr-build
+	cp ./validateplist /tmp/imagr-build/Tools
 	hdiutil create -srcfolder /tmp/imagr-build -volname "Imagr" -format UDZO -o Imagr.dmg
 	mv Imagr.dmg \
 		"Imagr-$(shell /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "./build/Release/Imagr.app/Contents/Info.plist").dmg"
