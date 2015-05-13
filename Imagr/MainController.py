@@ -292,9 +292,6 @@ class MainController(NSObject):
 
     @objc.IBAction
     def chooseImagingTarget_(self, sender):
-        for volume in self.volumes:
-            if not volume.Mounted():
-                volume.Mount()
         self.chooseTargetDropDown.removeAllItems()
         list = []
         for volume in self.volumes:
@@ -663,6 +660,7 @@ class MainController(NSObject):
         (unused_stdout, stderr) = task.communicate()
         if task.returncode:
             self.errorMessage = "Cloning Error: %s" % stderr
+            imaging_target.EnsureMountedWithRefresh()
             return False
         if task.poll() == 0:
             return True
