@@ -656,13 +656,8 @@ class MainController(NSObject):
             command.append("--noverify")
 
         self.updateProgressTitle_Percent_Detail_('Restoring %s' % source, -1, '')
-
-<<<<<<< HEAD
         NSLog("%@", str(command))
-=======
->>>>>>> master
         task = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
         message = ""
         while task.poll() is None:
             output = task.stdout.readline().strip()
