@@ -509,7 +509,7 @@ class MainController(NSObject):
             first_boot_items = None
             self.should_update_volume_list = False
             for item in self.selectedWorkflow['components']:
-                NSLog("%@", self.targetVolume)
+                NSLog("%@", self.targetVolume.mountpoint)
                 # No point carrying on if something is broken
                 if not self.errorMessage:
                     counter = counter + 1.0
@@ -533,14 +533,11 @@ class MainController(NSObject):
                     # Partition a disk
                     elif item.get('type') == 'partition':
                         self.partitionTargetDisk(item.get('partitions'), item.get('map'))
-                        if not item.get('target'):
+                        if self.future_target == False:
                             # If a partition task is done without a new target specified, no other tasks can be parsed. 
                             # Another workflow must be selected.
+                            NSLog("No target specified, reverting to workflow selection screen.")
                             break
-                        else:
-                            # Assign the targetVolume to the new target
-                            # self.workVolume is still the previous target
-                            self.workVolume
                     # Format a volume
                     elif item.get('type') == 'eraseVolume':
                         self.eraseTargetVolume(item.get('name'), item.get('format'))
@@ -1004,13 +1001,15 @@ class MainController(NSObject):
         'partitions' is a list of dictionaries of partition mappings for names, sizes, formats.
         'partition_map' is a volume map type - MBR, GPT, or APM.
         """
-        # self.workVolume.mountpoint should be the actual volume we're targeting.
-        # self.workVolume is the macdisk object that can be queried for its parent disk
-        NSLog("Parent disk: %@", self.workVolume.Info()['ParentWholeDisk'])
+        # self.targetVolume.mountpoint should be the actual volume we're targeting.
+        # self.targetVolume is the macdisk object that can be queried for its parent disk
+        parent_disk = self.targetVolume.Info()['ParentWholeDisk']
+        NSLog("Parent disk: %@", parent_disk)
 
         numPartitions = 0
-        cmd = ['/usr/sbin/diskutil', 'partitionDisk', str(self.workVolume.Info()['ParentWholeDisk'])]
+        cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk]
         partitionCmdList = list()
+        self.future_target = False
         if partitions:
             # A partition map was provided, so use that to repartition the disk
             for partition in partitions:
@@ -1023,13 +1022,18 @@ class MainController(NSObject):
                 target.append(partition.get('size', '100%'))
                 partitionCmdList.extend(target)
                 numPartitions += 1
+                if partition.get('target'):
+                    # A new default target for future workflow actions was specified
+                    self.future_target = True
+                    # Now assign self.targetVolume to new mountpoint
+                    self.targetVolume = macdisk.Disk('/dev/' + str(parent_disk))
             cmd.append(str(numPartitions))
             cmd.append(str(partition_map))
             cmd.extend(partitionCmdList)
         else:
             # No partition list was provided, so we just partition the target disk 
             # with one volume, named 'Macintosh HD', using JHFS+
-            cmd = ['/usr/sbin/diskutil', 'partitionDisk', str(self.workVolume.Info()['ParentWholeDisk']), 
+            cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk), 
                     '1', 'Journaled HFS+', 'Macintosh HD', '100%']
         NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
