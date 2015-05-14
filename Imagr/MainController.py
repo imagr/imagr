@@ -574,7 +574,8 @@ class MainController(NSObject):
             self.restartToImagedVolume()
         else:
             if self.should_update_volume_list == True:
-            # again, this needs to be refactored
+                NSLog("Refreshing volume list.")
+                # again, this needs to be refactored
                 self.volumes = macdisk.MountedVolumes()
                 self.chooseTargetDropDown.removeAllItems()
                 list = []
