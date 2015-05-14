@@ -691,6 +691,7 @@ class MainController(NSObject):
     def downloadAndInstallPackages(self, url):
         self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
         # mount the target
+        NSLog("%@", self.targetVolume.mountpoint)
         if not self.targetVolume.Mounted():
             self.targetVolume.Mount()
 
@@ -1009,6 +1010,7 @@ class MainController(NSObject):
         numPartitions = 0
         cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk]
         partitionCmdList = list()
+        future_target_name = ''
         self.future_target = False
         if partitions:
             # A partition map was provided, so use that to repartition the disk
@@ -1023,18 +1025,18 @@ class MainController(NSObject):
                 partitionCmdList.extend(target)
                 numPartitions += 1
                 if partition.get('target'):
+                    NSLog("New target action found.")
                     # A new default target for future workflow actions was specified
                     self.future_target = True
-                    # Now assign self.targetVolume to new mountpoint
-                    self.targetVolume = macdisk.Disk('/dev/' + str(parent_disk))
+                    future_target_name = partition.get('name', 'Macintosh HD')
             cmd.append(str(numPartitions))
             cmd.append(str(partition_map))
             cmd.extend(partitionCmdList)
         else:
             # No partition list was provided, so we just partition the target disk 
-            # with one volume, named 'Macintosh HD', using JHFS+
-            cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk), 
-                    '1', 'Journaled HFS+', 'Macintosh HD', '100%']
+            # with one volume, named 'Macintosh HD', using JHFS+, GPT Format
+            cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk, 
+                    '1', 'GPTFormat', 'Journaled HFS+', 'Macintosh HD', '100%']
         NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
@@ -1044,6 +1046,18 @@ class MainController(NSObject):
         NSLog("%@", partOut)
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
         self.should_update_volume_list = True
+        if self.future_target == True:
+            # Now assign self.targetVolume to new mountpoint
+            partitionListFromDisk = macdisk.Disk('/dev/' + str(parent_disk))
+            # this is in desperate need of refactoring and rewriting
+            # the only way to safely set self.targetVolume is to assign a new macdisk.Disk() object
+            # and then find the partition that matches our target
+            for partition in partitionListFromDisk.Partitions():
+                if partition.Info()['MountPoint'] == cmd[6]:
+                    self.targetVolume = partition
+                    break
+            NSLog("New target volume mountpoint is %@", self.targetVolume.mountpoint)
+
         
     def eraseTargetVolume(self, name='Macintosh HD', format='Journaled HFS+', progress_method=None):
         """
