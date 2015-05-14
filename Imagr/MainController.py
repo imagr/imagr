@@ -533,9 +533,14 @@ class MainController(NSObject):
                     # Partition a disk
                     elif item.get('type') == 'partition':
                         self.partitionTargetDisk(item.get('partitions'), item.get('map'))
-                        # If a partition task is done, no other tasks can be parsed. 
-                        # Another workflow must be selected.
-                        break
+                        if not item.get('target'):
+                            # If a partition task is done without a new target specified, no other tasks can be parsed. 
+                            # Another workflow must be selected.
+                            break
+                        else:
+                            # Assign the targetVolume to the new target
+                            # self.workVolume is still the previous target
+                            self.workVolume
                     # Format a volume
                     elif item.get('type') == 'eraseVolume':
                         self.eraseTargetVolume(item.get('name'), item.get('format'))
