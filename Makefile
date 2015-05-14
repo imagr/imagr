@@ -6,10 +6,11 @@ URL="http://192.168.178.135/imagr_config.plist"
 APP="/Applications/Install OS X Yosemite.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
-ARGS= -e -p
+ARGS= --enable-nbi --add-python
 BUILD=Release
 AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
 FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py
+INDEX="5001"
 VALIDATE=True
 
 -include config.mk
@@ -99,9 +100,9 @@ endif
 	sudo chmod -R 755 Packages/*
 
 nbi: clean-pkgs autonbi foundation config pkg-dir
-	sudo ./AutoNBI.py $(ARGS) -s $(APP) -f Packages -d $(OUTPUT) -n $(NBI)
+	sudo ./AutoNBI.py $(ARGS) --source $(APP) --folder Packages --destination $(OUTPUT) --name $(NBI) --index $(INDEX)
 	$(MAKE) clean-all
 
 update: clean-pkgs autonbi foundation config pkg-dir
-	sudo ./AutoNBI.py -s $(OUTPUT)/$(NBI).nbi/NetInstall.dmg -f Packages
+	sudo ./AutoNBI.py --source $(OUTPUT)/$(NBI).nbi/NetInstall.dmg --folder Packages --name $(NBI) --index $(INDEX)
 	$(MAKE) clean-all
