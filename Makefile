@@ -103,5 +103,5 @@ nbi: clean-pkgs autonbi foundation config pkg-dir
 	$(MAKE) clean-all
 
 update: clean-pkgs autonbi foundation config pkg-dir
-	sudo ./AutoNBI.py -s $(OUTPUT)/$(NBI).nbi/NetInstall.dmg -f Packages
+	sudo ./AutoNBI.py -s $(OUTPUT)/$(NBI).nbi/NetInstall.dmg -f Packages -n $(NBI)
 	$(MAKE) clean-all
