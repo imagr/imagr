@@ -9,3 +9,5 @@ AutoNBI.py
 FoundationPlist*
 Imagr.xcodeproj/project.xcworkspace/xcuserdata/*
 config.mk
+
+*.pyc

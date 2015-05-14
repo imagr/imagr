@@ -92,8 +92,8 @@ class Disk(object):
       raise MacDiskError("%s is already mounted" % self.deviceid)
     else:
       command = ["diskutil", "mount", self.deviceid]
-      if self.wholedisk:  # pylint: disable=no-member
-        command[1] = "mountDisk"
+    #   if self.wholedisk:  # pylint: disable=no-member
+    #     command[1] = "mountDisk"
       rc = gmacpyutil.RunProcess(command)[2]
       if rc == 0:
         self.Refresh()
@@ -112,8 +112,8 @@ class Disk(object):
       return True
     else:
       command = ["diskutil", "mount", self.deviceid]
-      if self.wholedisk:  # pylint: disable=no-member
-        command[1] = "mountDisk"
+    #   if self.wholedisk:  # pylint: disable=no-member
+    #     command[1] = "mountDisk"
       rc = gmacpyutil.RunProcess(command)[2]
       if rc == 0:
         self.Refresh()

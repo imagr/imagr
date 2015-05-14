@@ -1,0 +1,141 @@
+#!/usr/bin/python
+
+"""
+This script will validate an Imagr configuration plist. Usage:
+./validateplist ~/path/to/config.plist
+
+    The rules of Imagr
+    #1 - there must be a password
+    #2 - there must be at least one workflow
+    #3 - Workflow names must be unique
+    #4 - Image components must have a url
+    #5 - Image urls must end in dmg
+    #6 - Package comonents must have a url
+    #7 - Package urls must end with either pkg or dmg
+    #8 - Scripts must have content
+    #9 - Restart actions must be 'none', 'shutdown' or 'restart'
+    #10 - first_boot must be a boolean on all component types
+"""
+
+import os
+import sys
+import argparse
+import subprocess
+import tempfile
+import shutil
+if os.path.exists(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Imagr')):
+    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Imagr'))
+elif os.path.exists('/usr/local/munki/munkilib'):
+    sys.path.append('/usr/local/munki/munkilib')
+else:
+    pass
+
+try:
+    import FoundationPlist
+except:
+    sys.exit("FoundationPlist is required. Use from the git repo or install Munki")
+
+def fail(error):
+    print ("ERROR: %s" % error)
+    sys.exit(1)
+
+def validateComponent(component, workflow):
+    # Rule 10
+    if 'first_boot' in component:
+        if str(type(component['first_boot'])) != "<type 'bool'>":
+            fail("'first_boot' must be a boolen (<true/> or <false/>). Not found in %s" % workflow['name'])
+    if 'type' not in component:
+        fail("'type' is a required key in a component. Not found in %s" % workflow['name'])
+
+    if component['type'] == 'image':
+        # Rule 4
+        if 'url' not in component:
+            fail("'url' is a required key in an 'image' component. Not found in %s" % workflow['name'])
+
+        # Rule 5
+        if not component['url'].endswith(".dmg") and not component['url'].endswith(".sparseimage"):
+            fail("The 'url' in 'image' components must end with '.dmg' or '.sparseimage'. Not found in %s" % workflow['name'])
+
+    if component['type'] == 'package':
+        # Rule 6
+        if 'url' not in component:
+            fail("'url' is a required key in a 'package' component. Not found in %s" % workflow['name'])
+
+        # Rule 7
+        if not component['url'].endswith(".dmg") and not component['url'].endswith(".pkg"):
+            fail("The 'url' in 'package' components must end with '.dmg' or '.pkg'. Not found in %s" % workflow['name'])
+
+    if component['type'] == 'script':
+        # Rule 8
+        if 'content' not in component:
+            fail("'content' is a required key in a 'script' component. Not found in %s" % workflow['name'])
+
+def main():
+    temp_plist = None
+    parser = argparse.ArgumentParser()
+    parser.add_argument('plist', help='Path or URL to your Imagr config plist')
+    args = parser.parse_args()
+
+    if 'plist' not in args:
+        fail('Path to configuration plist must be specified.')
+
+    plist = args.plist
+
+    if plist.startswith('http://') or plist.startswith('https://'):
+        temp_dir = tempfile.mkdtemp()
+        cmd = ['/usr/bin/curl', '-fsSL', plist, '-o', os.path.join(temp_dir, 'config.plist')]
+        task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = task.communicate()[0]
+
+        if task.returncode != 0:
+            fail(proc)
+        temp_plist = os.path.join(temp_dir, 'config.plist')
+        plist = temp_plist
+    if not os.path.exists(plist):
+        fail("Couldn't find configuration plist at %s" % plist)
+
+    # Lint plist
+    cmd = ['/usr/bin/plutil', '-lint', plist]
+    task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = task.communicate()[0]
+
+    if task.returncode != 0:
+        fail(proc)
+
+    try:
+        config = FoundationPlist.readPlist(plist)
+    except:
+        fail("Couldn't read plist. Make sure it's a valid ")
+
+    if temp_plist:
+        shutil.rmtree(temp_dir)
+    # Rule 1
+    if 'password' not in config:
+        fail('There must be a password set.')
+
+    # Rule 2
+    if 'workflows' not in config:
+        fail('There are no workflows.')
+
+    if len(config['workflows']) == 0:
+        fail('There are no workflows.')
+
+    existing_names = []
+    for workflow in config['workflows']:
+        # Rule 3
+        if workflow['name'] in existing_names:
+            fail('Workflow names must be unique. %s has already been used.' % workflow['name'])
+        else:
+            existing_names.append(workflow['name'])
+
+        # Rule 9
+        if 'restart_action' in workflow:
+            if workflow['restart_action'] != 'none' and workflow['restart_action'] != 'restart' and workflow['restart_action'] != 'shutdown':
+                fail("restart_action is not one of 'none', 'shutdown' or 'restart' in workflow %s" % workflow['name'])
+
+        for component in workflow['components']:
+            validateComponent(component, workflow)
+    # if we get this far, it looks good.
+    print "SUCCESS: %s looks like a valid Imagr configuration plist." % plist
+if __name__ == '__main__':
+    main()

@@ -6,10 +6,12 @@ URL="http://192.168.178.135/imagr_config.plist"
 APP="/Applications/Install OS X Yosemite.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
-ARGS= -e -p
+ARGS= --enable-nbi --add-python
 BUILD=Release
 AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
 FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py
+INDEX="5001"
+VALIDATE=True
 
 -include config.mk
 
@@ -42,6 +44,9 @@ run: build
 
 config:
 	rm -f com.grahamgilbert.Imagr.plist
+ifeq ($(VALIDATE),True)
+	./validateplist $(URL)
+endif
 	/usr/libexec/PlistBuddy -c 'Add :serverurl string "$(URL)"' com.grahamgilbert.Imagr.plist
 
 deps: autonbi foundation
@@ -49,9 +54,11 @@ deps: autonbi foundation
 dmg: build
 	rm -f ./Imagr*.dmg
 	rm -rf /tmp/imagr-build
-	mkdir -p /tmp/imagr-build
+	mkdir -p /tmp/imagr-build/Tools
 	cp ./Readme.md /tmp/imagr-build
+	cp ./Makefile /tmp/imagr-build/Tools
 	cp -R ./build/Release/Imagr.app /tmp/imagr-build
+	cp ./validateplist /tmp/imagr-build/Tools
 	hdiutil create -srcfolder /tmp/imagr-build -volname "Imagr" -format UDZO -o Imagr.dmg
 	mv Imagr.dmg \
 		"Imagr-$(shell /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "./build/Release/Imagr.app/Contents/Info.plist").dmg"
@@ -93,9 +100,9 @@ endif
 	sudo chmod -R 755 Packages/*
 
 nbi: clean-pkgs autonbi foundation config pkg-dir
-	sudo ./AutoNBI.py $(ARGS) -s $(APP) -f Packages -d $(OUTPUT) -n $(NBI)
+	sudo ./AutoNBI.py $(ARGS) --source $(APP) --folder Packages --destination $(OUTPUT) --name $(NBI) --index $(INDEX)
 	$(MAKE) clean-all
 
 update: clean-pkgs autonbi foundation config pkg-dir
-	sudo ./AutoNBI.py -s $(OUTPUT)/$(NBI).nbi/NetInstall.dmg -f Packages
+	sudo ./AutoNBI.py --source $(OUTPUT)/$(NBI).nbi/NetInstall.dmg --folder Packages --name $(NBI) --index $(INDEX)
 	$(MAKE) clean-all
