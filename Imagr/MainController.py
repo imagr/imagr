@@ -82,7 +82,7 @@ class MainController(NSObject):
     passwordHash = None
     workflows = None
     targetVolume = None
-    workVolume = None
+    #workVolume = None
     selectedWorkflow = None
     packages_to_install = None
     restartAction = None
@@ -126,6 +126,7 @@ class MainController(NSObject):
         # Run app startup - get the images, password, volumes - anything that takes a while
 
         self.progressText.setStringValue_("Application Starting...")
+        self.chooseWorkflowDropDown.removeAllItems()
         self.progressIndicator.setIndeterminate_(True)
         self.progressIndicator.setUsesThreadedAnimation_(True)
         self.progressIndicator.startAnimation_(self)
@@ -171,14 +172,13 @@ class MainController(NSObject):
         # reselect previously selected target if possible
         if self.targetVolume:
             self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
-            self.targetVolume = self.chooseTargetDropDown.titleOfSelectedItem()
-        if not self.targetVolume:
-            self.targetVolume = list[0]
-            self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
+            selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
+        else:
+            selected_volume = list[0]
+            self.chooseTargetDropDown.selectItemWithTitle_(selected_volume)
         for volume in self.volumes:
-            if str(volume.mountpoint) == str(self.targetVolume):
-                imaging_target = volume
-                self.workVolume = volume
+            if str(volume.mountpoint) == str(selected_volume):
+                self.targetVolume = volume
 
     def loadData(self):
 
@@ -315,14 +315,16 @@ class MainController(NSObject):
         else:
             self.chooseTargetDropDown.addItemsWithTitles_(list)
             if self.targetVolume:
-                self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
-                self.targetVolume = self.chooseTargetDropDown.titleOfSelectedItem()
-            if not self.targetVolume:
-                self.targetVolume = list[0]
+                self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume.mountpoint)
+            #     selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
+            # else:
+            #     selected_volume = list[0]
+            selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
             for volume in self.volumes:
-                if str(volume.mountpoint) == str(self.targetVolume):
-                    imaging_target = volume
-                    self.workVolume = volume
+                if str(volume.mountpoint) == str(selected_volume):
+                    #imaging_target = volume
+                    self.targetVolume = volume
+                    break
             self.selectWorkflow_(sender)
 
     @PyObjCTools.AppHelper.endSheetMethod
@@ -349,10 +351,10 @@ class MainController(NSObject):
 
     @objc.IBAction
     def selectImagingTarget_(self, sender):
-        self.targetVolume = self.chooseTargetDropDown.titleOfSelectedItem()
+        volume_name = self.chooseTargetDropDown.titleOfSelectedItem()
         for volume in self.volumes:
-            if str(volume.mountpoint) == str(self.targetVolume):
-                self.workVolume = volume
+            if str(volume.mountpoint) == str(volume_name):
+                self.targetVolume = volume
                 break
         NSLog("Imaging target is %@", self.targetVolume)
         #self.enableAllButtons_(sender)
@@ -505,6 +507,7 @@ class MainController(NSObject):
             counter = 0.0
             first_boot_items = None
             for item in self.selectedWorkflow['components']:
+                NSLog("%@", self.targetVolume)
                 # No point carrying on if something is broken
                 if not self.errorMessage:
                     counter = counter + 1.0
@@ -539,10 +542,10 @@ class MainController(NSObject):
 
             if first_boot_items:
                 # copy bits for first boot script
-                packages_dir = os.path.join(self.workVolume.mountpoint, 'usr/local/first-boot/')
+                packages_dir = os.path.join(self.targetVolume.mountpoint, 'usr/local/first-boot/')
                 if not os.path.exists(packages_dir):
                     os.makedirs(packages_dir)
-                Utils.copyFirstBoot(self.workVolume.mountpoint)
+                Utils.copyFirstBoot(self.targetVolume.mountpoint)
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.processWorkflowOnThreadComplete, None, YES)
@@ -606,14 +609,14 @@ class MainController(NSObject):
             MacDiskError: target is not a Disk object
         """
 
-        for volume in self.volumes:
-            if str(volume.mountpoint) == str(target):
-                imaging_target = volume
-                self.workVolume = volume
-                break
+        # for volume in self.volumes:
+        #     if str(volume.mountpoint) == str(target):
+        #         imaging_target = volume
+        #         #self.targetVolume = volume
+        #         break
 
-        if isinstance(imaging_target, macdisk.Disk):
-            target_ref = "/dev/%s" % imaging_target.deviceidentifier
+        if isinstance(self.targetVolume, macdisk.Disk):
+            target_ref = "/dev/%s" % self.targetVolume.deviceidentifier
         else:
             raise macdisk.MacDiskError("target is not a Disk object")
 
@@ -622,8 +625,8 @@ class MainController(NSObject):
 
         if erase:
             # check we can unmount the target... may as well fail here than later.
-            if imaging_target.Mounted():
-                imaging_target.Unmount()
+            if self.targetVolume.Mounted():
+                self.targetVolume.Unmount()
             command.append("--erase")
 
         if not verify:
@@ -631,7 +634,6 @@ class MainController(NSObject):
 
         self.updateProgressTitle_Percent_Detail_('Restoring %s' % source, -1, '')
 
-        NSLog(str(command))
         task = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         message = ""
@@ -657,7 +659,7 @@ class MainController(NSObject):
         (unused_stdout, stderr) = task.communicate()
         if task.returncode:
             self.errorMessage = "Cloning Error: %s" % stderr
-            imaging_target.EnsureMountedWithRefresh()
+            self.targetVolume.EnsureMountedWithRefresh()
             return False
         if task.poll() == 0:
             return True
@@ -665,12 +667,12 @@ class MainController(NSObject):
     def downloadAndInstallPackages(self, url):
         self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
         # mount the target
-        if not self.workVolume.Mounted():
-            self.workVolume.Mount()
+        if not self.targetVolume.Mounted():
+            self.targetVolume.Mount()
 
         package_name = os.path.basename(url)
         self.downloadAndInstallPackage(
-            url, self.workVolume.mountpoint,
+            url, self.targetVolume.mountpoint,
             progress_method=self.updateProgressTitle_Percent_Detail_)
 
     def downloadAndInstallPackage(self, url, target, progress_method=None):
@@ -724,11 +726,11 @@ class MainController(NSObject):
         self.updateProgressTitle_Percent_Detail_(
             'Copying packages for install on first boot...', -1, '')
         # mount the target
-        if not self.workVolume.Mounted():
-            self.workVolume.Mount()
+        if not self.targetVolume.Mounted():
+            self.targetVolume.Mount()
 
         package_name = os.path.basename(url)
-        (output, error) = self.downloadPackage(url, self.workVolume.mountpoint, counter,
+        (output, error) = self.downloadPackage(url, self.targetVolume.mountpoint, counter,
                               progress_method=self.updateProgressTitle_Percent_Detail_)
         if error:
             self.errorMessage = "Error copying first boot package %s - %s" % (url, error)
@@ -791,12 +793,12 @@ class MainController(NSObject):
         return pkg_list, None
 
     def copyFirstBootScript(self, script, counter):
-        if not self.workVolume.Mounted():
-            self.workVolume.Mount()
+        if not self.targetVolume.Mounted():
+            self.targetVolume.Mount()
 
         try:
             self.copyScript(
-                script, self.workVolume.mountpoint, counter,
+                script, self.targetVolume.mountpoint, counter,
                 progress_method=self.updateProgressTitle_Percent_Detail_)
         except:
             self.errorMessage = "Coun't copy script %s" % str(counter)
@@ -806,11 +808,11 @@ class MainController(NSObject):
         self.updateProgressTitle_Percent_Detail_(
             'Preparing to run scripts...', -1, '')
         # mount the target
-        if not self.workVolume.Mounted():
-            self.workVolume.Mount()
+        if not self.targetVolume.Mounted():
+            self.targetVolume.Mount()
 
         retcode = self.runScript(
-            script, self.workVolume.mountpoint,
+            script, self.targetVolume.mountpoint,
             progress_method=self.updateProgressTitle_Percent_Detail_)
 
         if retcode != 0:
@@ -864,7 +866,7 @@ class MainController(NSObject):
     def restartToImagedVolume(self):
         # set the startup disk to the restored volume
         if self.blessTarget == True:
-            self.workVolume.SetStartupDisk()
+            self.targetVolume.SetStartupDisk()
         if self.restartAction == 'restart':
             cmd = ['/sbin/reboot']
         elif self.restartAction == 'shutdown':
