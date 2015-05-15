@@ -540,7 +540,7 @@ class MainController(NSObject):
                             break
                     # Format a volume
                     elif item.get('type') == 'eraseVolume':
-                        self.eraseTargetVolume(item.get('name'), item.get('format'))
+                        self.eraseTargetVolume(item.get('name', 'Macintosh HD'), item.get('format', 'Journaled HFS+'))
                     elif item.get('type') == 'computer_name':
                         if self.computerName:
                             script_dir = os.path.dirname(os.path.realpath(__file__))
