@@ -1067,7 +1067,7 @@ class MainController(NSObject):
         'format' can be used to specify a format type.
         If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
         """
-        cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.workVolume.mountpoint ]
+        cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
         NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (eraseOut, eraseErr) = proc.communicate()
