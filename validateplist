@@ -18,6 +18,7 @@ This script will validate an Imagr configuration plist. Usage:
     #11 - Partition actions must have at least one partition
     #12 - Partition actions must have a target
     #13 - Partition actions must have one 'size' for each partition, if 'size' is specified
+    #14 - Partition actions must not be done at first boot
 """
 
 import os
@@ -95,6 +96,10 @@ def validateComponent(component, workflow):
             fail("'partitions' must only have one target. Too many found in %s" % workflow['name'])
         if sizeFound != len(component['partitions']):
             fail("'partitions' must have a size for each partition. Not enough found in %s" % workflow['name'])
+        
+    # Rule 14
+    if (component['type'] == 'partition') and (component['first_boot'] == True):
+        fail("'partitions' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
                 
 def main():
     temp_plist = None
