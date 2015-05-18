@@ -19,6 +19,7 @@ This script will validate an Imagr configuration plist. Usage:
     #12 - Partition actions must have a target
     #13 - Partition actions must have one 'size' for each partition, if 'size' is specified
     #14 - Partition actions must not be done at first boot
+    #15 - eraseVolume actions must not be done at first boot
 """
 
 import os
@@ -100,6 +101,11 @@ def validateComponent(component, workflow):
     # Rule 14
     if (component['type'] == 'partition') and (component['first_boot'] == True):
         fail("'partitions' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
+        
+    # Rule 15
+    if (component['type'] == 'eraseVolume') and (component['first_boot'] == True):
+        fail("'eraseVolume' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
+        
                 
 def main():
     temp_plist = None
