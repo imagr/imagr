@@ -144,6 +144,7 @@ class MainController(NSObject):
 
     def wsNotificationReceived(self, notification):
         if self.workflow_is_running:
+            self.should_update_volume_list = True
             return
         notification_name = notification.name()
         user_info = notification.userInfo()
@@ -506,8 +507,9 @@ class MainController(NSObject):
             component_count = len(components)
             counter = 0.0
             first_boot_items = None
+            self.should_update_volume_list = False
             for item in self.selectedWorkflow['components']:
-                NSLog("%@", self.targetVolume)
+                NSLog("%@", self.targetVolume.mountpoint)
                 # No point carrying on if something is broken
                 if not self.errorMessage:
                     counter = counter + 1.0
@@ -528,7 +530,17 @@ class MainController(NSObject):
                     # Run script
                     elif item.get('type') == 'script' and not item.get('first_boot', True):
                         self.runPreFirstBootScript(item.get('content'), counter)
-
+                    # Partition a disk
+                    elif item.get('type') == 'partition':
+                        self.partitionTargetDisk(item.get('partitions'), item.get('map'))
+                        if self.future_target == False:
+                            # If a partition task is done without a new target specified, no other tasks can be parsed. 
+                            # Another workflow must be selected.
+                            NSLog("No target specified, reverting to workflow selection screen.")
+                            break
+                    # Format a volume
+                    elif item.get('type') == 'eraseVolume':
+                        self.eraseTargetVolume(item.get('name', 'Macintosh HD'), item.get('format', 'Journaled HFS+'))
                     elif item.get('type') == 'computer_name':
                         if self.computerName:
                             script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -536,7 +548,6 @@ class MainController(NSObject):
                                 script=script.read()
                             self.copyFirstBootScript(script, counter)
                             first_boot_items = True
-
                     else:
                         self.errorMessage = "Found an unknown workflow item."
 
@@ -562,6 +573,21 @@ class MainController(NSObject):
         elif self.restartAction == 'restart' or self.restartAction == 'shutdown':
             self.restartToImagedVolume()
         else:
+            if self.should_update_volume_list == True:
+                NSLog("Refreshing volume list.")
+                # again, this needs to be refactored
+                self.volumes = macdisk.MountedVolumes()
+                self.chooseTargetDropDown.removeAllItems()
+                list = []
+                for volume in self.volumes:
+                    if volume.mountpoint != '/':
+                        if volume.mountpoint.startswith("/Volumes"):
+                            if volume.mountpoint != '/Volumes':
+                                if volume.writable:
+                                    list.append(volume.mountpoint)
+                self.chooseTargetDropDown.addItemsWithTitles_(list)
+                self.targetVolume = list[0]
+                self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
             self.openEndWorkflowPanel()
 
     def getComputerName_(self, component):
@@ -633,9 +659,8 @@ class MainController(NSObject):
             command.append("--noverify")
 
         self.updateProgressTitle_Percent_Detail_('Restoring %s' % source, -1, '')
-
+        NSLog("%@", str(command))
         task = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
         message = ""
         while task.poll() is None:
             output = task.stdout.readline().strip()
@@ -667,6 +692,7 @@ class MainController(NSObject):
     def downloadAndInstallPackages(self, url):
         self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
         # mount the target
+        NSLog("%@", self.targetVolume.mountpoint)
         if not self.targetVolume.Mounted():
             self.targetVolume.Mount()
 
@@ -970,7 +996,91 @@ class MainController(NSObject):
                         progress_method(None, None, msg)
 
         return proc.returncode
+        
+    def partitionTargetDisk(self, partitions=None, partition_map="GPTFormat", progress_method=None):
+        """
+        Formats a target disk according to specifications.
+        'partitions' is a list of dictionaries of partition mappings for names, sizes, formats.
+        'partition_map' is a volume map type - MBR, GPT, or APM.
+        """
+        # self.targetVolume.mountpoint should be the actual volume we're targeting.
+        # self.targetVolume is the macdisk object that can be queried for its parent disk
+        parent_disk = self.targetVolume.Info()['ParentWholeDisk']
+        NSLog("Parent disk: %@", parent_disk)
 
+        numPartitions = 0
+        cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk]
+        partitionCmdList = list()
+        future_target_name = ''
+        self.future_target = False
+        if partitions:
+            # A partition map was provided, so use that to repartition the disk
+            for partition in partitions:
+                target = list()
+                # Default format type is "Journaled HFS+, case-insensitive"
+                target.append(partition.get('format_type', 'Journaled HFS+'))
+                # Default name is "Macintosh HD"
+                target.append(partition.get('name', 'Macintosh HD'))
+                # Default partition size is 100% of the disk size
+                target.append(partition.get('size', '100%'))
+                partitionCmdList.extend(target)
+                numPartitions += 1
+                if partition.get('target'):
+                    NSLog("New target action found.")
+                    # A new default target for future workflow actions was specified
+                    self.future_target = True
+                    future_target_name = partition.get('name', 'Macintosh HD')
+            cmd.append(str(numPartitions))
+            cmd.append(str(partition_map))
+            cmd.extend(partitionCmdList)
+        else:
+            # No partition list was provided, so we just partition the target disk 
+            # with one volume, named 'Macintosh HD', using JHFS+, GPT Format
+            cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk, 
+                    '1', 'GPTFormat', 'Journaled HFS+', 'Macintosh HD', '100%']
+        NSLog("%@", str(cmd))
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (partOut, partErr) = proc.communicate()
+        if partErr:
+            NSLog("Error occurred: %@", partErr)
+            self.errorMessage = partErr
+        NSLog("%@", partOut)
+        # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
+        self.should_update_volume_list = True
+        if self.future_target == True:
+            # Now assign self.targetVolume to new mountpoint
+            partitionListFromDisk = macdisk.Disk('/dev/' + str(parent_disk))
+            # this is in desperate need of refactoring and rewriting
+            # the only way to safely set self.targetVolume is to assign a new macdisk.Disk() object
+            # and then find the partition that matches our target
+            for partition in partitionListFromDisk.Partitions():
+                if partition.Info()['MountPoint'] == cmd[6]:
+                    self.targetVolume = partition
+                    break
+            NSLog("New target volume mountpoint is %@", self.targetVolume.mountpoint)
+
+        
+    def eraseTargetVolume(self, name='Macintosh HD', format='Journaled HFS+', progress_method=None):
+        """
+        Erases the target volume.
+        'name' can be used to rename the volume on reformat.
+        'format' can be used to specify a format type.
+        If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
+        """
+        cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
+        NSLog("%@", str(cmd))
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (eraseOut, eraseErr) = proc.communicate()
+        if eraseErr:
+            NSLog("Error occured when erasing volume: %@", eraseErr)
+            self.errorMessage = eraseErr
+        NSLog("%@", eraseOut)
+        # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
+        if name != 'Macintosh HD':
+            # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
+            self.should_update_volume_list = True
+             
+        
     def shakeWindow(self):
         shake = {'count': 1, 'duration': 0.3, 'vigor': 0.04}
         shakeAnim = Quartz.CAKeyframeAnimation.animation()
