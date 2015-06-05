@@ -593,6 +593,16 @@ class MainController(NSObject):
     def getComputerName_(self, component):
         auto_run = component.get('auto', False)
         hardware_info = Utils.get_hardware_info()
+        
+        # Try to get existing HostName
+        existing_name = ''
+        try:
+            preferencePath = os.path.join(self.targetVolume.mountpoint,'Library/Preferences/SystemConfiguration/preferences.plist')
+            preferencePlist = FoundationPlist.readPlist(preferencePath)
+            existing_name = preferencePlist['System']['System']['HostName']
+        except:
+            pass
+
         if auto_run:
             # Eventually we will get the existing name, but for now...
             if component.get('use_serial', False):
@@ -605,7 +615,8 @@ class MainController(NSObject):
             elif component.get('prefix', None):
                 self.computerNameInput.setStringValue_(component.get('prefix'))
             else:
-                self.computerNameInput.setStringValue_('')
+                #self.computerNameInput.setStringValue_('')
+                self.computerNameInput.setStringValue_(existing_name)
 
             # Switch to the computer name tab
             self.theTabView.selectTabViewItem_(self.computerNameTab)
