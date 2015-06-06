@@ -75,7 +75,7 @@ def validateComponent(component, workflow):
         if 'content' not in component:
             fail("'content' is a required key in a 'script' component. Not found in %s" % workflow['name'])
 
-    
+
     if component['type'] == 'partition':
         # Rule 11
         if 'partitions' not in component:
@@ -97,16 +97,22 @@ def validateComponent(component, workflow):
             fail("'partitions' must only have one target. Too many found in %s" % workflow['name'])
         if sizeFound != len(component['partitions']):
             fail("'partitions' must have a size for each partition. Not enough found in %s" % workflow['name'])
-        
+
     # Rule 14
-    if (component['type'] == 'partition') and (component['first_boot'] == True):
-        fail("'partitions' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
-        
+    try:
+        if (component['type'] == 'partition') and (component['first_boot'] == True):
+            fail("'partitions' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
+    except:
+        pass
+
     # Rule 15
-    if (component['type'] == 'eraseVolume') and (component['first_boot'] == True):
-        fail("'eraseVolume' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
-        
-                
+    try:
+        if (component['type'] == 'eraseVolume') and (component['first_boot'] == True):
+            fail("'eraseVolume' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
+    except:
+        pass
+
+
 def main():
     temp_plist = None
     parser = argparse.ArgumentParser()
