@@ -606,6 +606,8 @@ class MainController(NSObject):
         if auto_run:
             if component.get('use_serial', False):
                 self.computerName = hardware_info.get('serial_number', 'UNKNOWN')
+            else:
+                self.computerName = existing_name
             self.theTabView.selectTabViewItem_(self.mainTab)
             self.workflowOnThreadPrep()
         else:
