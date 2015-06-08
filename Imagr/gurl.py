@@ -19,6 +19,8 @@ gurl.py
 
 Created by Greg Neagle on 2013-11-21.
 
+POST modification by Graham Gilbert (with lots of help from Michael Lynn) 2015-06-07.
+
 curl replacement using NSURLConnection and friends
 """
 
@@ -29,7 +31,7 @@ import xattr
 # No name 'Foo' in module 'Bar' warnings. Disable them.
 # pylint: disable=E0611
 from Foundation import NSRunLoop, NSDate
-from Foundation import NSObject, NSURL, NSURLConnection
+from Foundation import NSObject, NSData, NSString, NSURL, NSURLConnection
 from Foundation import NSMutableURLRequest
 from Foundation import NSURLRequestReloadIgnoringLocalCacheData
 from Foundation import NSURLResponseUnknownLength
@@ -129,6 +131,8 @@ class Gurl(NSObject):
 
         self.log = options.get('logging_function', NSLog)
 
+        self.post_data = options.get('post_data', None)
+
         self.resume = False
         self.response = None
         self.headers = None
@@ -155,6 +159,12 @@ class Gurl(NSObject):
             NSMutableURLRequest.requestWithURL_cachePolicy_timeoutInterval_(
                 url, NSURLRequestReloadIgnoringLocalCacheData,
                 self.connection_timeout))
+        if self.post_data:
+            request.setHTTPMethod_('POST')
+            data_unicode = unicode(self.post_data)
+            data = NSData.dataWithBytes_length_(NSString.stringWithString_(data_unicode).UTF8String(), len(data_unicode.encode('utf-8')))
+            request.setHTTPBody_(data)
+
         if self.additional_headers:
             for header, value in self.additional_headers.items():
                 request.setValue_forHTTPHeaderField_(value, header)
@@ -176,6 +186,7 @@ class Gurl(NSObject):
             if 'etag' in stored_data:
                 request.setValue_forHTTPHeaderField_(
                     stored_data['etag'], 'if-none-match')
+
         self.connection = NSURLConnection.alloc().initWithRequest_delegate_(
             request, self)
 
