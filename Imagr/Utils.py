@@ -331,7 +331,11 @@ def sendReport(status, message):
         }
 
         data = urllib.urlencode(data)
-        post_url(report_url, data)
+        # silently fail here, sending reports is a nice to have, if server is down, meh.
+        try:
+            post_url(report_url, data)
+        except:
+            pass
 
 def launchApp(app_path):
     # Get the binary path so we can launch it using a threaded subprocess
