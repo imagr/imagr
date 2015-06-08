@@ -95,6 +95,10 @@ class MainController(NSObject):
 
     def errorPanel(self, error):
         errorText = str(error)
+
+        # Send a report to the URL if it's configured
+        Utils.sendReport('error', errorText)
+
         self.alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
             NSLocalizedString(errorText, None),
             NSLocalizedString(u"Choose Startup Disk", None),
@@ -207,7 +211,7 @@ class MainController(NSObject):
                 self.errorMessage = "Couldn't get configuration plist from server."
         else:
             self.errorMessage = "Configuration URL wasn't set."
-
+        Utils.sendReport('in_progress', 'Imagr is starting up...')
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.loadDataComplete, None, YES)
         del pool
@@ -358,10 +362,6 @@ class MainController(NSObject):
                 self.targetVolume = volume
                 break
         NSLog("Imaging target is %@", self.targetVolume)
-        #self.enableAllButtons_(sender)
-        #NSApp.endSheet_(self.chooseTargetPanel)
-        #self.chooseTargetPanel.orderOut_(self)
-        #self.selectWorkflow_(self)
 
 
     @objc.IBAction
@@ -454,6 +454,7 @@ class MainController(NSObject):
 
     def workflowOnThreadPrep(self):
         self.disableWorkflowViewControls()
+        Utils.sendReport('in_progress', 'Preparing to run workflow %s...' % self.selectedWorkflow['name'])
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
         self.imagingProgressDetail.setStringValue_('')
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
@@ -515,40 +516,49 @@ class MainController(NSObject):
                     counter = counter + 1.0
                     # Restore image
                     if item.get('type') == 'image' and item.get('url'):
+                        Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
                         self.Clone(item.get('url'), self.targetVolume)
                     # Download and install package
                     elif item.get('type') == 'package' and not item.get('first_boot', True):
+                        Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
                         self.downloadAndInstallPackages(item.get('url'))
                     # Download and copy package
                     elif item.get('type') == 'package' and item.get('first_boot', True):
+                        Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
                         self.downloadAndCopyPackage(item.get('url'), counter)
                         first_boot_items = True
                     # Copy first boot script
                     elif item.get('type') == 'script' and item.get('first_boot', True):
+                        Utils.sendReport('in_progress', 'Copying first boot script %s' % str(counter))
                         self.copyFirstBootScript(item.get('content'), counter)
                         first_boot_items = True
                     # Run script
                     elif item.get('type') == 'script' and not item.get('first_boot', True):
+                        Utils.sendReport('in_progress', 'Running script %s' % str(counter))
                         self.runPreFirstBootScript(item.get('content'), counter)
                     # Partition a disk
                     elif item.get('type') == 'partition':
+                        Utils.sendReport('in_progress', 'Running pattiton task.')
                         self.partitionTargetDisk(item.get('partitions'), item.get('map'))
                         if self.future_target == False:
-                            # If a partition task is done without a new target specified, no other tasks can be parsed. 
+                            # If a partition task is done without a new target specified, no other tasks can be parsed.
                             # Another workflow must be selected.
                             NSLog("No target specified, reverting to workflow selection screen.")
                             break
                     # Format a volume
                     elif item.get('type') == 'eraseVolume':
+                        Utils.sendReport('in_progress', 'Erasing volume with name %s and format %s.' % str(item.get('name', 'Macintosh HD')), str(item.get('format', 'Journaled HFS+')))
                         self.eraseTargetVolume(item.get('name', 'Macintosh HD'), item.get('format', 'Journaled HFS+'))
                     elif item.get('type') == 'computer_name':
                         if self.computerName:
+                            Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
                             script_dir = os.path.dirname(os.path.realpath(__file__))
                             with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
                                 script=script.read()
                             self.copyFirstBootScript(script, counter)
                             first_boot_items = True
                     else:
+                        Utils.sendReport('error', 'Found an unknown workflow item.')
                         self.errorMessage = "Found an unknown workflow item."
 
             if first_boot_items:
@@ -567,6 +577,7 @@ class MainController(NSObject):
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
         self.workflow_is_running = False
+        Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'])
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
@@ -996,7 +1007,7 @@ class MainController(NSObject):
                         progress_method(None, None, msg)
 
         return proc.returncode
-        
+
     def partitionTargetDisk(self, partitions=None, partition_map="GPTFormat", progress_method=None):
         """
         Formats a target disk according to specifications.
@@ -1034,9 +1045,9 @@ class MainController(NSObject):
             cmd.append(str(partition_map))
             cmd.extend(partitionCmdList)
         else:
-            # No partition list was provided, so we just partition the target disk 
+            # No partition list was provided, so we just partition the target disk
             # with one volume, named 'Macintosh HD', using JHFS+, GPT Format
-            cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk, 
+            cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk,
                     '1', 'GPTFormat', 'Journaled HFS+', 'Macintosh HD', '100%']
         NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -1059,7 +1070,7 @@ class MainController(NSObject):
                     break
             NSLog("New target volume mountpoint is %@", self.targetVolume.mountpoint)
 
-        
+
     def eraseTargetVolume(self, name='Macintosh HD', format='Journaled HFS+', progress_method=None):
         """
         Erases the target volume.
@@ -1079,8 +1090,8 @@ class MainController(NSObject):
         if name != 'Macintosh HD':
             # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
             self.should_update_volume_list = True
-             
-        
+
+
     def shakeWindow(self):
         shake = {'count': 1, 'duration': 0.3, 'vigor': 0.04}
         shakeAnim = Quartz.CAKeyframeAnimation.animation()

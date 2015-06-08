@@ -12,6 +12,7 @@ import os
 import FoundationPlist
 import plistlib
 import shutil
+import urllib
 from SystemConfiguration import *
 from Foundation import *
 from AppKit import *
@@ -280,21 +281,21 @@ def downloadFile(url):
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
 
-def getServerURL():
+def getPlistData(data):
 
     # Try the user's homedir
     try:
         NSLog("Trying Home Location")
         homedir = os.path.expanduser("~")
         plist = FoundationPlist.readPlist(os.path.join(homedir, "Library", "Preferences", "com.grahamgilbert.Imagr.plist"))
-        return plist['serverurl']
+        return plist[data]
     except:
         pass
     # Try the main prefs
     try:
         NSLog("Trying System Location")
         plist = FoundationPlist.readPlist(os.path.join("/Library", "Preferences", "com.grahamgilbert.Imagr.plist"))
-        return plist['serverurl']
+        return plist[data]
     except:
         pass
 
@@ -302,10 +303,35 @@ def getServerURL():
     try:
         NSLog("Trying NetBoot Location")
         plist = FoundationPlist.readPlist(os.path.join("/System", "Installation", "Packages", "com.grahamgilbert.Imagr.plist"))
-        return plist['serverurl']
+        return plist[data]
     except:
         pass
 
+def getServerURL():
+    return getPlistData('serverurl')
+
+def getReportURL():
+    report_url = getPlistData('reporturl')
+    if report_url:
+        return report_url
+    else:
+        return None
+
+
+def sendReport(status, message):
+    report_url = getReportURL()
+    if report_url:
+        hardware_info = get_hardware_info()
+        SERIAL = hardware_info.get('serial_number', 'UNKNOWN')
+        # Should probably do some validation on the status at some point
+        data = {
+            'status': status,
+            'serial': SERIAL,
+            'message': message
+        }
+
+        data = urllib.urlencode(data)
+        post_url(report_url, data)
 
 def launchApp(app_path):
     # Get the binary path so we can launch it using a threaded subprocess
