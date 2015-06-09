@@ -11,3 +11,5 @@ Imagr.xcodeproj/project.xcworkspace/xcuserdata/*
 config.mk
 
 *.pyc
+
+Imagr/post_test.py

@@ -112,7 +112,7 @@ class MainController(NSObject):
                 self.mainWindow, self, self.errorPanelDidEnd_returnCode_contextInfo_, objc.nil)
         else:
             self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
-                self.mainWindow, self, setStartupDisk_, objc.nil)
+                self.mainWindow, self, self.setStartupDisk_, objc.nil)
 
     @PyObjCTools.AppHelper.endSheetMethod
     def errorPanelDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
@@ -604,7 +604,7 @@ class MainController(NSObject):
     def getComputerName_(self, component):
         auto_run = component.get('auto', False)
         hardware_info = Utils.get_hardware_info()
-        
+
         # Try to get existing HostName
         try:
             preferencePath = os.path.join(self.targetVolume.mountpoint,'Library/Preferences/SystemConfiguration/preferences.plist')
