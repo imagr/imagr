@@ -509,6 +509,7 @@ class MainController(NSObject):
             counter = 0.0
             first_boot_items = None
             self.should_update_volume_list = False
+
             for item in self.selectedWorkflow['components']:
                 NSLog("%@", self.targetVolume.mountpoint)
                 # No point carrying on if something is broken
@@ -547,7 +548,7 @@ class MainController(NSObject):
                             break
                     # Format a volume
                     elif item.get('type') == 'eraseVolume':
-                        Utils.sendReport('in_progress', 'Erasing volume with name %s and format %s.' % str(item.get('name', 'Macintosh HD')), str(item.get('format', 'Journaled HFS+')))
+                        Utils.sendReport('in_progress', 'Erasing volume with name %s' % item.get('name', 'Macintosh HD'))
                         self.eraseTargetVolume(item.get('name', 'Macintosh HD'), item.get('format', 'Journaled HFS+'))
                     elif item.get('type') == 'computer_name':
                         if self.computerName:
@@ -1090,7 +1091,7 @@ class MainController(NSObject):
         If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
         """
         cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
-        NSLog("%@", str(cmd))
+        NSLog("%@", cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (eraseOut, eraseErr) = proc.communicate()
         if eraseErr:

@@ -329,7 +329,7 @@ def sendReport(status, message):
             'serial': SERIAL,
             'message': message
         }
-
+        NSLog('Report: %@', data )
         data = urllib.urlencode(data)
         # silently fail here, sending reports is a nice to have, if server is down, meh.
         try:
