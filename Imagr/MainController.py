@@ -632,6 +632,7 @@ class MainController(NSObject):
 
             # Switch to the computer name tab
             self.theTabView.selectTabViewItem_(self.computerNameTab)
+            self.mainWindow.makeFirstResponder_(self.computerNameInput)
 
     @objc.IBAction
     def setComputerName_(self, sender):
