@@ -446,6 +446,8 @@ class MainController(NSObject):
             settingName = False
             for item in self.selectedWorkflow['components']:
                 if item.get('type') == 'computer_name':
+                    self.theTabView.selectTabViewItem_(self.computerNameTab)
+                    self.mainWindow.makeFirstResponder_(self.computerNameInput)
                     self.getComputerName_(item)
                     settingName = True
                     break
