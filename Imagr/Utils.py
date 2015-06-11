@@ -282,7 +282,6 @@ def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
 
 def getPlistData(data):
-
     # Try the user's homedir
     try:
         NSLog("Trying Home Location")
