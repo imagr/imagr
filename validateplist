@@ -12,7 +12,7 @@ This script will validate an Imagr configuration plist. Usage:
     #5 - Image urls must end in dmg
     #6 - Package comonents must have a url
     #7 - Package urls must end with either pkg or dmg
-    #8 - Scripts must have content
+    #8 - Scripts must have content or a url
     #9 - Restart actions must be 'none', 'shutdown' or 'restart'
     #10 - first_boot must be a boolean on all component types
     #11 - Partition actions must have at least one partition
@@ -72,7 +72,7 @@ def validateComponent(component, workflow):
 
     if component['type'] == 'script':
         # Rule 8
-        if 'content' not in component:
+        if 'content' not in component and 'url' not in component:
             fail("'content' is a required key in a 'script' component. Not found in %s" % workflow['name'])
 
 
