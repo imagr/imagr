@@ -531,12 +531,18 @@ class MainController(NSObject):
                     # Copy first boot script
                     elif item.get('type') == 'script' and item.get('first_boot', True):
                         Utils.sendReport('in_progress', 'Copying first boot script %s' % str(counter))
-                        self.copyFirstBootScript(item.get('content'), counter)
+                        if item.get('url'):
+                            self.copyFirstBootScript(Utils.downloadFile(item.get('url')), counter)
+                        else:
+                            self.copyFirstBootScript(item.get('content'), counter)
                         first_boot_items = True
                     # Run script
                     elif item.get('type') == 'script' and not item.get('first_boot', True):
                         Utils.sendReport('in_progress', 'Running script %s' % str(counter))
-                        self.runPreFirstBootScript(item.get('content'), counter)
+                        if item.get('url'):
+                            self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), counter)
+                        else:
+                            self.runPreFirstBootScript(item.get('content'), counter)
                     # Partition a disk
                     elif item.get('type') == 'partition':
                         Utils.sendReport('in_progress', 'Running pattiton task.')
