@@ -12,6 +12,7 @@ import os
 import FoundationPlist
 import plistlib
 import shutil
+import urllib
 from SystemConfiguration import *
 from Foundation import *
 from AppKit import *
@@ -45,6 +46,102 @@ class CustomThread(threading.Thread):
         proc = subprocess.call(self.cmd)
         pass
 
+def post_url(url, post_data, message=None, follow_redirects=False,
+            progress_method=None):
+    """Sends POST data to a URL and then returns the result.
+    Accepts the URL to send the POST to, URL encoded data and
+    optionally can follow redirects
+    """
+    temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
+    options = {'url': url,
+               'file': '/tmp/tempdata',
+               'follow_redirects': follow_redirects,
+               'post_data': post_data,
+               'logging_function': NSLog}
+    NSLog('gurl options: %@', options)
+
+    connection = Gurl.alloc().initWithOptions_(options)
+    stored_percent_complete = -1
+    stored_bytes_received = 0
+    connection.start()
+    try:
+        while True:
+            # if we did `while not connection.isDone()` we'd miss printing
+            # messages and displaying percentages if we exit the loop first
+            connection_done = connection.isDone()
+            if message and connection.status and connection.status != 304:
+                # log always, display if verbose is 1 or more
+                # also display in progress field
+                NSLog(message)
+                if progress_method:
+                    progress_method(None, None, message)
+                # now clear message so we don't display it again
+                message = None
+            if (str(connection.status).startswith('2')
+                    and connection.percentComplete != -1):
+                if connection.percentComplete != stored_percent_complete:
+                    # display percent done if it has changed
+                    stored_percent_complete = connection.percentComplete
+                    NSLog('Percent done: %@', stored_percent_complete)
+                    if progress_method:
+                        progress_method(None, stored_percent_complete, None)
+            elif connection.bytesReceived != stored_bytes_received:
+                # if we don't have percent done info, log bytes received
+                stored_bytes_received = connection.bytesReceived
+                NSLog('Bytes received: %@', stored_bytes_received)
+                if progress_method:
+                    progress_method(None, None,
+                                    'Bytes received: %s'
+                                    % stored_bytes_received)
+            if connection_done:
+                break
+
+    except (KeyboardInterrupt, SystemExit):
+        # safely kill the connection then re-raise
+        connection.cancel()
+        raise
+    except Exception, err: # too general, I know
+        # Let us out! ... Safely! Unexpectedly quit dialogs are annoying...
+        connection.cancel()
+        # Re-raise the error as a GurlError
+        raise GurlError(-1, str(err))
+
+    if connection.error != None:
+        # Gurl returned an error
+        NSLog('Download error %@: %@', connection.error.code(),
+              connection.error.localizedDescription())
+        if connection.SSLerror:
+            NSLog('SSL error detail: %@', str(connection.SSLerror))
+        NSLog('Headers: %@', str(connection.headers))
+        raise GurlError(connection.error.code(),
+                        connection.error.localizedDescription())
+
+    if connection.response != None:
+        NSLog('Status: %@', connection.status)
+        NSLog('Headers: %@', connection.headers)
+    if connection.redirection != []:
+        NSLog('Redirection: %@', connection.redirection)
+
+    connection.headers['http_result_code'] = str(connection.status)
+    description = NSHTTPURLResponse.localizedStringForStatusCode_(
+        connection.status)
+    connection.headers['http_result_description'] = description
+
+    try:
+        os.unlink(temp_file)
+        os.rmdir(os.path.dirname(temp_file))
+    except (OSError, IOError):
+        pass
+    if str(connection.status).startswith('2'):
+        return connection.headers
+    elif connection.status == 304:
+        # unchanged on server
+        NSLog('Item is unchanged on the server.')
+        return connection.headers
+    else:
+        # there was an HTTP error of some sort
+        raise HTTPError(connection.status,
+                        connection.headers.get('http_result_description', ''))
 
 def get_url(url, destinationpath, message=None, follow_redirects=False,
             progress_method=None):
@@ -184,21 +281,20 @@ def downloadFile(url):
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
 
-def getServerURL():
-
+def getPlistData(data):
     # Try the user's homedir
     try:
         NSLog("Trying Home Location")
         homedir = os.path.expanduser("~")
         plist = FoundationPlist.readPlist(os.path.join(homedir, "Library", "Preferences", "com.grahamgilbert.Imagr.plist"))
-        return plist['serverurl']
+        return plist[data]
     except:
         pass
     # Try the main prefs
     try:
         NSLog("Trying System Location")
         plist = FoundationPlist.readPlist(os.path.join("/Library", "Preferences", "com.grahamgilbert.Imagr.plist"))
-        return plist['serverurl']
+        return plist[data]
     except:
         pass
 
@@ -206,10 +302,39 @@ def getServerURL():
     try:
         NSLog("Trying NetBoot Location")
         plist = FoundationPlist.readPlist(os.path.join("/System", "Installation", "Packages", "com.grahamgilbert.Imagr.plist"))
-        return plist['serverurl']
+        return plist[data]
     except:
         pass
 
+def getServerURL():
+    return getPlistData('serverurl')
+
+def getReportURL():
+    report_url = getPlistData('reporturl')
+    if report_url:
+        return report_url
+    else:
+        return None
+
+
+def sendReport(status, message):
+    report_url = getReportURL()
+    if report_url:
+        hardware_info = get_hardware_info()
+        SERIAL = hardware_info.get('serial_number', 'UNKNOWN')
+        # Should probably do some validation on the status at some point
+        data = {
+            'status': status,
+            'serial': SERIAL,
+            'message': message
+        }
+        NSLog('Report: %@', data )
+        data = urllib.urlencode(data)
+        # silently fail here, sending reports is a nice to have, if server is down, meh.
+        try:
+            post_url(report_url, data)
+        except:
+            pass
 
 def launchApp(app_path):
     # Get the binary path so we can launch it using a threaded subprocess

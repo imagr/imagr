@@ -12,9 +12,14 @@ This script will validate an Imagr configuration plist. Usage:
     #5 - Image urls must end in dmg
     #6 - Package comonents must have a url
     #7 - Package urls must end with either pkg or dmg
-    #8 - Scripts must have content
+    #8 - Scripts must have content or a url
     #9 - Restart actions must be 'none', 'shutdown' or 'restart'
     #10 - first_boot must be a boolean on all component types
+    #11 - Partition actions must have at least one partition
+    #12 - Partition actions must have a target
+    #13 - Partition actions must have one 'size' for each partition, if 'size' is specified
+    #14 - Partition actions must not be done at first boot
+    #15 - eraseVolume actions must not be done at first boot
 """
 
 import os
@@ -67,8 +72,46 @@ def validateComponent(component, workflow):
 
     if component['type'] == 'script':
         # Rule 8
-        if 'content' not in component:
+        if 'content' not in component and 'url' not in component:
             fail("'content' is a required key in a 'script' component. Not found in %s" % workflow['name'])
+
+
+    if component['type'] == 'partition':
+        # Rule 11
+        if 'partitions' not in component:
+            fail("'partitions' is a required key in a 'partition' component. Not found in %s" % workflow['name'])
+        if len(component['partitions']) == 0:
+            fail("'partitions' must have at least one item in the array. Not found in %s" % workflow['name'])
+        # Rule 12
+        targetFound = 0
+        sizeFound = 0
+        for partition in component['partitions']:
+            if 'target' in partition and partition['target'] == True:
+                targetFound += 1
+            # Rule 13
+            if 'size' in partition:
+                sizeFound += 1
+        if targetFound == 0:
+            fail("'partitions' must have at least one 'target'. Not found in %s" % workflow['name'])
+        elif targetFound > 1:
+            fail("'partitions' must only have one target. Too many found in %s" % workflow['name'])
+        if sizeFound != len(component['partitions']):
+            fail("'partitions' must have a size for each partition. Not enough found in %s" % workflow['name'])
+
+    # Rule 14
+    try:
+        if (component['type'] == 'partition') and (component['first_boot'] == True):
+            fail("'partitions' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
+    except:
+        pass
+
+    # Rule 15
+    try:
+        if (component['type'] == 'eraseVolume') and (component['first_boot'] == True):
+            fail("'eraseVolume' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
+    except:
+        pass
+
 
 def main():
     temp_plist = None

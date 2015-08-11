@@ -3,6 +3,7 @@
 #################################################
 
 URL="http://192.168.178.135/imagr_config.plist"
+REPORTURL=none
 APP="/Applications/Install OS X Yosemite.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
@@ -48,6 +49,9 @@ ifeq ($(VALIDATE),True)
 	./validateplist $(URL)
 endif
 	/usr/libexec/PlistBuddy -c 'Add :serverurl string "$(URL)"' com.grahamgilbert.Imagr.plist
+ifneq ($(REPORTURL),none)
+	/usr/libexec/PlistBuddy -c 'Add :reporturl string "$(REPORTURL)"' com.grahamgilbert.Imagr.plist
+endif
 
 deps: autonbi foundation
 
