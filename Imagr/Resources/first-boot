@@ -58,8 +58,7 @@ Imagr First Boot %s
 ''') % time.strftime("%Y-%m-%d %H:%M:%S"))
     plist_opts = plistlib.readPlist(config_plist)
     # Detect new network hardware
-    command = "/usr/sbin/networksetup -detectnewhardware"
-    proc = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
+    subprocess.call(['/usr/sbin/networksetup', '-detectnewhardware'])
     if plist_opts.get('Network') == True:
         # Check if the network is up
         while True:
