@@ -224,6 +224,7 @@ class MainController(NSObject):
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
         else:
+            self.buildUtilitiesMenu()
             if self.hasLoggedIn:
                 self.enableWorkflowViewControls()
                 self.theTabView.selectTabViewItem_(self.mainTab)
@@ -253,7 +254,6 @@ class MainController(NSObject):
                 self.shakeWindow()
 
             else:
-                self.buildUtilitiesMenu()
                 self.theTabView.selectTabViewItem_(self.mainTab)
                 self.chooseImagingTarget_(None)
                 self.enableAllButtons_(self)
@@ -376,7 +376,13 @@ class MainController(NSObject):
         self.chooseWorkflowDropDown.removeAllItems()
         list = []
         for workflow in self.workflows:
-            list.append(workflow['name'])
+            if 'hidden' in workflow:
+                # Don't add 'hidden' workdlows to the list
+                if workflow['hidden'] == False:
+                    list.append(workflow['name'])
+            else:
+                # If not specified, assume visible
+                list.append(workflow['name'])
 
         self.chooseWorkflowDropDown.addItemsWithTitles_(list)
         self.chooseWorkflowDropDownDidChange_(sender)
@@ -947,13 +953,17 @@ class MainController(NSObject):
         # -1 = Shutdown
         # 0 = another workflow
         # 1 = Restart
+        
         if returncode == -1:
+            NSLog("You clicked %@ - shutdown", returncode)
             self.restartAction = 'shutdown'
             self.restartToImagedVolume()
         elif returncode == 1:
+            NSLog("You clicked %@ - restart", returncode)
             self.restartAction = 'restart'
             self.restartToImagedVolume()
         elif returncode == 0:
+            NSLog("You clicked %@ - another workflow", returncode)
             self.enableWorkflowViewControls()
             self.chooseImagingTarget_(contextinfo)
 
