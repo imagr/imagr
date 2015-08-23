@@ -84,6 +84,7 @@ class MainController(NSObject):
     targetVolume = None
     #workVolume = None
     selectedWorkflow = None
+    parentWorkflow = None
     packages_to_install = None
     restartAction = None
     blessTarget = None
@@ -92,6 +93,8 @@ class MainController(NSObject):
     alert = None
     workflow_is_running = False
     computerName = None
+    counter = 0.0
+    first_boot_items = None
 
     def errorPanel(self, error):
         errorText = str(error)
@@ -512,69 +515,13 @@ class MainController(NSObject):
             # count all of the workflow items - are we still using this?
             components = [item for item in self.selectedWorkflow['components']]
             component_count = len(components)
-            counter = 0.0
-            first_boot_items = None
+            
             self.should_update_volume_list = False
 
             for item in self.selectedWorkflow['components']:
                 NSLog("%@", self.targetVolume.mountpoint)
-                # No point carrying on if something is broken
-                if not self.errorMessage:
-                    counter = counter + 1.0
-                    # Restore image
-                    if item.get('type') == 'image' and item.get('url'):
-                        Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
-                        self.Clone(item.get('url'), self.targetVolume)
-                    # Download and install package
-                    elif item.get('type') == 'package' and not item.get('first_boot', True):
-                        Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
-                        self.downloadAndInstallPackages(item.get('url'))
-                    # Download and copy package
-                    elif item.get('type') == 'package' and item.get('first_boot', True):
-                        Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
-                        self.downloadAndCopyPackage(item.get('url'), counter)
-                        first_boot_items = True
-                    # Copy first boot script
-                    elif item.get('type') == 'script' and item.get('first_boot', True):
-                        Utils.sendReport('in_progress', 'Copying first boot script %s' % str(counter))
-                        if item.get('url'):
-                            self.copyFirstBootScript(Utils.downloadFile(item.get('url')), counter)
-                        else:
-                            self.copyFirstBootScript(item.get('content'), counter)
-                        first_boot_items = True
-                    # Run script
-                    elif item.get('type') == 'script' and not item.get('first_boot', True):
-                        Utils.sendReport('in_progress', 'Running script %s' % str(counter))
-                        if item.get('url'):
-                            self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), counter)
-                        else:
-                            self.runPreFirstBootScript(item.get('content'), counter)
-                    # Partition a disk
-                    elif item.get('type') == 'partition':
-                        Utils.sendReport('in_progress', 'Running pattiton task.')
-                        self.partitionTargetDisk(item.get('partitions'), item.get('map'))
-                        if self.future_target == False:
-                            # If a partition task is done without a new target specified, no other tasks can be parsed.
-                            # Another workflow must be selected.
-                            NSLog("No target specified, reverting to workflow selection screen.")
-                            break
-                    # Format a volume
-                    elif item.get('type') == 'eraseVolume':
-                        Utils.sendReport('in_progress', 'Erasing volume with name %s' % item.get('name', 'Macintosh HD'))
-                        self.eraseTargetVolume(item.get('name', 'Macintosh HD'), item.get('format', 'Journaled HFS+'))
-                    elif item.get('type') == 'computer_name':
-                        if self.computerName:
-                            Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
-                            script_dir = os.path.dirname(os.path.realpath(__file__))
-                            with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
-                                script=script.read()
-                            self.copyFirstBootScript(script, counter)
-                            first_boot_items = True
-                    else:
-                        Utils.sendReport('error', 'Found an unknown workflow item.')
-                        self.errorMessage = "Found an unknown workflow item."
-
-            if first_boot_items:
+                self.runComponent(item)
+            if self.first_boot_items:
                 # copy bits for first boot script
                 packages_dir = os.path.join(self.targetVolume.mountpoint, 'usr/local/first-boot/')
                 if not os.path.exists(packages_dir):
@@ -613,6 +560,79 @@ class MainController(NSObject):
                 self.targetVolume = list[0]
                 self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
             self.openEndWorkflowPanel()
+    
+    def runComponent(self, item):
+        # No point carrying on if something is broken
+        if not self.errorMessage:
+            self.counter = self.counter + 1.0
+            # Restore image
+            if item.get('type') == 'image' and item.get('url'):
+                Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
+                self.Clone(item.get('url'), self.targetVolume)
+            # Download and install package
+            elif item.get('type') == 'package' and not item.get('first_boot', True):
+                Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
+                self.downloadAndInstallPackages(item.get('url'))
+            # Download and copy package
+            elif item.get('type') == 'package' and item.get('first_boot', True):
+                Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
+                self.downloadAndCopyPackage(item.get('url'), counter)
+                self.first_boot_items = True
+            # Copy first boot script
+            elif item.get('type') == 'script' and item.get('first_boot', True):
+                Utils.sendReport('in_progress', 'Copying first boot script %s' % str(counter))
+                if item.get('url'):
+                    self.copyFirstBootScript(Utils.downloadFile(item.get('url')), counter)
+                else:
+                    self.copyFirstBootScript(item.get('content'), counter)
+                self.first_boot_items = True
+            # Run script
+            elif item.get('type') == 'script' and not item.get('first_boot', True):
+                Utils.sendReport('in_progress', 'Running script %s' % str(counter))
+                if item.get('url'):
+                    self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), counter)
+                else:
+                    self.runPreFirstBootScript(item.get('content'), counter)
+            # Partition a disk
+            elif item.get('type') == 'partition':
+                Utils.sendReport('in_progress', 'Running partiton task.')
+                self.partitionTargetDisk(item.get('partitions'), item.get('map'))
+                if self.future_target == False:
+                    # If a partition task is done without a new target specified, no other tasks can be parsed.
+                    # Another workflow must be selected.
+                    NSLog("No target specified, reverting to workflow selection screen.")
+                    break
+            elif item.get('type') == 'included_workflow':
+                Utils.sendReport('in_progress', 'Running included workflow.')
+                self.runIncludedWorkflow(item)
+
+            # Format a volume
+            elif item.get('type') == 'eraseVolume':
+                Utils.sendReport('in_progress', 'Erasing volume with name %s' % item.get('name', 'Macintosh HD'))
+                self.eraseTargetVolume(item.get('name', 'Macintosh HD'), item.get('format', 'Journaled HFS+'))
+            elif item.get('type') == 'computer_name':
+                if self.computerName:
+                    Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
+                    script_dir = os.path.dirname(os.path.realpath(__file__))
+                    with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
+                        script=script.read()
+                    self.copyFirstBootScript(script, counter)
+                    self.first_boot_items = True
+            else:
+                Utils.sendReport('error', 'Found an unknown workflow item.')
+                self.errorMessage = "Found an unknown workflow item."
+    
+    def runIncludedWorkflow(self, item):
+        # find the workflow we're looking for
+        target_workflow = None
+        for workflow in self.workflows:
+            if item['name'] == workflow['name']:
+                target_workflow = workflow
+                break
+        # run the workflow
+        if target_workflow:
+            for component in target_workflow['components']:
+                self.runComponent(component)
 
     def getComputerName_(self, component):
         auto_run = component.get('auto', False)
