@@ -576,23 +576,23 @@ class MainController(NSObject):
             # Download and copy package
             elif item.get('type') == 'package' and item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
-                self.downloadAndCopyPackage(item.get('url'), counter)
+                self.downloadAndCopyPackage(item.get('url'), self.counter)
                 self.first_boot_items = True
             # Copy first boot script
             elif item.get('type') == 'script' and item.get('first_boot', True):
-                Utils.sendReport('in_progress', 'Copying first boot script %s' % str(counter))
+                Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
                 if item.get('url'):
-                    self.copyFirstBootScript(Utils.downloadFile(item.get('url')), counter)
+                    self.copyFirstBootScript(Utils.downloadFile(item.get('url')), self.counter)
                 else:
-                    self.copyFirstBootScript(item.get('content'), counter)
+                    self.copyFirstBootScript(item.get('content'), self.counter)
                 self.first_boot_items = True
             # Run script
             elif item.get('type') == 'script' and not item.get('first_boot', True):
-                Utils.sendReport('in_progress', 'Running script %s' % str(counter))
+                Utils.sendReport('in_progress', 'Running script %s' % str(self.counter))
                 if item.get('url'):
-                    self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), counter)
+                    self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), self.counter)
                 else:
-                    self.runPreFirstBootScript(item.get('content'), counter)
+                    self.runPreFirstBootScript(item.get('content'), self.counter)
             # Partition a disk
             elif item.get('type') == 'partition':
                 Utils.sendReport('in_progress', 'Running partiton task.')
@@ -601,7 +601,7 @@ class MainController(NSObject):
                     # If a partition task is done without a new target specified, no other tasks can be parsed.
                     # Another workflow must be selected.
                     NSLog("No target specified, reverting to workflow selection screen.")
-                    break
+                    
             elif item.get('type') == 'included_workflow':
                 Utils.sendReport('in_progress', 'Running included workflow.')
                 self.runIncludedWorkflow(item)
@@ -616,7 +616,7 @@ class MainController(NSObject):
                     script_dir = os.path.dirname(os.path.realpath(__file__))
                     with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
                         script=script.read()
-                    self.copyFirstBootScript(script, counter)
+                    self.copyFirstBootScript(script, self.counter)
                     self.first_boot_items = True
             else:
                 Utils.sendReport('error', 'Found an unknown workflow item.')
@@ -690,12 +690,6 @@ class MainController(NSObject):
             MacDiskError: source is not a Disk or Image object
             MacDiskError: target is not a Disk object
         """
-
-        # for volume in self.volumes:
-        #     if str(volume.mountpoint) == str(target):
-        #         imaging_target = volume
-        #         #self.targetVolume = volume
-        #         break
 
         if isinstance(self.targetVolume, macdisk.Disk):
             target_ref = "/dev/%s" % self.targetVolume.deviceidentifier
