@@ -519,7 +519,6 @@ class MainController(NSObject):
             self.should_update_volume_list = False
 
             for item in self.selectedWorkflow['components']:
-                NSLog("%@", self.targetVolume.mountpoint)
                 self.runComponent(item)
             if self.first_boot_items:
                 # copy bits for first boot script
@@ -562,6 +561,7 @@ class MainController(NSObject):
             self.openEndWorkflowPanel()
     
     def runComponent(self, item):
+        '''Run the selected workflow component'''
         # No point carrying on if something is broken
         if not self.errorMessage:
             self.counter = self.counter + 1.0
@@ -623,6 +623,7 @@ class MainController(NSObject):
                 self.errorMessage = "Found an unknown workflow item."
     
     def runIncludedWorkflow(self, item):
+        '''Runs an included workdlow'''
         # find the workflow we're looking for
         target_workflow = None
         for workflow in self.workflows:
