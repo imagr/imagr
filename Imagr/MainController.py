@@ -552,6 +552,11 @@ class MainController(NSObject):
                     # Partition a disk
                     elif item.get('type') == 'partition':
                         Utils.sendReport('in_progress', 'Running pattiton task.')
+                        if item.get('partitions') == None:
+                            # If a partition task is called without a correct 'partitions' key the process crashes.
+                            # Check for a valid 'partitions' key before running 'partitionTargetDisk()'.
+                            NSLog("No 'partitions' key specified, reverting to workflow selection screen.")
+                            break
                         self.partitionTargetDisk(item.get('partitions'), item.get('map'))
                         if self.future_target == False:
                             # If a partition task is done without a new target specified, no other tasks can be parsed.
@@ -953,7 +958,7 @@ class MainController(NSObject):
         # -1 = Shutdown
         # 0 = another workflow
         # 1 = Restart
-        
+
         if returncode == -1:
             NSLog("You clicked %@ - shutdown", returncode)
             self.restartAction = 'shutdown'
