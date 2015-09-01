@@ -538,7 +538,10 @@ class MainController(NSObject):
                     elif item.get('type') == 'script' and item.get('first_boot', True):
                         Utils.sendReport('in_progress', 'Copying first boot script %s' % str(counter))
                         if item.get('url'):
-                            self.copyFirstBootScript(Utils.downloadFile(item.get('url')), counter)
+                            if Utils.downloadFile(item.get('url')):
+                                self.copyFirstBootScript(Utils.downloadFile(item.get('url')), counter)
+                            else:
+                                NSLog("Error: Could not download script: %s" % item.get('url'))
                         else:
                             self.copyFirstBootScript(item.get('content'), counter)
                         first_boot_items = True
@@ -546,7 +549,10 @@ class MainController(NSObject):
                     elif item.get('type') == 'script' and not item.get('first_boot', True):
                         Utils.sendReport('in_progress', 'Running script %s' % str(counter))
                         if item.get('url'):
-                            self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), counter)
+                            if Utils.downloadFile(item.get('url')):
+                                self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), counter)
+                            else:
+                                NSLog("Error: Could not download script: %s" % item.get('url'))
                         else:
                             self.runPreFirstBootScript(item.get('content'), counter)
                     # Partition a disk
