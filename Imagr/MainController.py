@@ -505,6 +505,31 @@ class MainController(NSObject):
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.updateProgressWithInfo_, info, objc.NO)
 
+    def checksumImage(self, image):
+        '''Perform sha256 checksum of an image'''
+        import hashlib
+        import requests
+
+        content = image
+        response = requests.head(content)
+
+        contentlength = int(response.headers['content-length'])
+
+        print contentlength
+
+        sha256 = hashlib.sha256()
+        chunk = 8192000
+
+        for i in range(0, contentlength, chunk)[:-1]:
+            r = requests.get(content, headers={"range": "bytes=%s-%s" % (str(i), str(i+chunk-1))})
+            sha256.update(r.content)
+            remainder = str(i+chunk)
+
+        r = requests.get(content, headers={"range": "bytes=%s-%s" % (remainder, str(contentlength))})
+        sha256.update(r.content)
+
+        return sha256.hexdigest()
+
     def processWorkflowOnThread(self, sender):
         '''Process the selected workflow'''
         pool = NSAutoreleasePool.alloc().init()
@@ -523,6 +548,15 @@ class MainController(NSObject):
                     counter = counter + 1.0
                     # Restore image
                     if item.get('type') == 'image' and item.get('url'):
+                        if item.get('image_checksum'):
+                            checksum = checksumImage(item.get('url'))
+                            if checksum == item.get('image_checksum'):
+                                Utils.sendReport('in_progress', 'Verifying image checksum...')
+                                pass
+                            else:
+                                Utils.sendReport('error', 'Image checksum does not match.')
+                                self.errorMessage = "The checksum for image %s did not match." % item.get('url')
+                                break
                         Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
                         self.Clone(item.get('url'), self.targetVolume)
                     # Download and install package
