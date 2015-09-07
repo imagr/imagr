@@ -214,6 +214,7 @@ class MainController(NSObject):
                 self.errorMessage = "Couldn't get configuration plist from server."
         else:
             self.errorMessage = "Configuration URL wasn't set."
+        Utils.setup_logging()
         Utils.sendReport('in_progress', 'Imagr is starting up...')
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.loadDataComplete, None, YES)
