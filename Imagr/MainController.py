@@ -943,7 +943,13 @@ class MainController(NSObject):
     def restartToImagedVolume(self):
         # set the startup disk to the restored volume
         if self.blessTarget == True:
-            self.targetVolume.SetStartupDisk()
+            try:
+                self.targetVolume.SetStartupDisk()
+            except:
+                for volume in self.volumes:
+                    if str(volume.mountpoint) == str(self.targetVolume):
+                        volume.SetStartupDisk()
+
         if self.restartAction == 'restart':
             cmd = ['/sbin/reboot']
         elif self.restartAction == 'shutdown':
@@ -998,6 +1004,9 @@ class MainController(NSObject):
             Utils.launchApp(app_path)
 
     def buildUtilitiesMenu(self):
+        """
+        Adds all applications in /Applications/Utilities to the Utilities menu
+        """
         self.utilities_menu.removeAllItems()
         for item in os.listdir('/Applications/Utilities'):
             if item.endswith('.app'):
