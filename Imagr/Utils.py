@@ -23,6 +23,9 @@ import threading
 import time
 import sys
 import xml.sax.saxutils
+import logging
+import urlparse
+import socket
 
 from gurl import Gurl
 
@@ -318,10 +321,11 @@ def getReportURL():
 
 
 def sendReport(status, message):
+    hardware_info = get_hardware_info()
+    SERIAL = hardware_info.get('serial_number', 'UNKNOWN')
+    
     report_url = getReportURL()
     if report_url:
-        hardware_info = get_hardware_info()
-        SERIAL = hardware_info.get('serial_number', 'UNKNOWN')
         # Should probably do some validation on the status at some point
         data = {
             'status': status,
@@ -335,6 +339,14 @@ def sendReport(status, message):
             post_url(report_url, data)
         except:
             pass
+
+    log_message = "[{}] {}".format(SERIAL, message)
+    log = logging.getLogger("Imagr")
+
+    if status == 'error':
+        log.error(log_message)
+    else:
+        log.info(log_message)
 
 def launchApp(app_path):
     # Get the binary path so we can launch it using a threaded subprocess
@@ -377,6 +389,35 @@ def get_hardware_info():
         return sp_hardware_dict
     except Exception:
         return {}
+
+def setup_logging():
+    syslog = getPlistData('syslog')
+    
+    if not syslog:
+        return
+    
+    # Parse syslog URI
+    try:
+        uri = urlparse.urlparse(syslog)
+        qs = urlparse.parse_qs(uri.query)
+
+        hostname = uri.hostname if uri.hostname else "localhost"
+        port = uri.port if uri.port else 514
+        socktype = socket.SOCK_STREAM if qs['transport'][0] == 'TCP' else socket.SOCK_DGRAM
+        facility = qs['facility'][0] if 'facility' in qs else "local7"
+    except:
+        NSLog("Failed to parse syslog URI.")
+
+    # Create a syslog handler
+    handler = logging.handlers.SysLogHandler(address=(hostname, port),
+                                             facility=facility,
+                                             socktype=socktype)
+
+    # Configure logging
+    formatter = logging.Formatter('%(name)s: %(message)s')
+    handler.setFormatter(formatter)
+    logging.getLogger("Imagr").addHandler(handler)
+    logging.getLogger("Imagr").setLevel("INFO")
 
 def replacePlaceholders(script, target, computer_name=None):
     hardware_info = get_hardware_info()
