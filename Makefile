@@ -13,6 +13,7 @@ AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
 FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py
 INDEX="5001"
 VALIDATE=True
+SYSLOG=none
 
 -include config.mk
 
@@ -51,6 +52,9 @@ endif
 	/usr/libexec/PlistBuddy -c 'Add :serverurl string "$(URL)"' com.grahamgilbert.Imagr.plist
 ifneq ($(REPORTURL),none)
 	/usr/libexec/PlistBuddy -c 'Add :reporturl string "$(REPORTURL)"' com.grahamgilbert.Imagr.plist
+endif
+ifneq ($(SYSLOG),none)
+	/usr/libexec/PlistBuddy -c 'Add :syslog string "$(SYSLOG)"' com.grahamgilbert.Imagr.plist
 endif
 
 deps: autonbi foundation
