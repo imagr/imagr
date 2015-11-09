@@ -1,6 +1,6 @@
 # Imagr
 
-Imagr is an application designed to be run from a NetInstall environment created with [AutoNBI](https://bitbucket.org/bruienne/autonbi/src). It is able to restore a disk image and install packages on a target volume. It is not intended to be a replacement for tools such as DeployStudio, but is able to perform some of their more commonly used functions to allow organisations to run more complicated workflows than just basic NetRestore without the need for OS X in the datacentre.
+Imagr is an application designed to be run from a NetInstall environment created with [AutoNBI](https://bitbucket.org/bruienne/autonbi/src). It is able replace tools such as DeployStudio for many organisations without the requirement of needing to be run on OS X servers.
 
 This is a Python application, so Python will need to be included in your NetInstall.
 
