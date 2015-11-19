@@ -57,7 +57,7 @@ def post_url(url, post_data, message=None, follow_redirects=False,
     """
     temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
     options = {'url': url,
-               'file': '/tmp/tempdata',
+               'file': temp_file,
                'follow_redirects': follow_redirects,
                'post_data': post_data,
                'logging_function': NSLog}
