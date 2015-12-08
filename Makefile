@@ -4,7 +4,7 @@
 
 URL="http://192.168.178.135/imagr_config.plist"
 REPORTURL=none
-APP="/Applications/Install OS X Yosemite.app"
+APP="/Applications/Install OS X El Capitan.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
 ARGS= --enable-nbi --add-python
