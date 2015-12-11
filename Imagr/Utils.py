@@ -49,8 +49,20 @@ class CustomThread(threading.Thread):
         proc = subprocess.call(self.cmd)
         pass
 
+def header_dict_from_list(array):
+    """Given a list of strings in http header format, return a dict.
+    If array is None, return None"""
+    if array is None:
+        return array
+    header_dict = {}
+    for item in array:
+        (key, sep, value) = item.partition(':')
+        if sep and value:
+            header_dict[key.strip()] = value.strip()
+    return header_dict
+
 def post_url(url, post_data, message=None, follow_redirects=False,
-            progress_method=None):
+            progress_method=None, additional_headers=None):
     """Sends POST data to a URL and then returns the result.
     Accepts the URL to send the POST to, URL encoded data and
     optionally can follow redirects
@@ -60,6 +72,7 @@ def post_url(url, post_data, message=None, follow_redirects=False,
                'file': temp_file,
                'follow_redirects': follow_redirects,
                'post_data': post_data,
+               'additional_headers': header_dict_from_list(additional_headers),
                'logging_function': NSLog}
     NSLog('gurl options: %@', options)
 
@@ -147,7 +160,7 @@ def post_url(url, post_data, message=None, follow_redirects=False,
                         connection.headers.get('http_result_description', ''))
 
 def get_url(url, destinationpath, message=None, follow_redirects=False,
-            progress_method=None):
+            progress_method=None, additional_headers=None):
     """Gets an HTTP or HTTPS URL and stores it in
     destination path. Returns a dictionary of headers, which includes
     http_result_code and http_result_description.
@@ -166,6 +179,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
     options = {'url': url,
                'file': tempdownloadpath,
                'follow_redirects': follow_redirects,
+               'additional_headers': header_dict_from_list(additional_headers),
                'logging_function': NSLog}
     NSLog('gurl options: %@', options)
 
@@ -256,10 +270,10 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         raise HTTPError(connection.status,
                         connection.headers.get('http_result_description', ''))
 
-def downloadFile(url):
+def downloadFile(url, additional_headers=None):
     temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
     try:
-        headers = get_url(url, temp_file)
+        headers = get_url(url, temp_file, additional_headers=additional_headers)
     except HTTPError, err:
         NSLog("HTTP Error: %@", err)
         return False
@@ -323,7 +337,7 @@ def getReportURL():
 def sendReport(status, message):
     hardware_info = get_hardware_info()
     SERIAL = hardware_info.get('serial_number', 'UNKNOWN')
-    
+
     report_url = getReportURL()
     if report_url:
         # Should probably do some validation on the status at some point
@@ -392,10 +406,10 @@ def get_hardware_info():
 
 def setup_logging():
     syslog = getPlistData('syslog')
-    
+
     if not syslog:
         return
-    
+
     # Parse syslog URI
     try:
         uri = urlparse.urlparse(syslog)
@@ -484,10 +498,10 @@ def unmountdmg(mountpoint):
         return True
 
 
-def downloadChunks(url, file, progress_method=None):
+def downloadChunks(url, file, progress_method=None, additional_headers=None):
     message = "Downloading %s" % os.path.basename(url)
     try:
-        headers = get_url(url, file, message=message, progress_method=progress_method)
+        headers = get_url(url, file, message=message, progress_method=progress_method, additional_headers=additional_headers)
     except HTTPError, err:
         NSLog("HTTP Error: %@", err)
         return False, err

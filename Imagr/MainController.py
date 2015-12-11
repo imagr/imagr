@@ -325,9 +325,7 @@ class MainController(NSObject):
             self.chooseTargetDropDown.addItemsWithTitles_(list)
             if self.targetVolume:
                 self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume.mountpoint)
-            #     selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
-            # else:
-            #     selected_volume = list[0]
+
             selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
             for volume in self.volumes:
                 if str(volume.mountpoint) == str(selected_volume):
@@ -516,7 +514,7 @@ class MainController(NSObject):
             # count all of the workflow items - are we still using this?
             components = [item for item in self.selectedWorkflow['components']]
             component_count = len(components)
-            
+
             self.should_update_volume_list = False
 
             for item in self.selectedWorkflow['components']:
@@ -560,7 +558,7 @@ class MainController(NSObject):
                 self.targetVolume = list[0]
                 self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
             self.openEndWorkflowPanel()
-    
+
     def runComponent(self, item):
         '''Run the selected workflow component'''
         # No point carrying on if something is broken
@@ -573,17 +571,20 @@ class MainController(NSObject):
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
-                self.downloadAndInstallPackages(item.get('url'))
+                self.downloadAndInstallPackages(item)
             # Download and copy package
             elif item.get('type') == 'package' and item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
-                self.downloadAndCopyPackage(item.get('url'), self.counter)
+                self.downloadAndCopyPackage(item, self.counter)
                 self.first_boot_items = True
             # Copy first boot script
             elif item.get('type') == 'script' and item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
                 if item.get('url'):
-                    self.copyFirstBootScript(Utils.downloadFile(item.get('url')), self.counter)
+                    if item.get('additional_headers'):
+                        self.copyFirstBootScript(Utils.downloadFile(item.get('url'), item.get('additional_headers')), self.counter)
+                    else:
+                        self.copyFirstBootScript(Utils.downloadFile(item.get('url')), self.counter)
                 else:
                     self.copyFirstBootScript(item.get('content'), self.counter)
                 self.first_boot_items = True
@@ -591,7 +592,10 @@ class MainController(NSObject):
             elif item.get('type') == 'script' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Running script %s' % str(self.counter))
                 if item.get('url'):
-                    self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), self.counter)
+                    if item.get('additional_headers'):
+                        self.runPreFirstBootScript(Utils.downloadFile(item.get('url'), item.get('additional_headers')), self.counter)
+                    else:
+                        self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), self.counter)
                 else:
                     self.runPreFirstBootScript(item.get('content'), self.counter)
             # Partition a disk
@@ -602,7 +606,7 @@ class MainController(NSObject):
                     # If a partition task is done without a new target specified, no other tasks can be parsed.
                     # Another workflow must be selected.
                     NSLog("No target specified, reverting to workflow selection screen.")
-                    
+
             elif item.get('type') == 'included_workflow':
                 Utils.sendReport('in_progress', 'Running included workflow.')
                 self.runIncludedWorkflow(item)
@@ -622,7 +626,7 @@ class MainController(NSObject):
             else:
                 Utils.sendReport('error', 'Found an unknown workflow item.')
                 self.errorMessage = "Found an unknown workflow item."
-    
+
     def runIncludedWorkflow(self, item):
         '''Runs an included workdlow'''
         # find the workflow we're looking for
@@ -741,7 +745,9 @@ class MainController(NSObject):
         if task.poll() == 0:
             return True
 
-    def downloadAndInstallPackages(self, url):
+    def downloadAndInstallPackages(self, item):
+        url = item.get('url')
+        custom_headers = item.get('additional_headers')
         self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
         # mount the target
         NSLog("%@", self.targetVolume.mountpoint)
@@ -751,9 +757,10 @@ class MainController(NSObject):
         package_name = os.path.basename(url)
         self.downloadAndInstallPackage(
             url, self.targetVolume.mountpoint,
-            progress_method=self.updateProgressTitle_Percent_Detail_)
+            progress_method=self.updateProgressTitle_Percent_Detail_,
+            additional_headers=custom_headers)
 
-    def downloadAndInstallPackage(self, url, target, progress_method=None):
+    def downloadAndInstallPackage(self, url, target, progress_method=None, additional_headers=None):
         if os.path.basename(url).endswith('.dmg'):
             error = None
             # We're going to mount the dmg
@@ -788,7 +795,7 @@ class MainController(NSObject):
             # Download it
             packagename = os.path.basename(url)
             (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(temp_dir,
-                                                            packagename))
+            packagename), additional_headers=additional_headers)
             if error:
                 self.errorMessage = "Couldn't download - %s %s" % (url, error)
                 return False
@@ -800,23 +807,24 @@ class MainController(NSObject):
             # Clean up after ourselves
             shutil.rmtree(temp_dir)
 
-    def downloadAndCopyPackage(self, url, counter):
+    def downloadAndCopyPackage(self, item, counter):
         self.updateProgressTitle_Percent_Detail_(
             'Copying packages for install on first boot...', -1, '')
         # mount the target
         if not self.targetVolume.Mounted():
             self.targetVolume.Mount()
-
+        url = item.get('url')
+        custom_headers = item.get('additional_headers')
         package_name = os.path.basename(url)
         (output, error) = self.downloadPackage(url, self.targetVolume.mountpoint, counter,
-                              progress_method=self.updateProgressTitle_Percent_Detail_)
+                              progress_method=self.updateProgressTitle_Percent_Detail_, additional_headers=custom_headers)
         if error:
             self.errorMessage = "Error copying first boot package %s - %s" % (url, error)
             return False
 
 
 
-    def downloadPackage(self, url, target, number, progress_method=None):
+    def downloadPackage(self, url, target, number, progress_method=None, additional_headers=None):
         error = None
         dest_dir = os.path.join(target, 'usr/local/first-boot/items')
         if not os.path.exists(dest_dir):
@@ -830,7 +838,7 @@ class MainController(NSObject):
             package_name = "%03d-%s" % (number, os.path.basename(url))
             os.umask(0002)
             file = os.path.join(dest_dir, package_name)
-            (output, error) = Utils.downloadChunks(url, file, progress_method=progress_method)
+            (output, error) = Utils.downloadChunks(url, file, progress_method=progress_method, additional_headers=additional_headers)
 
         return output, error
 
@@ -879,7 +887,7 @@ class MainController(NSObject):
                 script, self.targetVolume.mountpoint, counter,
                 progress_method=self.updateProgressTitle_Percent_Detail_)
         except:
-            self.errorMessage = "Coun't copy script %s" % str(counter)
+            self.errorMessage = "Couldn't copy script %s" % str(counter)
             return False
 
     def runPreFirstBootScript(self, script, counter):
@@ -975,7 +983,7 @@ class MainController(NSObject):
         # -1 = Shutdown
         # 0 = another workflow
         # 1 = Restart
-        
+
         if returncode == -1:
             NSLog("You clicked %@ - shutdown", returncode)
             self.restartAction = 'shutdown'
