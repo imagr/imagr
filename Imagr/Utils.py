@@ -301,7 +301,7 @@ def getPasswordHash(password):
 def getPlistData(data):
     # Try the user's homedir
     try:
-        NSLog("Trying Home Location")
+        # NSLog("Trying Home Location")
         homedir = os.path.expanduser("~")
         plist = FoundationPlist.readPlist(os.path.join(homedir, "Library", "Preferences", "com.grahamgilbert.Imagr.plist"))
         return plist[data]
@@ -309,7 +309,7 @@ def getPlistData(data):
         pass
     # Try the main prefs
     try:
-        NSLog("Trying System Location")
+        # NSLog("Trying System Location")
         plist = FoundationPlist.readPlist(os.path.join("/Library", "Preferences", "com.grahamgilbert.Imagr.plist"))
         return plist[data]
     except:
@@ -317,7 +317,7 @@ def getPlistData(data):
 
     # Hopefully we're in a netboot set, try in /System/Installation/Packages
     try:
-        NSLog("Trying NetBoot Location")
+        # NSLog("Trying NetBoot Location")
         plist = FoundationPlist.readPlist(os.path.join("/System", "Installation", "Packages", "com.grahamgilbert.Imagr.plist"))
         return plist[data]
     except:
