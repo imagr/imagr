@@ -339,7 +339,7 @@ def sendReport(status, message):
     SERIAL = hardware_info.get('serial_number', 'UNKNOWN')
 
     report_url = getReportURL()
-    if report_url:
+    if report_url and len(message) > 0:
         # Should probably do some validation on the status at some point
         data = {
             'status': status,
