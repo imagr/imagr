@@ -97,7 +97,10 @@ class MainController(NSObject):
     first_boot_items = None
 
     def errorPanel(self, error):
-        errorText = str(error)
+        if error:
+            errorText = str(error)
+        else:
+            errorText = "Unknown error"
 
         # Send a report to the URL if it's configured
         Utils.sendReport('error', errorText)
