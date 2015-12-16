@@ -354,13 +354,14 @@ def sendReport(status, message):
         except:
             pass
 
-    log_message = "[{}] {}".format(SERIAL, message)
-    log = logging.getLogger("Imagr")
+    if len(message) > 0:
+        log_message = "[{}] {}".format(SERIAL, message)
+        log = logging.getLogger("Imagr")
 
-    if status == 'error':
-        log.error(log_message)
-    else:
-        log.info(log_message)
+        if status == 'error':
+            log.error(log_message)
+        else:
+            log.info(log_message)
 
 def launchApp(app_path):
     # Get the binary path so we can launch it using a threaded subprocess
