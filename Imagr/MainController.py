@@ -207,7 +207,8 @@ class MainController(NSObject):
                 try:
                     self.passwordHash = converted_plist['password']
                 except:
-                    self.errorMessage = "Password wasn't set."
+                    # Bypass the login form if no password is given.
+                    self.hasLoggedIn = True
 
                 try:
                     self.workflows = converted_plist['workflows']
