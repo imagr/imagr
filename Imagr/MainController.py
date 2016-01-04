@@ -84,6 +84,7 @@ class MainController(NSObject):
     targetVolume = None
     #workVolume = None
     selectedWorkflow = None
+    defaultWorkflow = None
     parentWorkflow = None
     packages_to_install = None
     restartAction = None
@@ -214,6 +215,10 @@ class MainController(NSObject):
                     self.workflows = converted_plist['workflows']
                 except:
                     self.errorMessage = "No workflows found in the configuration plist."
+                try:
+                    self.defaultWorkflow = converted_plist['default_workflow']
+                except:
+                    pass
             else:
                 self.errorMessage = "Couldn't get configuration plist from server."
         else:
@@ -391,6 +396,11 @@ class MainController(NSObject):
                 list.append(workflow['name'])
 
         self.chooseWorkflowDropDown.addItemsWithTitles_(list)
+        
+        # The current selection is deselected if a nil or non-existent title is given
+        if self.defaultWorkflow:
+            self.chooseWorkflowDropDown.selectItemWithTitle_(self.defaultWorkflow)
+        
         self.chooseWorkflowDropDownDidChange_(sender)
 
     @objc.IBAction
