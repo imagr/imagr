@@ -5,7 +5,7 @@ This script will validate an Imagr configuration plist. Usage:
 ./validateplist ~/path/to/config.plist
 
     The rules of Imagr
-    #1 - there must be a password
+    #1 - if there is a password, its hash must not be empty
     #2 - there must be at least one workflow
     #3 - Workflow names must be unique
     #4 - Image components must have a url
@@ -152,9 +152,9 @@ def main():
 
     if temp_plist:
         shutil.rmtree(temp_dir)
-    # Rule 1
-    if 'password' not in config:
-        fail('There must be a password set.')
+    # Rule 1		
+    if 'password' in config and len(config['password']) == 0:
+        fail('There must be a valid password set.')
 
     # Rule 2
     if 'workflows' not in config:
