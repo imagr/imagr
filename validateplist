@@ -5,20 +5,21 @@ This script will validate an Imagr configuration plist. Usage:
 ./validateplist ~/path/to/config.plist
 
     The rules of Imagr
-    #1 - there must be at least one workflow
-    #2 - Workflow names must be unique
-    #3 - Image components must have a url
-    #4 - Image urls must end in dmg
-    #5 - Package comonents must have a url
-    #6 - Package urls must end with either pkg or dmg
-    #7 - Scripts must have content or a url
-    #8 - Restart actions must be 'none', 'shutdown' or 'restart'
-    #9 - first_boot must be a boolean on all component types
-    #10 - Partition actions must have at least one partition
-    #11 - Partition actions must have a target
-    #12 - Partition actions must have one 'size' for each partition, if 'size' is specified
-    #13 - Partition actions must not be done at first boot
-    #14 - eraseVolume actions must not be done at first boot
+    #1 - if there is a password, its hash must not be empty
+    #2 - there must be at least one workflow
+    #3 - Workflow names must be unique
+    #4 - Image components must have a url
+    #5 - Image urls must end in dmg
+    #6 - Package comonents must have a url
+    #7 - Package urls must end with either pkg or dmg
+    #8 - Scripts must have content or a url
+    #9 - Restart actions must be 'none', 'shutdown' or 'restart'
+    #10 - first_boot must be a boolean on all component types
+    #11 - Partition actions must have at least one partition
+    #12 - Partition actions must have a target
+    #13 - Partition actions must have one 'size' for each partition, if 'size' is specified
+    #14 - Partition actions must not be done at first boot
+    #15 - eraseVolume actions must not be done at first boot
 """
 
 import os
@@ -44,7 +45,7 @@ def fail(error):
     sys.exit(1)
 
 def validateComponent(component, workflow):
-    # Rule 9
+    # Rule 10
     if 'first_boot' in component:
         if str(type(component['first_boot'])) != "<type 'bool'>":
             fail("'first_boot' must be a boolen (<true/> or <false/>). Not found in %s" % workflow['name'])
@@ -52,42 +53,42 @@ def validateComponent(component, workflow):
         fail("'type' is a required key in a component. Not found in %s" % workflow['name'])
 
     if component['type'] == 'image':
-        # Rule 3
+        # Rule 4
         if 'url' not in component:
             fail("'url' is a required key in an 'image' component. Not found in %s" % workflow['name'])
 
-        # Rule 4
+        # Rule 5
         if not component['url'].endswith(".dmg") and not component['url'].endswith(".sparseimage"):
             fail("The 'url' in 'image' components must end with '.dmg' or '.sparseimage'. Not found in %s" % workflow['name'])
 
     if component['type'] == 'package':
-        # Rule 5
+        # Rule 6
         if 'url' not in component:
             fail("'url' is a required key in a 'package' component. Not found in %s" % workflow['name'])
 
-        # Rule 6
+        # Rule 7
         if not component['url'].endswith(".dmg") and not component['url'].endswith(".pkg"):
             fail("The 'url' in 'package' components must end with '.dmg' or '.pkg'. Not found in %s" % workflow['name'])
 
     if component['type'] == 'script':
-        # Rule 7
+        # Rule 8
         if 'content' not in component and 'url' not in component:
             fail("'content' is a required key in a 'script' component. Not found in %s" % workflow['name'])
 
 
     if component['type'] == 'partition':
-        # Rule 10
+        # Rule 11
         if 'partitions' not in component:
             fail("'partitions' is a required key in a 'partition' component. Not found in %s" % workflow['name'])
         if len(component['partitions']) == 0:
             fail("'partitions' must have at least one item in the array. Not found in %s" % workflow['name'])
-        # Rule 11
+        # Rule 12
         targetFound = 0
         sizeFound = 0
         for partition in component['partitions']:
             if 'target' in partition and partition['target'] == True:
                 targetFound += 1
-            # Rule 12
+            # Rule 13
             if 'size' in partition:
                 sizeFound += 1
         if targetFound == 0:
@@ -97,14 +98,14 @@ def validateComponent(component, workflow):
         if sizeFound != len(component['partitions']):
             fail("'partitions' must have a size for each partition. Not enough found in %s" % workflow['name'])
 
-    # Rule 13
+    # Rule 14
     try:
         if (component['type'] == 'partition') and (component['first_boot'] == True):
             fail("'partitions' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
     except:
         pass
 
-    # Rule 14
+    # Rule 15
     try:
         if (component['type'] == 'eraseVolume') and (component['first_boot'] == True):
             fail("'eraseVolume' must not be a first-boot action. 'first_boot' = True found in %s" % workflow['name'])
@@ -151,8 +152,11 @@ def main():
 
     if temp_plist:
         shutil.rmtree(temp_dir)
+    # Rule 1		
+    if 'password' in config and len(config['password']) == 0:
+        fail('There must be a valid password set.')
 
-    # Rule 1
+    # Rule 2
     if 'workflows' not in config:
         fail('There are no workflows.')
 
@@ -161,13 +165,13 @@ def main():
 
     existing_names = []
     for workflow in config['workflows']:
-        # Rule 2
+        # Rule 3
         if workflow['name'] in existing_names:
             fail('Workflow names must be unique. %s has already been used.' % workflow['name'])
         else:
             existing_names.append(workflow['name'])
 
-        # Rule 8
+        # Rule 9
         if 'restart_action' in workflow:
             if workflow['restart_action'] != 'none' and workflow['restart_action'] != 'restart' and workflow['restart_action'] != 'shutdown':
                 fail("restart_action is not one of 'none', 'shutdown' or 'restart' in workflow %s" % workflow['name'])
