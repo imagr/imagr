@@ -20,6 +20,7 @@ This script will validate an Imagr configuration plist. Usage:
     #13 - Partition actions must have one 'size' for each partition, if 'size' is specified
     #14 - Partition actions must not be done at first boot
     #15 - eraseVolume actions must not be done at first boot
+    #16 - if a default workflow is specified, it must match the name of an existing workflow
 """
 
 import os
@@ -178,6 +179,11 @@ def main():
 
         for component in workflow['components']:
             validateComponent(component, workflow)
+
+    # Rule 16
+    if 'default_workflow' in config and config['default_workflow'] not in existing_names:
+        fail('Default workflow must match the name of an existing workflow.')
+
     # if we get this far, it looks good.
     print "SUCCESS: %s looks like a valid Imagr configuration plist." % plist
 if __name__ == '__main__':
