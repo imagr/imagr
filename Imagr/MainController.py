@@ -388,7 +388,7 @@ class MainController(NSObject):
         list = []
         for workflow in self.workflows:
             if 'hidden' in workflow:
-                # Don't add 'hidden' workdlows to the list
+                # Don't add 'hidden' workflows to the list
                 if workflow['hidden'] == False:
                     list.append(workflow['name'])
             else:
@@ -642,7 +642,7 @@ class MainController(NSObject):
                 self.errorMessage = "Found an unknown workflow item."
 
     def runIncludedWorkflow(self, item):
-        '''Runs an included workdlow'''
+        '''Runs an included workflow'''
         # find the workflow we're looking for
         target_workflow = None
         for workflow in self.workflows:
