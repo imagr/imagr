@@ -23,6 +23,7 @@ import PyObjCTools
 import tempfile
 import shutil
 import Quartz
+import time
 
 class MainController(NSObject):
 
@@ -75,6 +76,9 @@ class MainController(NSObject):
 
     computerNameInput = objc.IBOutlet()
     computerNameButton = objc.IBOutlet()
+    
+    countdownWarningImage = objc.IBOutlet()
+    countdownCancelButton = objc.IBOutlet()
 
     # former globals, now instance variables
     hasLoggedIn = None
@@ -96,6 +100,8 @@ class MainController(NSObject):
     computerName = None
     counter = 0.0
     first_boot_items = None
+    autorunDefaultWorkflow = False
+    cancelledAutorun = False
 
     def errorPanel(self, error):
         if error:
@@ -192,8 +198,29 @@ class MainController(NSObject):
             if str(volume.mountpoint) == str(selected_volume):
                 self.targetVolume = volume
 
-    def loadData(self):
+    def expandImagingProgressPanel(self):
+        self.imagingProgressPanel.setContentSize_(NSSize(466, 119))
+        self.countdownWarningImage.setHidden_(False)
+        self.countdownCancelButton.setHidden_(False)
+        self.imagingLabel.setFrameOrigin_(NSPoint(89, 87))
+        self.imagingLabel.setFrameSize_(NSSize(359, 17))
+        self.imagingProgress.setFrameOrigin_(NSPoint(91, 60))
+        self.imagingProgress.setFrameSize_(NSSize(355, 20))
+        self.imagingProgressDetail.setFrameOrigin_(NSPoint(89, 41))
+        self.imagingProgressDetail.setFrameSize_(NSSize(360, 17))
+    
+    def contractImagingProgressPanel(self):
+        self.imagingProgressPanel.setContentSize_(NSSize(466, 98))
+        self.countdownWarningImage.setHidden_(True)
+        self.countdownCancelButton.setHidden_(True)
+        self.imagingLabel.setFrameOrigin_(NSPoint(17, 66))
+        self.imagingLabel.setFrameSize_(NSSize(431, 17))
+        self.imagingProgress.setFrameOrigin_(NSPoint(20, 39))
+        self.imagingProgress.setFrameSize_(NSSize(426, 20))
+        self.imagingProgressDetail.setFrameOrigin_(NSPoint(18, 20))
+        self.imagingProgressDetail.setFrameSize_(NSSize(431, 17))
 
+    def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
         self.volumes = macdisk.MountedVolumes()
 
@@ -242,6 +269,16 @@ class MainController(NSObject):
                 self.enableWorkflowViewControls()
                 self.theTabView.selectTabViewItem_(self.mainTab)
                 self.chooseImagingTarget_(None)
+                
+                
+                
+                # If the default workflow has "autorun" set to True, we run the default workflow without prompting.
+                for workflow in self.workflows:
+                    if not self.cancelledAutorun and self.defaultWorkflow and workflow['name'] == self.defaultWorkflow and 'autorun' in workflow and workflow['autorun']:
+                        self.autorunDefaultWorkflow = True
+            
+                if self.autorunDefaultWorkflow:
+                    self.countdownOnThreadPrep()
                 #self.enableAllButtons_(self)
             else:
                 self.theTabView.selectTabViewItem_(self.loginTab)
@@ -471,14 +508,15 @@ class MainController(NSObject):
                     self.getComputerName_(item)
                     settingName = True
                     break
-        if not settingName:
-            self.workflowOnThreadPrep()
+            if not settingName:
+                self.workflowOnThreadPrep()
 
     def workflowOnThreadPrep(self):
         self.disableWorkflowViewControls()
         Utils.sendReport('in_progress', 'Preparing to run workflow %s...' % self.selectedWorkflow['name'])
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
         self.imagingProgressDetail.setStringValue_('')
+        self.contractImagingProgressPanel()
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
             self.imagingProgressPanel, self.mainWindow, self, None, None)
         # initialize the progress bar
@@ -489,6 +527,58 @@ class MainController(NSObject):
         self.imagingProgress.startAnimation_(self)
         NSThread.detachNewThreadSelector_toTarget_withObject_(
             self.processWorkflowOnThread, self, None)
+    
+    def countdownOnThreadPrep(self):
+        self.disableWorkflowViewControls()
+        self.imagingLabel.setStringValue_("Preparing to run {} on {}".format(self.defaultWorkflow, self.targetVolume.mountpoint))
+        #self.imagingProgressDetail.setStringValue_('')
+        self.expandImagingProgressPanel()
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.imagingProgressPanel, self.mainWindow, self, None, None)
+        # initialize the progress bar
+        self.imagingProgress.setMinValue_(0.0)
+        self.imagingProgress.setMaxValue_(30.0)
+        self.imagingProgress.setIndeterminate_(True)
+        self.imagingProgress.setUsesThreadedAnimation_(True)
+        self.imagingProgress.startAnimation_(self)
+        NSThread.detachNewThreadSelector_toTarget_withObject_(
+            self.processCountdownOnThread, self, None)
+    
+    def processCountdownOnThread(self, sender):
+        '''Count down for 30s'''
+        #pool = NSAutoreleasePool.alloc().init()
+        NSLog("{}, {}".format(self.defaultWorkflow, self.targetVolume))
+        if self.defaultWorkflow and self.targetVolume:
+            self.should_update_volume_list = False
+            
+            # Count down for 30s.
+            for remaining in range(30, 0, -1):
+                if not self.autorunDefaultWorkflow:
+                    break
+                
+                self.updateProgressTitle_Percent_Detail_(None, 30 - remaining, "Beginning in {}s".format(remaining))
+                time.sleep(1)
+
+        self.performSelectorOnMainThread_withObject_waitUntilDone_(
+            self.processCountdownOnThreadComplete, None, YES)
+        #del pool
+
+    def processCountdownOnThreadComplete(self):
+        '''Done running countdown, start the default workflow'''
+        NSApp.endSheet_(self.imagingProgressPanel)
+        self.imagingProgressPanel.orderOut_(self)
+        
+        # Make sure the user still wants to autorun the default workflow (i.e. hasn't clicked cancel).
+        if self.autorunDefaultWorkflow:
+            self.runWorkflow_(None)
+    
+    @objc.IBAction
+    def cancelCountdown_(self, sender):
+        '''The user didn't want to automatically run the default workflow after all.'''
+        self.autorunDefaultWorkflow = False
+        # Avoid trying to autorun again.
+        self.cancelledAutorun = True
+        self.enableWorkflowViewControls()
 
     def updateProgressWithInfo_(self, info):
         '''UI stuff should be done on the main thread. Yet we do all our interesting work
