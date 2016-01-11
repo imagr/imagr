@@ -269,20 +269,20 @@ class MainController(NSObject):
                 self.enableWorkflowViewControls()
                 self.theTabView.selectTabViewItem_(self.mainTab)
                 self.chooseImagingTarget_(None)
-                
-                
-                
-                # If the default workflow has "autorun" set to True, we run the default workflow without prompting.
-                for workflow in self.workflows:
-                    if not self.cancelledAutorun and self.defaultWorkflow and workflow['name'] == self.defaultWorkflow and 'autorun' in workflow and workflow['autorun']:
-                        self.autorunDefaultWorkflow = True
             
-                if self.autorunDefaultWorkflow:
-                    self.countdownOnThreadPrep()
-                #self.enableAllButtons_(self)
+                self.isAutorun()
             else:
                 self.theTabView.selectTabViewItem_(self.loginTab)
                 self.mainWindow.makeFirstResponder_(self.password)
+
+    def isAutorun(self):
+        # If the default workflow has "autorun" set to True, we run the default workflow without prompting.
+        for workflow in self.workflows:
+            if not self.cancelledAutorun and self.defaultWorkflow and workflow['name'] == self.defaultWorkflow and 'autorun' in workflow and workflow['autorun']:
+                self.autorunDefaultWorkflow = True
+                
+        if self.autorunDefaultWorkflow:
+            self.countdownOnThreadPrep()
 
     @objc.IBAction
     def reloadWorkflows_(self, sender):
@@ -308,6 +308,8 @@ class MainController(NSObject):
                 self.chooseImagingTarget_(None)
                 self.enableAllButtons_(self)
                 self.hasLoggedIn = True
+
+                self.isAutorun()
 
     @objc.IBAction
     def setStartupDisk_(self, sender):
