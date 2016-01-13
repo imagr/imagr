@@ -1009,15 +1009,15 @@ class MainController(NSObject):
         # 1 = Restart
 
         if returncode == -1:
-            NSLog("You clicked %@ - shutdown", returncode)
+            # NSLog("You clicked %@ - shutdown", returncode)
             self.restartAction = 'shutdown'
             self.restartToImagedVolume()
         elif returncode == 1:
-            NSLog("You clicked %@ - restart", returncode)
+            # NSLog("You clicked %@ - restart", returncode)
             self.restartAction = 'restart'
             self.restartToImagedVolume()
         elif returncode == 0:
-            NSLog("You clicked %@ - another workflow", returncode)
+            # NSLog("You clicked %@ - another workflow", returncode)
             self.enableWorkflowViewControls()
             self.chooseImagingTarget_(contextinfo)
 
