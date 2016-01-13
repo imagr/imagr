@@ -396,11 +396,11 @@ class MainController(NSObject):
                 list.append(workflow['name'])
 
         self.chooseWorkflowDropDown.addItemsWithTitles_(list)
-        
+
         # The current selection is deselected if a nil or non-existent title is given
         if self.defaultWorkflow:
             self.chooseWorkflowDropDown.selectItemWithTitle_(self.defaultWorkflow)
-        
+
         self.chooseWorkflowDropDownDidChange_(sender)
 
     @objc.IBAction
@@ -930,14 +930,19 @@ class MainController(NSObject):
         # replace the placeholders in the script
         script = Utils.replacePlaceholders(script, target)
 
+        # Copy script content to a temporary location and make executable
+        script_file = tempfile.NamedTemporaryFile(delete=False)
+        script_file.write(script)
+        script_file.close()
+        os.chmod(script_file.name, 0700)
         if progress_method:
             progress_method("Running script...", 0, '')
-        proc = subprocess.Popen(script, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         while proc.poll() is None:
             output = proc.stdout.readline().strip().decode('UTF-8')
             if progress_method:
                 progress_method(None, None, output)
-
+        os.remove(script_file.name)
         return proc.returncode
 
     def copyScript(self, script, target, number, progress_method=None):
