@@ -643,8 +643,9 @@ class MainController(NSObject):
         if 'script' in item:
             if progress_method:
                 progress_method("Running script to determine included workflow...", -1, '')
+            script = Utils.replacePlaceholders(item['script'], self.targetVolume.mountpoint)
             script_file = tempfile.NamedTemporaryFile(delete=False)
-            script_file.write(item['script'])
+            script_file.write(script)
             script_file.close()
             os.chmod(script_file.name, 0700)
             proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -657,11 +658,14 @@ class MainController(NSObject):
             if proc.returncode != 0:
                 if err == None:
                     err = 'Unknown'
-                Utils.sendReport('error', 'Could not run included worklow script: %s' % err)
-                self.errorMessage = 'Could not run included worklow script: %s' % err
+                Utils.sendReport('error', 'Could not run included workflow script: %s' % err)
+                self.errorMessage = 'Could not run included workflow script: %s' % err
                 return
             else:
-                included_workflow = out
+                for line in out.splitlines():
+                    if line.startswith("ImagrIncludedWorkflow: ") or line.startswith("ImagrIncludedWorkflow:"):
+                        included_workflow = line.replace("ImagrIncludedWorkflow: ", "").replace("ImagrIncludedWorkflow:", "").strip()
+                        break
         else:
             included_workflow = item['name']
         if included_workflow:
@@ -674,8 +678,8 @@ class MainController(NSObject):
             for component in target_workflow['components']:
                 self.runComponent(component)
         else:
-            Utils.sendReport('error', 'Could not find included worklow %s' % included_workflow)
-            self.errorMessage = 'Could not find included worklow %s' % included_workflow
+            Utils.sendReport('error', 'Could not find included workflow %s' % included_workflow)
+            self.errorMessage = 'Could not find included workflow %s' % included_workflow
 
     def getComputerName_(self, component):
         auto_run = component.get('auto', False)
