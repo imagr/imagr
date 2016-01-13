@@ -637,28 +637,36 @@ class MainController(NSObject):
         '''Runs an included workflow'''
         # find the workflow we're looking for
         progress_method = self.updateProgressTitle_Percent_Detail_
+        #progress_method = None
         target_workflow = None
         included_workflow = None
         if 'script' in item:
             if progress_method:
-                progress_method("Running script to determine included workflow...", 0, '')
+                progress_method("Running script to determine included workflow...", -1, '')
+            script_file = tempfile.NamedTemporaryFile(delete=False)
+            script_file.write(item['script'])
+            script_file.close()
+            os.chmod(script_file.name, 0700)
             proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            while proc.poll() is None:
-                output = proc.stdout.readline().strip().decode('UTF-8')
-                if progress_method:
-                    progress_method(None, None, output)
+
+            # while proc.poll() is None:
+            #     output = proc.stdout.readline().strip().decode('UTF-8')
+            #     if progress_method:
+            #         progress_method(None, None, output)
             (out, err) = proc.communicate()
             if proc.returncode != 0:
+                if err == None:
+                    err = 'Unknown'
                 Utils.sendReport('error', 'Could not run included worklow script: %s' % err)
                 self.errorMessage = 'Could not run included worklow script: %s' % err
+                return
             else:
                 included_workflow = out
         else:
             included_workflow = item['name']
-
         if included_workflow:
             for workflow in self.workflows:
-                if item['name'] == workflow['name']:
+                if included_workflow.strip() == workflow['name'].strip():
                     target_workflow = workflow
                     break
         # run the workflow
@@ -951,7 +959,7 @@ class MainController(NSObject):
         script_file.close()
         os.chmod(script_file.name, 0700)
         if progress_method:
-            progress_method("Running script...", 0, '')
+            progress_method("Running script...", -1, '')
         proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         while proc.poll() is None:
             output = proc.stdout.readline().strip().decode('UTF-8')
