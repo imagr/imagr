@@ -99,7 +99,7 @@ class MainController(NSObject):
     computerName = None
     counter = 0.0
     first_boot_items = None
-    autorunDefaultWorkflow = False
+    autorunWorkflow = None
     cancelledAutorun = False
 
     def errorPanel(self, error):
@@ -219,13 +219,16 @@ class MainController(NSObject):
         self.volumes = macdisk.MountedVolumes()
 
         theURL = Utils.getServerURL()
+        
         if theURL:
             plistData = Utils.downloadFile(theURL)
+            
             if plistData:
                 try:
                     converted_plist = FoundationPlist.readPlistFromString(plistData)
                 except:
                     self.errorMessage = "Configuration plist couldn't be read."
+                
                 try:
                     self.passwordHash = converted_plist['password']
                 except:
@@ -236,8 +239,18 @@ class MainController(NSObject):
                     self.workflows = converted_plist['workflows']
                 except:
                     self.errorMessage = "No workflows found in the configuration plist."
+                
                 try:
                     self.defaultWorkflow = converted_plist['default_workflow']
+                except:
+                    pass
+        
+                try:
+                    self.autorunWorkflow = converted_plist['autorun']
+                    
+                    # If we've already cancelled autorun, don't bother trying to autorun again.
+                    if self.cancelledAutorun:
+                        self.autorunWorkflow = None
                 except:
                     pass
             else:
@@ -268,12 +281,7 @@ class MainController(NSObject):
                 self.mainWindow.makeFirstResponder_(self.password)
 
     def isAutorun(self):
-        # If the default workflow has "autorun" set to True, we run the default workflow without prompting.
-        for workflow in self.workflows:
-            if not self.cancelledAutorun and self.defaultWorkflow and workflow['name'] == self.defaultWorkflow and 'autorun' in workflow and workflow['autorun']:
-                self.autorunDefaultWorkflow = True
-                
-        if self.autorunDefaultWorkflow:
+        if self.autorunWorkflow:
             self.countdownOnThreadPrep()
 
     @objc.IBAction
@@ -480,6 +488,10 @@ class MainController(NSObject):
         '''Set up the selected workflow to run on secondary thread'''
         self.workflow_is_running = True
         selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
+        
+        if self.autorunWorkflow:
+            selected_workflow = self.autorunWorkflow
+
         # let's get the workflow
         self.selectedWorkflow = None
         for workflow in self.workflows:
@@ -524,7 +536,7 @@ class MainController(NSObject):
     
     def countdownOnThreadPrep(self):
         self.disableWorkflowViewControls()
-        self.imagingLabel.setStringValue_("Preparing to run {} on {}".format(self.defaultWorkflow, self.targetVolume.mountpoint))
+        self.imagingLabel.setStringValue_("Preparing to run {} on {}".format(self.autorunWorkflow, self.targetVolume.mountpoint))
         #self.imagingProgressDetail.setStringValue_('')
         self.expandImagingProgressPanel()
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
@@ -541,13 +553,12 @@ class MainController(NSObject):
     def processCountdownOnThread(self, sender):
         '''Count down for 30s'''
         #pool = NSAutoreleasePool.alloc().init()
-        NSLog("{}, {}".format(self.defaultWorkflow, self.targetVolume))
-        if self.defaultWorkflow and self.targetVolume:
+        if self.autorunWorkflow and self.targetVolume:
             self.should_update_volume_list = False
             
             # Count down for 30s.
             for remaining in range(30, 0, -1):
-                if not self.autorunDefaultWorkflow:
+                if not self.autorunWorkflow:
                     break
                 
                 self.updateProgressTitle_Percent_Detail_(None, 30 - remaining, "Beginning in {}s".format(remaining))
@@ -563,13 +574,13 @@ class MainController(NSObject):
         self.imagingProgressPanel.orderOut_(self)
         
         # Make sure the user still wants to autorun the default workflow (i.e. hasn't clicked cancel).
-        if self.autorunDefaultWorkflow:
+        if self.autorunWorkflow:
             self.runWorkflow_(None)
     
     @objc.IBAction
     def cancelCountdown_(self, sender):
         '''The user didn't want to automatically run the default workflow after all.'''
-        self.autorunDefaultWorkflow = False
+        self.autorunWorkflow = None
         # Avoid trying to autorun again.
         self.cancelledAutorun = True
         self.enableWorkflowViewControls()
@@ -633,6 +644,10 @@ class MainController(NSObject):
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
         self.workflow_is_running = False
+        
+        # Disable autorun so users are able to select additional workflows to run.
+        self.autorunWorkflow = None
+        
         Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'])
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
