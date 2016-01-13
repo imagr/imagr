@@ -13,3 +13,13 @@ Support Mailing List: [imagr-discuss](https://groups.google.com/group/imagr-disc
 ## Getting Started
 
 The best place to get started with Imagr is the [Getting Started](https://github.com/grahamgilbert/imagr/wiki/Getting-Started) page on the wiki.
+
+## Features
+
+* Restore ASR Images (such as those created with AutoDMG)
+* Install packages during Imagr run and at first boot
+* Run scripts during Imagr run and at first boot
+* Include other workflows in your workflow, specified statically or using a script
+* Erase and partition disks
+* Rename the machine
+* Protect your users from accidentally wiping their devices by specifying a password for Imagr
