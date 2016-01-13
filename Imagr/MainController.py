@@ -94,7 +94,6 @@ class MainController(NSObject):
     restartAction = None
     blessTarget = None
     errorMessage = None
-    errorRecoverable = True
     alert = None
     workflow_is_running = False
     computerName = None
@@ -118,20 +117,15 @@ class MainController(NSObject):
             NSLocalizedString(u"Reload Workflows", None),
             objc.nil,
             NSLocalizedString(u"", None))
-        if self.errorRecoverable:
-            # This is an error that can be recovered from. Go back to main Tab
-            self.errorMessage = None
-            self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
-                self.mainWindow, self, self.errorPanelDidEnd_returnCode_contextInfo_, objc.nil)
-        else:
-            self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
-                self.mainWindow, self, self.setStartupDisk_, objc.nil)
+
+        self.errorMessage = None
+        self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.mainWindow, self, self.errorPanelDidEnd_returnCode_contextInfo_, objc.nil)
 
     @PyObjCTools.AppHelper.endSheetMethod
     def errorPanelDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
         # 0 = reload workflows
         # 1 = Restart
-        NSLog(str(returncode))
         if returncode == 0:
             self.errorMessage = None
             self.reloadWorkflows_(self)
@@ -259,8 +253,6 @@ class MainController(NSObject):
     def loadDataComplete(self):
         #self.reloadWorkflowsMenuItem.setEnabled_(True)
         if self.errorMessage:
-            # errors here aren't recoverable
-            self.errorRecoverable = False
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
         else:
@@ -435,11 +427,11 @@ class MainController(NSObject):
                 list.append(workflow['name'])
 
         self.chooseWorkflowDropDown.addItemsWithTitles_(list)
-        
+
         # The current selection is deselected if a nil or non-existent title is given
         if self.defaultWorkflow:
             self.chooseWorkflowDropDown.selectItemWithTitle_(self.defaultWorkflow)
-        
+
         self.chooseWorkflowDropDownDidChange_(sender)
 
     @objc.IBAction
@@ -736,15 +728,50 @@ class MainController(NSObject):
     def runIncludedWorkflow(self, item):
         '''Runs an included workflow'''
         # find the workflow we're looking for
+        progress_method = self.updateProgressTitle_Percent_Detail_
+        #progress_method = None
         target_workflow = None
-        for workflow in self.workflows:
-            if item['name'] == workflow['name']:
-                target_workflow = workflow
-                break
+        included_workflow = None
+        if 'script' in item:
+            if progress_method:
+                progress_method("Running script to determine included workflow...", -1, '')
+            script = Utils.replacePlaceholders(item['script'], self.targetVolume.mountpoint)
+            script_file = tempfile.NamedTemporaryFile(delete=False)
+            script_file.write(script)
+            script_file.close()
+            os.chmod(script_file.name, 0700)
+            proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+
+            # while proc.poll() is None:
+            #     output = proc.stdout.readline().strip().decode('UTF-8')
+            #     if progress_method:
+            #         progress_method(None, None, output)
+            (out, err) = proc.communicate()
+            if proc.returncode != 0:
+                if err == None:
+                    err = 'Unknown'
+                Utils.sendReport('error', 'Could not run included workflow script: %s' % err)
+                self.errorMessage = 'Could not run included workflow script: %s' % err
+                return
+            else:
+                for line in out.splitlines():
+                    if line.startswith("ImagrIncludedWorkflow: ") or line.startswith("ImagrIncludedWorkflow:"):
+                        included_workflow = line.replace("ImagrIncludedWorkflow: ", "").replace("ImagrIncludedWorkflow:", "").strip()
+                        break
+        else:
+            included_workflow = item['name']
+        if included_workflow:
+            for workflow in self.workflows:
+                if included_workflow.strip() == workflow['name'].strip():
+                    target_workflow = workflow
+                    break
         # run the workflow
         if target_workflow:
             for component in target_workflow['components']:
                 self.runComponent(component)
+        else:
+            Utils.sendReport('error', 'Could not find included workflow %s' % included_workflow)
+            self.errorMessage = 'Could not find included workflow %s' % included_workflow
 
     def getComputerName_(self, component):
         auto_run = component.get('auto', False)
@@ -1022,14 +1049,19 @@ class MainController(NSObject):
         # replace the placeholders in the script
         script = Utils.replacePlaceholders(script, target)
 
+        # Copy script content to a temporary location and make executable
+        script_file = tempfile.NamedTemporaryFile(delete=False)
+        script_file.write(script)
+        script_file.close()
+        os.chmod(script_file.name, 0700)
         if progress_method:
-            progress_method("Running script...", 0, '')
-        proc = subprocess.Popen(script, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            progress_method("Running script...", -1, '')
+        proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         while proc.poll() is None:
             output = proc.stdout.readline().strip().decode('UTF-8')
             if progress_method:
                 progress_method(None, None, output)
-
+        os.remove(script_file.name)
         return proc.returncode
 
     def copyScript(self, script, target, number, progress_method=None):
@@ -1096,15 +1128,15 @@ class MainController(NSObject):
         # 1 = Restart
 
         if returncode == -1:
-            NSLog("You clicked %@ - shutdown", returncode)
+            # NSLog("You clicked %@ - shutdown", returncode)
             self.restartAction = 'shutdown'
             self.restartToImagedVolume()
         elif returncode == 1:
-            NSLog("You clicked %@ - restart", returncode)
+            # NSLog("You clicked %@ - restart", returncode)
             self.restartAction = 'restart'
             self.restartToImagedVolume()
         elif returncode == 0:
-            NSLog("You clicked %@ - another workflow", returncode)
+            # NSLog("You clicked %@ - another workflow", returncode)
             self.enableWorkflowViewControls()
             self.chooseImagingTarget_(contextinfo)
 
