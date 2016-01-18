@@ -76,7 +76,7 @@ class MainController(NSObject):
 
     computerNameInput = objc.IBOutlet()
     computerNameButton = objc.IBOutlet()
-    
+
     countdownWarningImage = objc.IBOutlet()
     countdownCancelButton = objc.IBOutlet()
 
@@ -168,9 +168,9 @@ class MainController(NSObject):
             NSLog("%@ was unmounted", removed_volume)
         elif notification_name == NSWorkspaceDidRenameVolumeNotification:
             pass
-        # this repeats code elsewhere; this should really be factored out
-        # this next bit can take a bit and cause rainbow wheels; we should also
-        # do this differently.
+        self.reloadVolumes()
+
+    def reloadVolumes(self):
         self.volumes = macdisk.MountedVolumes()
         self.chooseTargetDropDown.removeAllItems()
         list = []
@@ -202,7 +202,7 @@ class MainController(NSObject):
         self.imagingProgress.setFrameSize_(NSSize(355, 20))
         self.imagingProgressDetail.setFrameOrigin_(NSPoint(89, 41))
         self.imagingProgressDetail.setFrameSize_(NSSize(360, 17))
-    
+
     def contractImagingProgressPanel(self):
         self.imagingProgressPanel.setContentSize_(NSSize(466, 98))
         self.countdownWarningImage.setHidden_(True)
@@ -219,16 +219,16 @@ class MainController(NSObject):
         self.volumes = macdisk.MountedVolumes()
 
         theURL = Utils.getServerURL()
-        
+
         if theURL:
             plistData = Utils.downloadFile(theURL)
-            
+
             if plistData:
                 try:
                     converted_plist = FoundationPlist.readPlistFromString(plistData)
                 except:
                     self.errorMessage = "Configuration plist couldn't be read."
-                
+
                 try:
                     self.passwordHash = converted_plist['password']
                 except:
@@ -239,15 +239,15 @@ class MainController(NSObject):
                     self.workflows = converted_plist['workflows']
                 except:
                     self.errorMessage = "No workflows found in the configuration plist."
-                
+
                 try:
                     self.defaultWorkflow = converted_plist['default_workflow']
                 except:
                     pass
-        
+
                 try:
                     self.autorunWorkflow = converted_plist['autorun']
-                    
+
                     # If we've already cancelled autorun, don't bother trying to autorun again.
                     if self.cancelledAutorun:
                         self.autorunWorkflow = None
@@ -274,7 +274,7 @@ class MainController(NSObject):
                 self.enableWorkflowViewControls()
                 self.theTabView.selectTabViewItem_(self.mainTab)
                 self.chooseImagingTarget_(None)
-            
+
                 self.isAutorun()
             else:
                 self.theTabView.selectTabViewItem_(self.loginTab)
@@ -488,7 +488,7 @@ class MainController(NSObject):
         '''Set up the selected workflow to run on secondary thread'''
         self.workflow_is_running = True
         selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
-        
+
         if self.autorunWorkflow:
             selected_workflow = self.autorunWorkflow
 
@@ -533,7 +533,7 @@ class MainController(NSObject):
         self.imagingProgress.startAnimation_(self)
         NSThread.detachNewThreadSelector_toTarget_withObject_(
             self.processWorkflowOnThread, self, None)
-    
+
     def countdownOnThreadPrep(self):
         self.disableWorkflowViewControls()
         self.imagingLabel.setStringValue_("Preparing to run {} on {}".format(self.autorunWorkflow, self.targetVolume.mountpoint))
@@ -549,18 +549,18 @@ class MainController(NSObject):
         self.imagingProgress.startAnimation_(self)
         NSThread.detachNewThreadSelector_toTarget_withObject_(
             self.processCountdownOnThread, self, None)
-    
+
     def processCountdownOnThread(self, sender):
         '''Count down for 30s'''
         #pool = NSAutoreleasePool.alloc().init()
         if self.autorunWorkflow and self.targetVolume:
             self.should_update_volume_list = False
-            
+
             # Count down for 30s.
             for remaining in range(30, 0, -1):
                 if not self.autorunWorkflow:
                     break
-                
+
                 self.updateProgressTitle_Percent_Detail_(None, 30 - remaining, "Beginning in {}s".format(remaining))
                 time.sleep(1)
 
@@ -572,11 +572,11 @@ class MainController(NSObject):
         '''Done running countdown, start the default workflow'''
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
-        
+
         # Make sure the user still wants to autorun the default workflow (i.e. hasn't clicked cancel).
         if self.autorunWorkflow:
             self.runWorkflow_(None)
-    
+
     @objc.IBAction
     def cancelCountdown_(self, sender):
         '''The user didn't want to automatically run the default workflow after all.'''
@@ -644,10 +644,10 @@ class MainController(NSObject):
         NSApp.endSheet_(self.imagingProgressPanel)
         self.imagingProgressPanel.orderOut_(self)
         self.workflow_is_running = False
-        
+
         # Disable autorun so users are able to select additional workflows to run.
         self.autorunWorkflow = None
-        
+
         Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'])
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
@@ -1152,8 +1152,10 @@ class MainController(NSObject):
             self.restartToImagedVolume()
         elif returncode == 0:
             # NSLog("You clicked %@ - another workflow", returncode)
+            self.reloadVolumes()
             self.enableWorkflowViewControls()
-            self.chooseImagingTarget_(contextinfo)
+            self.chooseImagingTarget_(None)
+            # self.loadDataComplete()
 
     def enableAllButtons_(self, sender):
         self.cancelAndRestartButton.setEnabled_(True)
