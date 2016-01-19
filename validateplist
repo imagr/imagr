@@ -154,7 +154,7 @@ def main():
 
     if temp_plist:
         shutil.rmtree(temp_dir)
-    # Rule 1		
+    # Rule 1
     if 'password' in config and len(config['password']) == 0:
         fail('There must be a valid password set.')
 
