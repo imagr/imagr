@@ -173,20 +173,20 @@ class MainController(NSObject):
     def reloadVolumes(self):
         self.volumes = macdisk.MountedVolumes()
         self.chooseTargetDropDown.removeAllItems()
-        list = []
+        volume_list = []
         for volume in self.volumes:
             if volume.mountpoint != '/':
                 if volume.mountpoint.startswith("/Volumes"):
                     if volume.mountpoint != '/Volumes':
                         if volume.writable:
-                            list.append(volume.mountpoint)
-        self.chooseTargetDropDown.addItemsWithTitles_(list)
+                            volume_list.append(volume.mountpoint)
+        self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
         # reselect previously selected target if possible
         if self.targetVolume:
             self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
             selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
         else:
-            selected_volume = list[0]
+            selected_volume = volume_list[0]
             self.chooseTargetDropDown.selectItemWithTitle_(selected_volume)
         for volume in self.volumes:
             if str(volume.mountpoint) == str(selected_volume):
@@ -327,12 +327,12 @@ class MainController(NSObject):
             self.disableAllButtons_(sender)
             # clear out the default junk in the dropdown
             self.startupDiskDropdown.removeAllItems()
-            list = []
+            volume_list = []
             for volume in self.volumes:
-                list.append(volume.mountpoint)
+                volume_list.append(volume.mountpoint)
 
             # Let's add the items to the popup
-            self.startupDiskDropdown.addItemsWithTitles_(list)
+            self.startupDiskDropdown.addItemsWithTitles_(volume_list)
             NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
                 self.startUpDiskPanel, self.mainWindow, self, None, None)
             NSGraphicsContext.restoreGraphicsState()
@@ -352,15 +352,15 @@ class MainController(NSObject):
     @objc.IBAction
     def chooseImagingTarget_(self, sender):
         self.chooseTargetDropDown.removeAllItems()
-        list = []
+        volume_list = []
         for volume in self.volumes:
             if volume.mountpoint != '/':
                 if volume.mountpoint.startswith("/Volumes"):
                     if volume.mountpoint != '/Volumes':
                         if volume.writable:
-                            list.append(volume.mountpoint)
+                            volume_list.append(volume.mountpoint)
          # No writable volumes, this is bad.
-        if len(list) == 0:
+        if len(volume_list) == 0:
             alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
                 NSLocalizedString(u"No writable volumes found", None),
                 NSLocalizedString(u"Restart", None),
@@ -370,7 +370,7 @@ class MainController(NSObject):
             alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
                 self.mainWindow, self, self.noVolAlertDidEnd_returnCode_contextInfo_, objc.nil)
         else:
-            self.chooseTargetDropDown.addItemsWithTitles_(list)
+            self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
             if self.targetVolume:
                 self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume.mountpoint)
 
@@ -424,17 +424,17 @@ class MainController(NSObject):
     @objc.IBAction
     def selectWorkflow_(self, sender):
         self.chooseWorkflowDropDown.removeAllItems()
-        list = []
+        workflow_list = []
         for workflow in self.workflows:
             if 'hidden' in workflow:
                 # Don't add 'hidden' workflows to the list
                 if workflow['hidden'] == False:
-                    list.append(workflow['name'])
+                    workflow_list.append(workflow['name'])
             else:
                 # If not specified, assume visible
-                list.append(workflow['name'])
+                workflow_list.append(workflow['name'])
 
-        self.chooseWorkflowDropDown.addItemsWithTitles_(list)
+        self.chooseWorkflowDropDown.addItemsWithTitles_(workflow_list)
 
         # The current selection is deselected if a nil or non-existent title is given
         if self.defaultWorkflow:
@@ -660,15 +660,15 @@ class MainController(NSObject):
                 # again, this needs to be refactored
                 self.volumes = macdisk.MountedVolumes()
                 self.chooseTargetDropDown.removeAllItems()
-                list = []
+                volume_list = []
                 for volume in self.volumes:
                     if volume.mountpoint != '/':
                         if volume.mountpoint.startswith("/Volumes"):
                             if volume.mountpoint != '/Volumes':
                                 if volume.writable:
-                                    list.append(volume.mountpoint)
-                self.chooseTargetDropDown.addItemsWithTitles_(list)
-                self.targetVolume = list[0]
+                                    volume_list.append(volume.mountpoint)
+                self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
+                self.targetVolume = volume_list[0]
                 self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
             self.openEndWorkflowPanel()
 
