@@ -10,7 +10,7 @@ This script will validate an Imagr configuration plist. Usage:
     #3 - Workflow names must be unique
     #4 - Image components must have a url
     #5 - Image urls must end in dmg
-    #6 - Package comonents must have a url
+    #6 - Package components must have a url
     #7 - Package urls must end with either pkg or dmg
     #8 - Scripts must have content or a url
     #9 - Restart actions must be 'none', 'shutdown' or 'restart'
