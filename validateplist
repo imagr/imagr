@@ -22,6 +22,7 @@ This script will validate an Imagr configuration plist. Usage:
     #15 - eraseVolume actions must not be done at first boot
     #16 - if a default workflow is specified, it must match the name of an existing workflow
     #17 - if a workflow to autorun is specified, it must match the name of an existing workflow
+    #18 - If a destructive task comes after a non-destructive task, the admin should be warned
 """
 
 import os
@@ -181,6 +182,15 @@ def main():
         for component in workflow['components']:
             validateComponent(component, workflow)
 
+        # Rule 18
+        seen_components = []
+        for component in workflow['components']:
+            if component.get('type') == 'partition' or component.get('type') == 'image':
+                for seen_component in seen_components:
+                    if seen_component.get('type') != 'partition' \
+                    and seen_component.get('type') != 'image':
+                        print 'WARNING: The %s component in workflow %s is a destructive action that comes after non destructive tasks. This may be intentional, but the results of the previous actions may be removed from the target disk.' % (component.get('type'), workflow['name'])
+            seen_components.append(component)
     # Rule 16
     if 'default_workflow' in config and config['default_workflow'] not in existing_names:
         fail('Default workflow must match the name of an existing workflow.')
