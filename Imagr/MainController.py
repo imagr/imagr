@@ -510,12 +510,27 @@ class MainController(NSObject):
             # name in DS.
             settingName = False
             for item in self.selectedWorkflow['components']:
-                if item.get('type') == 'computer_name':
+                if self.checkForNameComponent(item):
                     self.getComputerName_(item)
                     settingName = True
                     break
+
             if not settingName:
                 self.workflowOnThreadPrep()
+
+    def checkForNameComponent(self, item):
+        if item.get('type') == 'computer_name':
+            return True
+        if item.get('type') == 'included_workflow':
+            included_workflow = self.getIncludedWorkflow(item)
+            print included_workflow
+            for workflow in self.workflows:
+                if workflow['name'] == included_workflow:
+                    for new_item in workflow['components']:
+                        if self.checkForNameComponent(new_item):
+                            return True
+
+        return False
 
     def workflowOnThreadPrep(self):
         self.disableWorkflowViewControls()
@@ -740,13 +755,13 @@ class MainController(NSObject):
                 Utils.sendReport('error', 'Found an unknown workflow item.')
                 self.errorMessage = "Found an unknown workflow item."
 
-    def runIncludedWorkflow(self, item):
-        '''Runs an included workflow'''
+    def getIncludedWorkflow(self, item):
+        included_workflow = None
         # find the workflow we're looking for
         progress_method = self.updateProgressTitle_Percent_Detail_
-        #progress_method = None
+
         target_workflow = None
-        included_workflow = None
+
         if 'script' in item:
             if progress_method:
                 progress_method("Running script to determine included workflow...", -1, '')
@@ -775,6 +790,12 @@ class MainController(NSObject):
                         break
         else:
             included_workflow = item['name']
+        return included_workflow
+
+    def runIncludedWorkflow(self, item):
+        '''Runs an included workflow'''
+
+        included_workflow = self.getIncludedWorkflow(item)
         if included_workflow:
             for workflow in self.workflows:
                 if included_workflow.strip() == workflow['name'].strip():
