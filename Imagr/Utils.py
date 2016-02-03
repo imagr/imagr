@@ -434,19 +434,35 @@ def setup_logging():
     logging.getLogger("Imagr").addHandler(handler)
     logging.getLogger("Imagr").setLevel("INFO")
 
-def replacePlaceholders(script, target, computer_name=None):
+def replacePlaceholders(script, target, computer_name=None, keyboard_layout_id=None, keyboard_layout_name=None, language=None, locale=None, timezone=None):
     hardware_info = get_hardware_info()
     placeholders = {
         "{{target_volume}}": target,
         "{{serial_number}}": hardware_info.get('serial_number', 'UNKNOWN'),
-        "{{machine_model}}": hardware_info.get('machine_model', 'UNKNOWN')
+        "{{machine_model}}": hardware_info.get('machine_model', 'UNKNOWN'),
     }
 
     if computer_name:
         placeholders['{{computer_name}}'] = computer_name
 
+    if keyboard_layout_id:
+        placeholders['{{keyboard_layout_id}}'] = keyboard_layout_id
+
+    if keyboard_layout_name:
+        placeholders['{{keyboard_layout_name}}'] = keyboard_layout_name
+
+    if language:
+        placeholders['{{language}}'] = language
+
+    if locale:
+        placeholders['{{locale}}'] = locale
+
+    if timezone:
+        placeholders['{{timezone}}'] = timezone
+
     for placeholder, value in placeholders.iteritems():
-        script = script.replace(placeholder, value)
+        script = script.replace(placeholder, str(value))
+        
     script = xml.sax.saxutils.unescape(script)
     return script
 

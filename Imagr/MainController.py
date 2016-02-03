@@ -102,6 +102,13 @@ class MainController(NSObject):
     autorunWorkflow = None
     cancelledAutorun = False
 
+    # For localize script
+    keyboard_layout_name = None
+    keyboard_layout_id = None
+    language = None
+    locale = None
+    timezone = None
+
     def errorPanel(self, error):
         if error:
             errorText = str(error)
@@ -751,6 +758,10 @@ class MainController(NSObject):
                         script=script.read()
                     self.copyFirstBootScript(script, self.counter)
                     self.first_boot_items = True
+            elif item.get('type') == 'localize':
+                Utils.sendReport('in_progress', 'Localizing Mac')
+                self.copyLocalize(item)
+                self.first_boot_items = True
             else:
                 Utils.sendReport('error', 'Found an unknown workflow item.')
                 self.errorMessage = "Found an unknown workflow item."
@@ -772,10 +783,6 @@ class MainController(NSObject):
             os.chmod(script_file.name, 0700)
             proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
-            # while proc.poll() is None:
-            #     output = proc.stdout.readline().strip().decode('UTF-8')
-            #     if progress_method:
-            #         progress_method(None, None, output)
             (out, err) = proc.communicate()
             if proc.returncode != 0:
                 if err == None:
@@ -1112,8 +1119,8 @@ class MainController(NSObject):
         if progress_method:
             progress_method("Copying script to %s" % dest_file, 0, '')
         # convert placeholders
-        if self.computerName:
-            script = Utils.replacePlaceholders(script, target, self.computerName)
+        if self.computerName or self.keyboard_layout_id or self.keyboard_layout_name or self.language or self.locale or self.timezone:
+            script = Utils.replacePlaceholders(script, target, self.computerName, self.keyboard_layout_id, self.keyboard_layout_name, self.language, self.locale, self.timezone)
         else:
             script = Utils.replacePlaceholders(script, target)
         # write file
@@ -1334,6 +1341,26 @@ class MainController(NSObject):
             # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
             self.should_update_volume_list = True
 
+    def copyLocalize(self, item):
+        if 'keyboard_layout_name' in item:
+            self.keyboard_layout_name = item['keyboard_layout_name']
+
+        if 'keyboard_layout_id' in item:
+            self.keyboard_layout_id = item['keyboard_layout_id']
+
+        if 'language' in item:
+            self.language = item['language']
+
+        if 'locale' in item:
+            self.locale = item['locale']
+
+        if 'timezone' in item:
+            self.timezone = item['timezone']
+
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        with open(os.path.join(script_dir, 'localize.sh')) as script:
+            script=script.read()
+        self.copyFirstBootScript(script, self.counter)
 
     def shakeWindow(self):
         shake = {'count': 1, 'duration': 0.3, 'vigor': 0.04}

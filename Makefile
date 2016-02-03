@@ -67,6 +67,9 @@ dmg: build
 	cp ./Makefile /tmp/imagr-build/Tools
 	cp -R ./build/Release/Imagr.app /tmp/imagr-build
 	cp ./validateplist /tmp/imagr-build/Tools
+	cp ./get_locale /tmp/imagr-build/Tools
+	chmod +x /tmp/imagr-build/Tools/validateplist
+	chmod +x /tmp/imagr-build/Tools/get_locale
 	hdiutil create -srcfolder /tmp/imagr-build -volname "Imagr" -format UDZO -o Imagr.dmg
 	mv Imagr.dmg \
 		"Imagr-$(shell /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "./build/Release/Imagr.app/Contents/Info.plist").dmg"

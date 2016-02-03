@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		C06979C21AE83F3500914535 /* gurl.py in Resources */ = {isa = PBXBuildFile; fileRef = C06979C11AE83F3500914535 /* gurl.py */; };
+		FC21F1741C6235DA0039D923 /* localize.sh in Resources */ = {isa = PBXBuildFile; fileRef = FC21F1731C6235DA0039D923 /* localize.sh */; };
 		FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */; };
 		FC98DA241AD6B2DC00F90405 /* first-boot in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA201AD6B2DC00F90405 /* first-boot */; };
 		FC98DA251AD6B2DC00F90405 /* LoginLog.app in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA211AD6B2DC00F90405 /* LoginLog.app */; };
@@ -59,6 +60,7 @@
 
 /* Begin PBXFileReference section */
 		C06979C11AE83F3500914535 /* gurl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gurl.py; sourceTree = "<group>"; };
+		FC21F1731C6235DA0039D923 /* localize.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = localize.sh; sourceTree = "<group>"; };
 		FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "com.grahamgilbert.first-boot-pkg.plist"; sourceTree = "<group>"; };
 		FC98DA201AD6B2DC00F90405 /* first-boot */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "first-boot"; sourceTree = "<group>"; };
 		FC98DA211AD6B2DC00F90405 /* LoginLog.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; path = LoginLog.app; sourceTree = "<group>"; };
@@ -129,6 +131,7 @@
 		FC98DA1E1AD6B2DC00F90405 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				FC21F1731C6235DA0039D923 /* localize.sh */,
 				FCED84641B0201B20072AC1C /* set_computer_name.sh */,
 				FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */,
 				FC98DA201AD6B2DC00F90405 /* first-boot */,
@@ -346,6 +349,7 @@
 				FCEA80F01AD018E500DBA039 /* airport.py in Resources */,
 				FCEA80F81AD018E500DBA039 /* ds.py in Resources */,
 				FCEA80FE1AD018E500DBA039 /* gmacpyutil.py in Resources */,
+				FC21F1741C6235DA0039D923 /* localize.sh in Resources */,
 				FCEA80C51AD0101100DBA039 /* MainMenu.xib in Resources */,
 				FCEA810B1AD02C9A00DBA039 /* Utils.py in Resources */,
 				FCEA80F71AD018E500DBA039 /* defaults.py in Resources */,
