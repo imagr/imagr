@@ -530,7 +530,6 @@ class MainController(NSObject):
             return True
         if item.get('type') == 'included_workflow':
             included_workflow = self.getIncludedWorkflow(item)
-            print included_workflow
             for workflow in self.workflows:
                 if workflow['name'] == included_workflow:
                     for new_item in workflow['components']:
