@@ -228,7 +228,7 @@ class MainController(NSObject):
         theURL = Utils.getServerURL()
 
         if theURL:
-            plistData = Utils.downloadFile(theURL)
+            (plistData, error) = Utils.downloadFile(theURL)
 
             if plistData:
                 try:
@@ -261,7 +261,7 @@ class MainController(NSObject):
                 except:
                     pass
             else:
-                self.errorMessage = "Couldn't get configuration plist from server."
+                self.errorMessage = "Couldn't get configuration plist. \n %s. \n '%s'" % (error.reason, error.url)
         else:
             self.errorMessage = "Configuration URL wasn't set."
         Utils.setup_logging()
@@ -975,7 +975,7 @@ class MainController(NSObject):
             (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(temp_dir,
             packagename), additional_headers=additional_headers)
             if error:
-                self.errorMessage = "Couldn't download - %s %s" % (url, error)
+                self.errorMessage = "Couldn't download - %s \n %s" % (url, error)
                 return False
             # Install it
             retcode = self.installPkg(downloaded_file, target, progress_method=progress_method)
