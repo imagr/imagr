@@ -716,9 +716,11 @@ class MainController(NSObject):
                 Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
-                        self.copyFirstBootScript(Utils.downloadFile(item.get('url'), item.get('additional_headers')), self.counter)
+                        (data, error) = Utils.downloadFile(item.get('url'), item.get('additional_headers'))
+                        self.copyFirstBootScript(data, self.counter)
                     else:
-                        self.copyFirstBootScript(Utils.downloadFile(item.get('url')), self.counter)
+                        (data, error) = Utils.downloadFile(item.get('url'))
+                        self.copyFirstBootScript(data, self.counter)
                 else:
                     self.copyFirstBootScript(item.get('content'), self.counter)
                 self.first_boot_items = True
@@ -727,9 +729,11 @@ class MainController(NSObject):
                 Utils.sendReport('in_progress', 'Running script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
-                        self.runPreFirstBootScript(Utils.downloadFile(item.get('url'), item.get('additional_headers')), self.counter)
+                        (data, error) = Utils.downloadFile(item.get('url'), item.get('additional_headers'))
+                        self.runPreFirstBootScript(data, self.counter)
                     else:
-                        self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), self.counter)
+                        (data, error) = Utils.downloadFile(item.get('url'))
+                        self.runPreFirstBootScript(data, self.counter)
                 else:
                     self.runPreFirstBootScript(item.get('content'), self.counter)
             # Partition a disk
