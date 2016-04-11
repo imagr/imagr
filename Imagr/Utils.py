@@ -558,7 +558,7 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
             return source, None
         except:
             error = "Unable to copy %s" % url
-            return None, error
+            return False, error
     else:
         return file, None
 
