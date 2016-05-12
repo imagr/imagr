@@ -637,31 +637,6 @@ class MainController(NSObject):
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.updateProgressWithInfo_, info, objc.NO)
 
-    def checksumImage(self, image):
-        '''Perform sha256 checksum of an image'''
-        import hashlib
-        import requests
-
-        content = image
-        response = requests.head(content)
-
-        contentlength = int(response.headers['content-length'])
-
-        print contentlength
-
-        sha256 = hashlib.sha256()
-        chunk = 8192000
-
-        for i in range(0, contentlength, chunk)[:-1]:
-            r = requests.get(content, headers={"range": "bytes=%s-%s" % (str(i), str(i+chunk-1))})
-            sha256.update(r.content)
-            remainder = str(i+chunk)
-
-        r = requests.get(content, headers={"range": "bytes=%s-%s" % (remainder, str(contentlength))})
-        sha256.update(r.content)
-
-        return sha256.hexdigest()
-
     def processWorkflowOnThread(self, sender):
         '''Process the selected workflow'''
         pool = NSAutoreleasePool.alloc().init()
@@ -673,78 +648,6 @@ class MainController(NSObject):
             self.should_update_volume_list = False
 
             for item in self.selectedWorkflow['components']:
-                NSLog("%@", self.targetVolume.mountpoint)
-                # No point carrying on if something is broken
-                if not self.errorMessage:
-                    counter = counter + 1.0
-                    # Restore image
-                    if item.get('type') == 'image' and item.get('url'):
-                        if item.get('image_checksum'):
-                            checksum = checksumImage(item.get('url'))
-                            if checksum == item.get('image_checksum'):
-                                Utils.sendReport('in_progress', 'Verifying image checksum...')
-                                pass
-                            else:
-                                Utils.sendReport('error', 'Image checksum does not match.')
-                                self.errorMessage = "The checksum for image %s did not match." % item.get('url')
-                                break
-                        Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
-                        self.Clone(item.get('url'), self.targetVolume)
-                    # Download and install package
-                    elif item.get('type') == 'package' and not item.get('first_boot', True):
-                        Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
-                        self.downloadAndInstallPackages(item.get('url'))
-                    # Download and copy package
-                    elif item.get('type') == 'package' and item.get('first_boot', True):
-                        Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
-                        self.downloadAndCopyPackage(item.get('url'), counter)
-                        first_boot_items = True
-                    # Copy first boot script
-                    elif item.get('type') == 'script' and item.get('first_boot', True):
-                        Utils.sendReport('in_progress', 'Copying first boot script %s' % str(counter))
-                        if item.get('url'):
-                            self.copyFirstBootScript(Utils.downloadFile(item.get('url')), counter)
-                        else:
-                            self.copyFirstBootScript(item.get('content'), counter)
-                        first_boot_items = True
-                    # Run script
-                    elif item.get('type') == 'script' and not item.get('first_boot', True):
-                        Utils.sendReport('in_progress', 'Running script %s' % str(counter))
-                        if item.get('url'):
-                            self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), counter)
-                        else:
-                            self.runPreFirstBootScript(item.get('content'), counter)
-                    # Partition a disk
-                    elif item.get('type') == 'partition':
-                        Utils.sendReport('in_progress', 'Running pattiton task.')
-                        if item.get('partitions') == None:
-                            # If a partition task is called without a correct 'partitions' key the process crashes.
-                            # Check for a valid 'partitions' key before running 'partitionTargetDisk()'.
-                            NSLog("No 'partitions' key specified, reverting to workflow selection screen.")
-                            break
-                        self.partitionTargetDisk(item.get('partitions'), item.get('map'))
-                        if self.future_target == False:
-                            # If a partition task is done without a new target specified, no other tasks can be parsed.
-                            # Another workflow must be selected.
-                            NSLog("No target specified, reverting to workflow selection screen.")
-                            break
-                    # Format a volume
-                    elif item.get('type') == 'eraseVolume':
-                        Utils.sendReport('in_progress', 'Erasing volume with name %s' % item.get('name', 'Macintosh HD'))
-                        self.eraseTargetVolume(item.get('name', 'Macintosh HD'), item.get('format', 'Journaled HFS+'))
-                    elif item.get('type') == 'computer_name':
-                        if self.computerName:
-                            Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
-                            script_dir = os.path.dirname(os.path.realpath(__file__))
-                            with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
-                                script=script.read()
-                            self.copyFirstBootScript(script, counter)
-                            first_boot_items = True
-                    else:
-                        Utils.sendReport('error', 'Found an unknown workflow item.')
-                        self.errorMessage = "Found an unknown workflow item."
-
-            if first_boot_items:
                 self.runComponent(item)
             if self.first_boot_items:
                 # copy bits for first boot script
@@ -797,6 +700,16 @@ class MainController(NSObject):
             self.counter = self.counter + 1.0
             # Restore image
             if item.get('type') == 'image' and item.get('url'):
+                if item.get('image_checksum'):
+                    Utils.sendReport('in_progress', 'Verifying image checksum...')
+                    checksum = checksumImage(item.get('url'))
+                    if checksum == item.get('image_checksum'):
+                        Utils.sendReport('in_progress', 'Image checksum verified successfully!')
+                        pass
+                    else:
+                        Utils.sendReport('error', 'Image checksum does not match.')
+                        self.errorMessage = "The checksum for image %s did not match." % item.get('url')
+                        break
                 Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
                 self.Clone(item.get('url'), self.targetVolume)
             # Download and install package
@@ -1478,3 +1391,28 @@ class MainController(NSObject):
     @objc.IBAction
     def showHelp_(self, sender):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://github.com/grahamgilbert/imagr/wiki"))
+
+    def checksumImage(self, image):
+        '''Perform sha256 checksum of an image'''
+        import hashlib
+        import requests
+
+        content = image
+        response = requests.head(content)
+
+        contentlength = int(response.headers['content-length'])
+
+        print contentlength
+
+        sha256 = hashlib.sha256()
+        chunk = 8192000
+
+        for i in range(0, contentlength, chunk)[:-1]:
+            r = requests.get(content, headers={"range": "bytes=%s-%s" % (str(i), str(i+chunk-1))})
+            sha256.update(r.content)
+            remainder = str(i+chunk)
+
+        r = requests.get(content, headers={"range": "bytes=%s-%s" % (remainder, str(contentlength))})
+        sha256.update(r.content)
+
+        return sha256.hexdigest()
