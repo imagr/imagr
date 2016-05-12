@@ -1,0 +1,204 @@
+#!/usr/bin/env python
+
+import objc
+import argparse
+import os
+import plistlib
+import re
+import sys
+
+from Foundation import NSBundle
+
+def process_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("country", help="The target ISO country code for localizing.")
+    parser.add_argument("--full", help="Don't try to match keyboard layout, show full list.",
+                    action="store_true")
+    args = parser.parse_args()
+    return args
+
+def match_country(countryISO):
+    # Get Countrycodes - to check against
+    countryCodePlist = plistlib.readPlist("/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/SACountry.plist")
+
+    # Get just the keys from the plist
+    countryCodes = countryCodePlist.keys()
+
+    # Check that we've been parse a valid country code
+    if countryISO in countryCodes:
+        print  'Matched:', countryISO
+    # Exit if not...
+    else:
+        print 'Not Matched:', countryISO
+        # Quit
+        sys.exit(1)
+
+
+def get_languages(countryISO):
+    # Create empty list
+    countryLanguageCodesList = []
+    try:
+        #  Get Language per country
+        countryLanguageList = plistlib.readPlist("/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/SALanguageToCountry.plist")
+
+        # Check arrays for country code, it found return arrays dict
+        for countryLanguageCodes, countryLanguages in countryLanguageList.iteritems():
+            if countryISO in countryLanguages:
+                countryLanguageCodesList.append(countryLanguageCodes)
+
+        # If array is not empty
+        if len(countryLanguageCodesList):
+            print'Matched Languages:'
+            count = 0
+            for language in countryLanguageCodesList:
+                print '* ', countryLanguageCodesList[count]
+                count = count + 1
+        # If array is empty
+        else:
+            print 'Matched Languages: None matched'
+
+    except:
+        print 'Matched Languages: None matched'
+
+    print
+
+    return countryLanguageCodesList
+
+def get_timezones(countryISO):
+    try:
+        # Get TimeZones per country
+        countryTimeZonesPlist = plistlib.readPlist("/System/Library/PrivateFrameworks/SetupAssistantSupport.framework/Versions/A/Resources/TimeZones.plist")
+
+        # Return the timezones for the selected countryISO
+        countryTimeZones = countryTimeZonesPlist[countryISO]
+
+        print 'Matched Timezones:'
+        count = 0
+        for zones in countryTimeZones:
+            print '* ', countryTimeZones [count]
+            count = count + 1
+
+    except:
+        print 'Matched Timezones: None matched'
+
+    print
+
+def get_input_language(countryISO):
+
+    countryInputSourceLanguage = []
+    try:
+        # Get InputSourceID's per country
+        countryInputSourcePlist = plistlib.readPlist("/System/Library/PrivateFrameworks/SetupAssistantSupport.framework/Versions/A/Resources/SALocaleToInputSourceID.plist")
+
+        # Create empty list
+        countryInputSource = []
+
+        # Return the keyboard layout for the Country ISO
+        for value in countryInputSourcePlist:
+            # If countryISO is found in value
+            if (countryISO in value or countryISO.lower() in value):
+                # If value is not in countryInputSource list then
+                if countryInputSourcePlist[value] not in countryInputSource:
+                    # Add to list
+                    countryInputSource.extend(countryInputSourcePlist[value])
+                    # Remove duplicate entries
+                    countryInputSource = list(set(countryInputSource))
+
+        # Return value after com.apple.keylayout.
+        countryInputSourceSetSplit = list([i.split('com.apple.keylayout.', 3)[1] for i in countryInputSource])
+        # Return value before any -
+        countryInputSourceSetSplit2 = list([i.split('-', 3)[0] for i in countryInputSourceSetSplit])
+
+
+        # Iterate through each value in the countryInputSourceSetSplit2 array
+        for inputLanguage in countryInputSourceSetSplit2:
+            capsCountInputLanguage = sum(1 for c in inputLanguage if c.isupper())
+            if capsCountInputLanguage >1:
+                # Split at Caps for words like AfghanDari
+                countryInputSourceLanguageSplit = re.findall('[A-Z][^A-Z]*', inputLanguage)
+                # Get only first word, so Afghan
+                countryInputSourceLanguageSplit = countryInputSourceLanguageSplit[0]
+                # Add to list
+                countryInputSourceLanguage.append(countryInputSourceLanguageSplit)
+            else:
+                # Add to list
+                countryInputSourceLanguage.append(inputLanguage)
+            # Remove duplicate entries
+            countryInputSourceLanguage = list(set(countryInputSourceLanguage))
+
+        # If array is not empty
+        if len(countryInputSourceLanguage):
+            print 'Matched Keyboard Layouts:'
+            count = 0
+            for layout in countryInputSourceLanguage:
+                print '* ', countryInputSourceLanguage[count]
+                count = count + 1
+        # If array is empty
+        else:
+            print 'Matched Keyboard Layouts: None matched'
+
+    except:
+        print 'Matched Keyboard Layouts: None matched'
+
+    print
+
+    return countryInputSourceLanguage
+
+def keyboard_layouts():
+    # Get list of keyboard layouts including identifier.
+    HIToolbox_bundle = NSBundle.bundleWithIdentifier_("com.apple.HIToolbox")
+    objc.loadBundleFunctions(HIToolbox_bundle, globals(), [('TISCreateInputSourceList','@@B')])
+    objc.loadBundleVariables(HIToolbox_bundle, globals(), [('kTISPropertyInputSourceType', '@')])
+    kb_layout_strs = map(lambda x: x.__repr__(), TISCreateInputSourceList({kTISPropertyInputSourceType: 'TISTypeKeyboardLayout'}, True))
+    name_id = re.compile(r'.+?KB Layout: (.+?) \(id=([-0-9]+)\)')
+    kb_layouts = [name_id.match(x).groups() for x in kb_layout_strs]
+    return kb_layouts
+
+def matched_keyboard_layouts(countryInputSourceLanguage, kb_layouts, full_output):
+    kb_output = []
+    for kb_layout in kb_layouts:
+        if len(countryInputSourceLanguage):
+            for layout in countryInputSourceLanguage:
+                if str(layout) in kb_layout[0]:
+                    if kb_layout not in kb_output:
+                        kb_output.append(kb_layout)
+
+    if len(kb_output) and not full_output:
+        print 'Matching keyboard layouts:'
+        print
+        for kb_layout in kb_output:
+            print 'Name: %s' % kb_layout[0]
+            print 'Keyboard layout ID: %s' % kb_layout[1]
+            print '------------------------------'
+            print
+    else:
+        if full_output:
+            print 'Displaying full keyboard layout list'
+        else:
+            print 'No matching keyboard layouts found, displaying whole list:'
+        print
+        for kb_layout in kb_layouts:
+            print 'Name: %s' % kb_layout[0]
+            print 'Code for Imagr configuration: %s' % kb_layout[1]
+            print '------------------------------'
+            print
+
+def main():
+    args = process_args()
+    full_output = args.full
+    countryISO = args.country
+
+    # Make sure countryISO is upper case
+    countryISO = countryISO.upper()
+    print 'Country To Match: %s' % countryISO
+    match_country(countryISO)
+
+    countryLanguageCodesList = get_languages(countryISO)
+    get_timezones(countryISO)
+    countryInputSourceLanguage = get_input_language(countryISO)
+    kb_layouts = keyboard_layouts()
+    matched_keyboard_layouts(countryInputSourceLanguage, kb_layouts, full_output)
+
+
+if __name__ == '__main__':
+    main()
