@@ -4,7 +4,7 @@
 
 URL="http://192.168.178.135/imagr_config.plist"
 REPORTURL=none
-APP="/Applications/Install OS X Yosemite.app"
+APP="/Applications/Install OS X El Capitan.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
 ARGS= --enable-nbi --add-python
@@ -13,6 +13,7 @@ AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
 FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py
 INDEX="5001"
 VALIDATE=True
+SYSLOG=none
 
 -include config.mk
 
@@ -52,6 +53,9 @@ endif
 ifneq ($(REPORTURL),none)
 	/usr/libexec/PlistBuddy -c 'Add :reporturl string "$(REPORTURL)"' com.grahamgilbert.Imagr.plist
 endif
+ifneq ($(SYSLOG),none)
+	/usr/libexec/PlistBuddy -c 'Add :syslog string "$(SYSLOG)"' com.grahamgilbert.Imagr.plist
+endif
 
 deps: autonbi foundation
 
@@ -63,6 +67,9 @@ dmg: build
 	cp ./Makefile /tmp/imagr-build/Tools
 	cp -R ./build/Release/Imagr.app /tmp/imagr-build
 	cp ./validateplist /tmp/imagr-build/Tools
+	cp ./get_locale /tmp/imagr-build/Tools
+	chmod +x /tmp/imagr-build/Tools/validateplist
+	chmod +x /tmp/imagr-build/Tools/get_locale
 	hdiutil create -srcfolder /tmp/imagr-build -volname "Imagr" -format UDZO -o Imagr.dmg
 	mv Imagr.dmg \
 		"Imagr-$(shell /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "./build/Release/Imagr.app/Contents/Info.plist").dmg"
