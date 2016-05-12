@@ -1403,8 +1403,6 @@ class MainController(NSObject):
 
         contentlength = int(response.headers['content-length'])
 
-        print contentlength
-
         sha256 = hashlib.sha256()
         chunk = 8192000
 
