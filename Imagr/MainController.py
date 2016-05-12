@@ -708,7 +708,8 @@ class MainController(NSObject):
                         pass
                     else:
                         Utils.sendReport('error', 'Image checksum does not match.')
-                        self.errorMessage = "The checksum for image %s did not match." % item.get('url')
+                        self.errorMessage = "The provided checksum %s for image %s did not match the calculated one: %s"
+                                                % (item.get('image_checksum'), item.get('url'), checksum)
                         break
                 Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
                 self.Clone(item.get('url'), self.targetVolume)
