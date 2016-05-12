@@ -673,7 +673,6 @@ class MainController(NSObject):
             self.should_update_volume_list = False
 
             for item in self.selectedWorkflow['components']:
-<<<<<<< HEAD
                 NSLog("%@", self.targetVolume.mountpoint)
                 # No point carrying on if something is broken
                 if not self.errorMessage:
@@ -746,10 +745,8 @@ class MainController(NSObject):
                         self.errorMessage = "Found an unknown workflow item."
 
             if first_boot_items:
-=======
                 self.runComponent(item)
             if self.first_boot_items:
->>>>>>> upstream/master
                 # copy bits for first boot script
                 packages_dir = os.path.join(self.targetVolume.mountpoint, 'usr/local/first-boot/')
                 if not os.path.exists(packages_dir):
