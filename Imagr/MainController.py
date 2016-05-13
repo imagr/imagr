@@ -169,7 +169,16 @@ class MainController(NSObject):
         self.backdropWindow.setLevel_(kCGNormalWindowLevel - 1)
         self.backdropWindow.setCollectionBehavior_(NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorCanJoinAllSpaces)
 
-    def loadBackgroundImage(self, url):
+    def loadBackgroundImage(self, urlString):
+        if not urlString.endswith(u"?"):
+            try:
+                verplist = FoundationPlist.readPlist("/System/Library/CoreServices/SystemVersion.plist")
+                osver = verplist[u"ProductUserVisibleVersion"]
+                osbuild = verplist[u"ProductBuildVersion"]
+                urlString += u"?osver=%s&osbuild=%s" % (osver, osbuild)
+            except:
+                pass
+        url = NSURL.URLWithString_(urlString)
         image = NSImage.alloc().initWithContentsOfURL_(url)
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.setBackgroundImage, image, YES)
@@ -264,6 +273,12 @@ class MainController(NSObject):
                     self.errorMessage = "Configuration plist couldn't be read."
 
                 try:
+                    urlString = converted_plist['background_image']
+                    NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadBackgroundImage, self, urlString)
+                except:
+                    pass
+                
+                try:
                     self.passwordHash = converted_plist['password']
                 except:
                     # Bypass the login form if no password is given.
@@ -276,12 +291,6 @@ class MainController(NSObject):
 
                 try:
                     self.defaultWorkflow = converted_plist['default_workflow']
-                except:
-                    pass
-                
-                try:
-                    url = NSURL.URLWithString_(converted_plist['background_image'])
-                    NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadBackgroundImage, self, url)
                 except:
                     pass
 
