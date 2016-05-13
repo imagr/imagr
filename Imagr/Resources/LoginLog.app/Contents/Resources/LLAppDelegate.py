@@ -9,7 +9,6 @@
 
 from objc import IBOutlet
 from Foundation import *
-import os
 from AppKit import *
 
 
@@ -23,8 +22,6 @@ class LLAppDelegate(NSObject):
             u"logfile": u"/var/log/system.log",
         })
         logfile = self.prefs.stringForKey_(u"logfile")
-        if not os.path.exists(logfile):
-            open(logfile, "a")
         self.logWindowController.showLogWindow_(logfile)
         self.logWindowController.watchLogFile_(logfile)
     
