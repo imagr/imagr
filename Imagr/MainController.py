@@ -160,7 +160,7 @@ class MainController(NSObject):
         rect = NSScreen.mainScreen().frame()
         self.backdropWindow.setCanBecomeVisibleWithoutLogin_(True)
         self.backdropWindow.setFrame_display_(rect, True)
-        backgroundColor = NSColor.orangeColor()
+        backgroundColor = NSColor.darkGrayColor()
         self.backdropWindow.setBackgroundColor_(backgroundColor)
         self.backdropWindow.setOpaque_(False)
         self.backdropWindow.setIgnoresMouseEvents_(False)
@@ -169,6 +169,15 @@ class MainController(NSObject):
         self.backdropWindow.setLevel_(kCGNormalWindowLevel - 1)
         self.backdropWindow.setCollectionBehavior_(NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorCanJoinAllSpaces)
 
+    def loadBackgroundImage(self, url):
+        image = NSImage.alloc().initWithContentsOfURL_(url)
+        self.performSelectorOnMainThread_withObject_waitUntilDone_(
+            self.setBackgroundImage, image, YES)
+    
+    def setBackgroundImage(self, image):
+        self.backdropWindow.contentView().setWantsLayer_(True)
+        self.backdropWindow.contentView().layer().setContents_(image)
+    
     def registerForWorkspaceNotifications(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
         nc.addObserver_selector_name_object_(
@@ -267,6 +276,12 @@ class MainController(NSObject):
 
                 try:
                     self.defaultWorkflow = converted_plist['default_workflow']
+                except:
+                    pass
+                
+                try:
+                    url = NSURL.URLWithString_(converted_plist['background_image'])
+                    NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadBackgroundImage, self, url)
                 except:
                     pass
 
