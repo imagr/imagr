@@ -43,6 +43,7 @@ clean-pkgs:
 
 clean-all: clean clean-pkgs
 	rm -rf AutoNBI.py
+	rm -rf rc.netboot
 	rm -rf com.grahamgilbert.Imagr.plist
 	rm -rf FoundationPlist.py
 	rm -rf FoundationPlist.pyc
