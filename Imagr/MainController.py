@@ -144,7 +144,6 @@ class MainController(NSObject):
     def runStartupTasks(self):
         self.showBackdropWindow()
         self.mainWindow.center()
-        self.mainWindow.orderFrontRegardless()
         # Run app startup - get the images, password, volumes - anything that takes a while
 
         self.progressText.setStringValue_("Application Starting...")
