@@ -20,7 +20,7 @@ SYSLOG=none
 -include config.mk
 
 ifeq ($(AUTONBIRAMDISK),True)
-	ARGS += \ --ramdisk
+	ARGS +=  --ramdisk
 endif
 
 #################################################
