@@ -700,17 +700,6 @@ class MainController(NSObject):
             self.counter = self.counter + 1.0
             # Restore image
             if item.get('type') == 'image' and item.get('url'):
-                if item.get('image_checksum'):
-                    Utils.sendReport('in_progress', 'Verifying image checksum...')
-                    checksum = checksumImage(item.get('url'))
-                    if checksum == item.get('image_checksum'):
-                        Utils.sendReport('in_progress', 'Image checksum verified successfully!')
-                        pass
-                    else:
-                        Utils.sendReport('error', 'Image checksum does not match.')
-                        self.errorMessage = "The provided checksum %s for image %s did not match the calculated one: %s"
-                                                % (item.get('image_checksum'), item.get('url'), checksum)
-                        break
                 Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
                 self.Clone(item.get('url'), self.targetVolume)
             # Download and install package
@@ -1392,26 +1381,3 @@ class MainController(NSObject):
     @objc.IBAction
     def showHelp_(self, sender):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://github.com/grahamgilbert/imagr/wiki"))
-
-    def checksumImage(self, image):
-        '''Perform sha256 checksum of an image'''
-        import hashlib
-        import requests
-
-        content = image
-        response = requests.head(content)
-
-        contentlength = int(response.headers['content-length'])
-
-        sha256 = hashlib.sha256()
-        chunk = 8192000
-
-        for i in range(0, contentlength, chunk)[:-1]:
-            r = requests.get(content, headers={"range": "bytes=%s-%s" % (str(i), str(i+chunk-1))})
-            sha256.update(r.content)
-            remainder = str(i+chunk)
-
-        r = requests.get(content, headers={"range": "bytes=%s-%s" % (remainder, str(contentlength))})
-        sha256.update(r.content)
-
-        return sha256.hexdigest()
