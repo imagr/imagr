@@ -10,7 +10,6 @@ NBI="Imagr"
 ARGS= --enable-nbi --add-python
 BUILD=Release
 AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
-AUTONBIRAMDISK=False
 AUTONBIRCNBURL=https://bitbucket.org/bruienne/autonbi/raw/f1e4e9c9688b766e73ed6e7633d2f4e7d1c223cf/rc.netboot
 FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py
 INDEX="5001"
@@ -18,10 +17,6 @@ VALIDATE=True
 SYSLOG=none
 
 -include config.mk
-
-ifeq ($(AUTONBIRAMDISK),True)
-	ARGS +=  --ramdisk
-endif
 
 #################################################
 
@@ -31,6 +26,12 @@ build: clean
 autonbi:
 	if [ ! -f ./AutoNBI.py ]; then \
 		curl -fsSL $(AUTONBIURL) -o ./AutoNBI.py; \
+		chmod 755 ./AutoNBI.py; \
+	fi
+
+autonbi-rcnetboot:
+	if [ ! -f ./rc.netboot ]; then \
+		curl -fsSL $(AUTONBIRCNBURL) -o ./rc.netboot; \
 		chmod 755 ./AutoNBI.py; \
 	fi
 
@@ -118,6 +119,10 @@ endif
 
 nbi: clean-pkgs autonbi foundation config pkg-dir
 	sudo ./AutoNBI.py $(ARGS) --source $(APP) --folder Packages --destination $(OUTPUT) --name $(NBI) --index $(INDEX)
+	$(MAKE) clean-all
+
+nbi-ramdisk: clean-pkgs autonbi autonbi-rcnetboot foundation config pkg-dir
+	sudo ./AutoNBI.py $(ARGS) --ramdisk --source $(APP) --folder Packages --destination $(OUTPUT) --name $(NBI) --index $(INDEX)
 	$(MAKE) clean-all
 
 update: clean-pkgs autonbi foundation config pkg-dir
