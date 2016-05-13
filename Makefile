@@ -10,6 +10,8 @@ NBI="Imagr"
 ARGS= --enable-nbi --add-python
 BUILD=Release
 AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
+AUTONBIRAMDISK=False
+AUTONBIRCNBURL=https://bitbucket.org/bruienne/autonbi/raw/master/rc.netboot
 FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py
 INDEX="5001"
 VALIDATE=True
@@ -26,6 +28,11 @@ autonbi:
 	if [ ! -f ./AutoNBI.py ]; then \
 		curl -fsSL $(AUTONBIURL) -o ./AutoNBI.py; \
 		chmod 755 ./AutoNBI.py; \
+	fi
+	if [ $(AUTONBIRAMDISK) = 'True' ]; then \
+		curl -fsSL $(AUTONBIRCNBURL) -o ./rc.netboot; \
+		chmod 755 ./AutoNBI.py; \
+		$(ARGS) = "$(ARGS) --ramdisk"; \
 	fi
 
 clean:
