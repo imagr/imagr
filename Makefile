@@ -32,7 +32,7 @@ autonbi:
 	if [ $(AUTONBIRAMDISK) = 'True' ]; then \
 		curl -fsSL $(AUTONBIRCNBURL) -o ./rc.netboot; \
 		chmod 755 ./AutoNBI.py; \
-		$(ARGS)+="--ramdisk"; \
+		ARGS += " --ramdisk"; \
 	fi
 
 clean:
