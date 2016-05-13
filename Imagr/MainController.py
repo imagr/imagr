@@ -14,6 +14,7 @@ from SystemConfiguration import *
 from Foundation import *
 from AppKit import *
 from Cocoa import *
+from Quartz.CoreGraphics import *
 import subprocess
 import sys
 import macdisk
@@ -28,7 +29,8 @@ import time
 class MainController(NSObject):
 
     mainWindow = objc.IBOutlet()
-
+    backdropWindow = objc.IBOutlet()
+    
     utilities_menu = objc.IBOutlet()
     help_menu = objc.IBOutlet()
 
@@ -140,7 +142,9 @@ class MainController(NSObject):
             self.setStartupDisk_(self)
 
     def runStartupTasks(self):
+        self.showBackdropWindow()
         self.mainWindow.center()
+        self.mainWindow.orderFrontRegardless()
         # Run app startup - get the images, password, volumes - anything that takes a while
 
         self.progressText.setStringValue_("Application Starting...")
@@ -150,6 +154,20 @@ class MainController(NSObject):
         self.progressIndicator.startAnimation_(self)
         self.registerForWorkspaceNotifications()
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
+    
+    def showBackdropWindow(self):
+        # Create a backdrop window that covers the whole screen.
+        rect = NSScreen.mainScreen().frame()
+        self.backdropWindow.setCanBecomeVisibleWithoutLogin_(True)
+        self.backdropWindow.setFrame_display_(rect, True)
+        backgroundColor = NSColor.orangeColor()
+        self.backdropWindow.setBackgroundColor_(backgroundColor)
+        self.backdropWindow.setOpaque_(False)
+        self.backdropWindow.setIgnoresMouseEvents_(False)
+        self.backdropWindow.setAlphaValue_(1.0)
+        self.backdropWindow.orderFrontRegardless()
+        self.backdropWindow.setLevel_(kCGNormalWindowLevel - 1)
+        self.backdropWindow.setCollectionBehavior_(NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorCanJoinAllSpaces)
 
     def registerForWorkspaceNotifications(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
