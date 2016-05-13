@@ -19,6 +19,10 @@ SYSLOG=none
 
 -include config.mk
 
+ifeq ($(AUTONBIRAMDISK),True)
+	ARGS += " --ramdisk"
+endif
+
 #################################################
 
 build: clean
@@ -28,11 +32,6 @@ autonbi:
 	if [ ! -f ./AutoNBI.py ]; then \
 		curl -fsSL $(AUTONBIURL) -o ./AutoNBI.py; \
 		chmod 755 ./AutoNBI.py; \
-	fi
-	if [ $(AUTONBIRAMDISK) = 'True' ]; then \
-		curl -fsSL $(AUTONBIRCNBURL) -o ./rc.netboot; \
-		chmod 755 ./AutoNBI.py; \
-		ARGS += " --ramdisk"; \
 	fi
 
 clean:
