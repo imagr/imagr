@@ -144,15 +144,18 @@ def main():
 
     plist = args.plist
 
+    # Create a temp file for validation so we can convert to xml freely 
+    temp_dir = tempfile.mkdtemp()
+    temp_plist = os.path.join(temp_dir, 'config.plist')
+
     if plist.startswith('http://') or plist.startswith('https://'):
         temp_dir = tempfile.mkdtemp()
-        cmd = ['/usr/bin/curl', '-fsSL', plist, '-o', os.path.join(temp_dir, 'config.plist')]
+        cmd = ['/usr/bin/curl', '-fsSL', plist, '-o', temp_plist]
         task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         proc = task.communicate()[0]
 
         if task.returncode != 0:
             fail(proc)
-        temp_plist = os.path.join(temp_dir, 'config.plist')
         plist = temp_plist
 
     if not os.path.exists(plist):
@@ -167,7 +170,7 @@ def main():
         fail(proc)
 
     # Convert to XML so plistlib can read it
-    cmd = ['/usr/bin/plutil', '-convert', 'xml1', plist]
+    cmd = ['/usr/bin/plutil', '-convert', 'xml1', plist, '-o', temp_plist]
     task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     proc = task.communicate()[0]
 
@@ -175,7 +178,7 @@ def main():
         fail(proc)
 
     try:
-        config = plistlib.readPlist(plist)
+        config = plistlib.readPlist(temp_plist)
     except:
         fail("Couldn't read plist. Make sure it's a valid ")
 
