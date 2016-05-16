@@ -701,7 +701,7 @@ class MainController(NSObject):
             # Restore image
             if item.get('type') == 'image' and item.get('url'):
                 Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
-                self.Clone(item.get('url'), self.targetVolume)
+                self.Clone(item.get('url'), self.targetVolume, verify=item.get('verify', True))
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
