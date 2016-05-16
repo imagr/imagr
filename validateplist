@@ -23,6 +23,7 @@ This script will validate an Imagr configuration plist. Usage:
     #16 - if a default workflow is specified, it must match the name of an existing workflow
     #17 - if a workflow to autorun is specified, it must match the name of an existing workflow
     #18 - If a destructive task comes after a non-destructive task, the admin should be warned
+    #19 - If image components have a verify option it must be a bool
 """
 
 import os
@@ -127,6 +128,13 @@ def validate_component(component, workflow):
         if (component['type'] == 'eraseVolume') and (component['first_boot'] is True):
             fail("'eraseVolume' must not be a first-boot action. \
             'first_boot' = True found in %s" % workflow['name'])
+    except:
+        pass
+    
+    # Rule 19
+    try:
+        if (component['type'] == 'image') and (type(component['verify']) != bool):
+            fail("verify must be a bool, found in %s" % workflow['name'])
     except:
         pass
 
