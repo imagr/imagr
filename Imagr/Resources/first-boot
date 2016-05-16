@@ -64,10 +64,10 @@ Imagr First Boot %s
         while True:
             print ip_addresses()
             if ip_addresses().strip() != "0":
-                log.info('%%{color=green}Network connection is active. ')
+                log.info('%{color=green}Network connection is active. ')
                 break
             else:
-                log.info('%%{color=orange}Network connection is inactive, retrying...')
+                log.info('%{color=orange}Network connection is inactive, retrying...')
                 time.sleep(10)
     retry_limit = plist_opts.get('RetryCount')
     # if the packages dir isn't empty, loop over them
