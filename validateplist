@@ -144,7 +144,7 @@ def main():
 
     plist = args.plist
 
-    # Create a temp file for validation so we can convert to xml freely 
+    # Create a temp file for validation so we can convert to xml freely
     temp_dir = tempfile.mkdtemp()
     temp_plist = os.path.join(temp_dir, 'config.plist')
 
