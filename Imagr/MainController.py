@@ -169,12 +169,23 @@ class MainController(NSObject):
         self.backdropWindow.setCollectionBehavior_(NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorCanJoinAllSpaces)
 
     def loadBackgroundImage(self, urlString):
+        def gcd(a, b):
+            """Return greatest common divisor of two numbers"""
+            if b == 0:
+                return a
+            return gcd(b, a % b)
         if not urlString.endswith(u"?"):
             try:
                 verplist = FoundationPlist.readPlist("/System/Library/CoreServices/SystemVersion.plist")
                 osver = verplist[u"ProductUserVisibleVersion"]
                 osbuild = verplist[u"ProductBuildVersion"]
-                urlString += u"?osver=%s&osbuild=%s" % (osver, osbuild)
+                size = NSScreen.mainScreen().frame().size
+                w = int(size.width)
+                h = int(size.height)
+                divisor = gcd(w, h)
+                aw = w / divisor
+                ah = h / divisor
+                urlString += u"?osver=%s&osbuild=%s&w=%d&h=%d&a=%d-%d" % (osver, osbuild, w, h, aw, ah)
             except:
                 pass
         url = NSURL.URLWithString_(urlString)
