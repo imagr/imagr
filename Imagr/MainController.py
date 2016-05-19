@@ -14,6 +14,7 @@ from SystemConfiguration import *
 from Foundation import *
 from AppKit import *
 from Cocoa import *
+from Quartz.CoreGraphics import *
 import subprocess
 import sys
 import macdisk
@@ -28,7 +29,8 @@ import time
 class MainController(NSObject):
 
     mainWindow = objc.IBOutlet()
-
+    backdropWindow = objc.IBOutlet()
+    
     utilities_menu = objc.IBOutlet()
     help_menu = objc.IBOutlet()
 
@@ -140,6 +142,7 @@ class MainController(NSObject):
             self.setStartupDisk_(self)
 
     def runStartupTasks(self):
+        self.showBackdropWindow()
         self.mainWindow.center()
         # Run app startup - get the images, password, volumes - anything that takes a while
 
@@ -150,7 +153,39 @@ class MainController(NSObject):
         self.progressIndicator.startAnimation_(self)
         self.registerForWorkspaceNotifications()
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
+    
+    def showBackdropWindow(self):
+        # Create a backdrop window that covers the whole screen.
+        rect = NSScreen.mainScreen().frame()
+        self.backdropWindow.setCanBecomeVisibleWithoutLogin_(True)
+        self.backdropWindow.setFrame_display_(rect, True)
+        backgroundColor = NSColor.darkGrayColor()
+        self.backdropWindow.setBackgroundColor_(backgroundColor)
+        self.backdropWindow.setOpaque_(False)
+        self.backdropWindow.setIgnoresMouseEvents_(False)
+        self.backdropWindow.setAlphaValue_(1.0)
+        self.backdropWindow.orderFrontRegardless()
+        self.backdropWindow.setLevel_(kCGNormalWindowLevel - 1)
+        self.backdropWindow.setCollectionBehavior_(NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorCanJoinAllSpaces)
 
+    def loadBackgroundImage(self, urlString):
+        if not urlString.endswith(u"?"):
+            try:
+                verplist = FoundationPlist.readPlist("/System/Library/CoreServices/SystemVersion.plist")
+                osver = verplist[u"ProductUserVisibleVersion"]
+                osbuild = verplist[u"ProductBuildVersion"]
+                urlString += u"?osver=%s&osbuild=%s" % (osver, osbuild)
+            except:
+                pass
+        url = NSURL.URLWithString_(urlString)
+        image = NSImage.alloc().initWithContentsOfURL_(url)
+        self.performSelectorOnMainThread_withObject_waitUntilDone_(
+            self.setBackgroundImage, image, YES)
+    
+    def setBackgroundImage(self, image):
+        self.backdropWindow.contentView().setWantsLayer_(True)
+        self.backdropWindow.contentView().layer().setContents_(image)
+    
     def registerForWorkspaceNotifications(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
         nc.addObserver_selector_name_object_(
@@ -236,6 +271,12 @@ class MainController(NSObject):
                 except:
                     self.errorMessage = "Configuration plist couldn't be read."
 
+                try:
+                    urlString = converted_plist['background_image']
+                    NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadBackgroundImage, self, urlString)
+                except:
+                    pass
+                
                 try:
                     self.passwordHash = converted_plist['password']
                 except:

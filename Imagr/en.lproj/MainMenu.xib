@@ -90,6 +90,7 @@
         <customObject id="420" customClass="NSFontManager"/>
         <customObject id="664" customClass="MainController">
             <connections>
+                <outlet property="backdropWindow" destination="58G-aZ-OKf" id="jaI-Lh-m64"/>
                 <outlet property="cancelAndRestartButton" destination="474" id="724"/>
                 <outlet property="chooseTargetCancelButton" destination="708" id="718"/>
                 <outlet property="chooseTargetDropDown" destination="706" id="719"/>
@@ -551,6 +552,16 @@ Gw
                 </subviews>
             </view>
             <point key="canvasLocation" x="-160" y="406"/>
+        </window>
+        <window title="Backdrop Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hasShadow="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="58G-aZ-OKf" customClass="LLBorderlessWindow">
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="0.0" y="0.0" width="480" height="270"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1177"/>
+            <view key="contentView" id="Slo-Fr-LxS">
+                <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                <autoresizingMask key="autoresizingMask"/>
+            </view>
+            <point key="canvasLocation" x="444" y="468"/>
         </window>
     </objects>
     <resources>
