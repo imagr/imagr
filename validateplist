@@ -24,6 +24,7 @@ This script will validate an Imagr configuration plist. Usage:
     #17 - if a workflow to autorun is specified, it must match the name of an existing workflow
     #18 - If a destructive task comes after a non-destructive task, the admin should be warned
     #19 - If image components have a verify option it must be a bool
+    #20 - Background images should have a valid url
 """
 
 import os
@@ -33,6 +34,8 @@ import plistlib
 import subprocess
 import tempfile
 import shutil
+import urlparse
+import urllib2
 if os.path.exists(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Imagr')):
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Imagr'))
 elif os.path.exists('/usr/local/munki/munkilib'):
@@ -46,6 +49,23 @@ def fail(error):
     """
     print "ERROR: %s" % error
     sys.exit(1)
+
+def validate_url(name, urlstring):
+    if not isinstance(urlstring, basestring):
+        fail('%s must be a string' % name)
+    try:
+        url = urlparse.urlparse(urlstring)
+    except:
+        fail('%s is not a valid URL' % urlstring)
+    if not url.netloc or not url.scheme:
+        fail('%s is not a valid URL' % urlstring)
+    request = urllib2.Request(urlstring)
+    request.get_method = lambda: 'HEAD'
+    try:
+        response = urllib2.urlopen(request)
+    except BaseException as e:
+        print 'WARNING: %s URL request failed: %s' % (urlstring, str(e))
+    
 
 def validate_component(component, workflow):
     """
@@ -70,7 +90,9 @@ def validate_component(component, workflow):
                component['url'].endswith(".sparseimage"):
             fail("The 'url' in 'image' components must end with '.dmg' or \
                      '.sparseimage'. Not found in %s" % workflow['name'])
-
+        
+        validate_url('Image', component['url'])
+    
     if component['type'] == 'package':
         # Rule 6
         if 'url' not in component:
@@ -82,11 +104,15 @@ def validate_component(component, workflow):
             fail("The 'url' in 'package' components must end with '.dmg' or '.pkg'. \
                                                Not found in %s" % workflow['name'])
 
+        validate_url('Package', component['url'])
+    
     if component['type'] == 'script':
         # Rule 8
         if 'content' not in component and 'url' not in component:
             fail("'content' is a required key in a 'script' component. \
                                   Not found in %s" % workflow['name'])
+        if 'url' in component:
+            validate_url('Script', component['url'])
 
     if component['type'] == 'partition':
         # Rule 11
@@ -242,6 +268,11 @@ def main():
     # Rule 17
     if 'autorun' in config and config['autorun'] not in existing_names:
         fail('Autorun workflow must match the name of an existing workflow')
+
+    # Rule 20
+    if 'background_image' in config:
+        validate_url('Background image', config['background_image'])
+        
 
     # if we get this far, it looks good.
     print "SUCCESS: %s looks like a valid Imagr configuration plist." % plist
