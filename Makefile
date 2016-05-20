@@ -7,6 +7,7 @@ REPORTURL=none
 APP="/Applications/Install OS X El Capitan.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
+DMGPATH=none
 ARGS= --enable-nbi --add-python
 BUILD=Release
 AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
@@ -82,6 +83,7 @@ foundation:
 	fi
 
 dl:
+ifeq ($(DMGPATH),none)
 	rm -f ./Imagr*.dmg
 	rm -rf Imagr.app
 	curl -sL -o ./Imagr.dmg --connect-timeout 30 $$(curl -s \
@@ -89,9 +91,14 @@ dl:
 		python -c 'import json,sys;obj=json.load(sys.stdin); \
 		print obj[0]["assets"][0]["browser_download_url"]')
 	hdiutil attach Imagr.dmg
+else
+	hdiutil attach $(DMGPATH)
+endif
 	cp -r /Volumes/Imagr/Imagr.app .
 	hdiutil detach /Volumes/Imagr
+ifeq ($(DMGPATH),none)
 	rm ./Imagr.dmg
+endif
 
 pkg-dir:
 	mkdir -p Packages/Extras
