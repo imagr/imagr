@@ -550,8 +550,9 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
             NSLog("Gurl Error: %@", err)
             return False, err
     elif url_parse.scheme == 'file':
-        # File resources should be handled natively
-        source = url_parse.path
+        # File resources should be handled natively. Space characters, %20, need to be removed 
+        # for /usr/sbin/installer and shutil.copy to function properly.  
+        source = url_parse.path.replace("%20", " ")
         try:
             if os.path.isfile(source):
                 shutil.copy(source, file)
