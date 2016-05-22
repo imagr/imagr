@@ -6,15 +6,15 @@
 	<dict>
 		<key>Resources/LLAppDelegate.py</key>
 		<data>
-		aA1uPxnCgAJ97FeLPXuEddlCaCE=
+		/og1UlKijeTM7d9wC+7D1ZqRchU=
 		</data>
 		<key>Resources/LLLogWindowController.py</key>
 		<data>
-		dol1Xxxy7ph2LZI0WceulS2K9JQ=
+		vrhBsgI4S4zmesJIBnu/sOndHEI=
 		</data>
 		<key>Resources/LoginLog.icns</key>
 		<data>
-		nJk9ZA46TZzBD8dLFnpqhDUpBsQ=
+		y8bETYxqL7AhuCgEJAyU9QNa+DI=
 		</data>
 		<key>Resources/en.lproj/Credits.rtf</key>
 		<dict>
@@ -38,7 +38,7 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			7rAQhO728v9bIiUwNPlfNpmuglw=
+			Ymu32qHYH3y/+d69Ebm4H2Ng0aY=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -51,22 +51,47 @@
 	<key>files2</key>
 	<dict>
 		<key>Resources/LLAppDelegate.py</key>
-		<data>
-		aA1uPxnCgAJ97FeLPXuEddlCaCE=
-		</data>
+		<dict>
+			<key>hash</key>
+			<data>
+			/og1UlKijeTM7d9wC+7D1ZqRchU=
+			</data>
+			<key>hash2</key>
+			<data>
+			EU0/vjyRgdo87E19795NgJyPmZ8VyLuHQg4mLd0uToo=
+			</data>
+		</dict>
 		<key>Resources/LLLogWindowController.py</key>
-		<data>
-		dol1Xxxy7ph2LZI0WceulS2K9JQ=
-		</data>
+		<dict>
+			<key>hash</key>
+			<data>
+			vrhBsgI4S4zmesJIBnu/sOndHEI=
+			</data>
+			<key>hash2</key>
+			<data>
+			ngCN2yLXHnWh496Y4ELYLz2gUbruGxVwQqzlqwhjZBM=
+			</data>
+		</dict>
 		<key>Resources/LoginLog.icns</key>
-		<data>
-		nJk9ZA46TZzBD8dLFnpqhDUpBsQ=
-		</data>
+		<dict>
+			<key>hash</key>
+			<data>
+			y8bETYxqL7AhuCgEJAyU9QNa+DI=
+			</data>
+			<key>hash2</key>
+			<data>
+			TFG3EKgWorRO5rlzvoTOfoH4IxDSuCosKWeKsdBEwKE=
+			</data>
+		</dict>
 		<key>Resources/en.lproj/Credits.rtf</key>
 		<dict>
 			<key>hash</key>
 			<data>
 			YKJIFIsxneJuNkJNJQIcJIjiPOg=
+			</data>
+			<key>hash2</key>
+			<data>
+			tDhv4c72XNkebI7MBl0RcIkIP5G3ytvww+Xq4g6LlkA=
 			</data>
 			<key>optional</key>
 			<true/>
@@ -77,6 +102,10 @@
 			<data>
 			MiLKDDnrUKr4EmuvhS5VQwxHGK8=
 			</data>
+			<key>hash2</key>
+			<data>
+			Oc8u4Ht7Mz58F50L9NeYpbcq9qTlhPUeZCcDu/pPyCg=
+			</data>
 			<key>optional</key>
 			<true/>
 		</dict>
@@ -84,15 +113,26 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			7rAQhO728v9bIiUwNPlfNpmuglw=
+			Ymu32qHYH3y/+d69Ebm4H2Ng0aY=
+			</data>
+			<key>hash2</key>
+			<data>
+			LeUK8Cv1g3glPK/o4b5cS1mv3qCvBrh46499AzERJhE=
 			</data>
 			<key>optional</key>
 			<true/>
 		</dict>
 		<key>Resources/main.py</key>
-		<data>
-		PaL777zGHqjzaWpudLKng/l3/tg=
-		</data>
+		<dict>
+			<key>hash</key>
+			<data>
+			PaL777zGHqjzaWpudLKng/l3/tg=
+			</data>
+			<key>hash2</key>
+			<data>
+			n3f0zwGDcf9L3Y9wCOck1M5t6wW83pgdSEORfMJ4rZA=
+			</data>
+		</dict>
 	</dict>
 	<key>rules</key>
 	<dict>

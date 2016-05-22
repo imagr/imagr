@@ -382,6 +382,15 @@ def sendReport(status, message):
         else:
             log.info(log_message)
 
+def bringToFront(bundleID):
+    startTime = time.time()
+    while time.time() - startTime < 10:
+        for runapp in NSRunningApplication.runningApplicationsWithBundleIdentifier_(bundleID):
+            runapp.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
+            if runapp.isActive():
+                return
+        time.sleep(1/10.0)
+
 def launchApp(app_path):
     # Get the binary path so we can launch it using a threaded subprocess
     try:
@@ -389,23 +398,16 @@ def launchApp(app_path):
         binary = app_plist['CFBundleExecutable']
     except:
         NSLog("Failed to get app binary location, cannot launch.")
-
-    app_list =  NSWorkspace.sharedWorkspace().runningApplications()
-    # Before launching the app, check to see if it is already running
-    app_running = False
-    for app in app_list:
-        if app_plist['CFBundleIdentifier'] == app.bundleIdentifier():
-            app_running = True
-
-    # Only launch the app if it isn't already running
-    if not app_running:
-        thread = CustomThread(os.path.join(app_path,'Contents', 'MacOS', binary))
+        return
+    
+    if not NSRunningApplication.runningApplicationsWithBundleIdentifier_(app_plist['CFBundleIdentifier']):
+        # Only launch the app if it isn't already running
+        thread = CustomThread(os.path.join(app_path, 'Contents', 'MacOS', binary))
         thread.daemon = True
         thread.start()
-        time.sleep(1)
 
     # Bring application to the front as they launch in the background in Netboot for some reason
-    NSWorkspace.sharedWorkspace().launchApplication_(app_path)
+    bringToFront(app_plist['CFBundleIdentifier'])
 
 def get_hardware_info():
     '''Uses system profiler to get hardware info for this machine'''
