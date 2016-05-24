@@ -186,6 +186,7 @@ class MainController(NSObject):
                     self.showBackdropWindow, None, YES)
             else:
                 NSLog(u"Not showing background window as Dock.app is running")
+                return
         
         def gcd(a, b):
             """Return greatest common divisor of two numbers"""
