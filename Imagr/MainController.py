@@ -142,7 +142,10 @@ class MainController(NSObject):
             self.setStartupDisk_(self)
 
     def runStartupTasks(self):
-        self.showBackdropWindow()
+        NSLog(u"background_window is set to %@", repr(self.backgroundWindowSetting()))
+        if self.backgroundWindowSetting() == u"always":
+            self.showBackdropWindow()
+        
         self.mainWindow.center()
         # Run app startup - get the images, password, volumes - anything that takes a while
 
@@ -154,8 +157,12 @@ class MainController(NSObject):
         self.registerForWorkspaceNotifications()
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
     
+    def backgroundWindowSetting(self):
+        return Utils.getPlistData(u"background_window") or u"auto"
+    
     def showBackdropWindow(self):
         # Create a backdrop window that covers the whole screen.
+        NSLog(u"Showing background window")
         rect = NSScreen.mainScreen().frame()
         self.backdropWindow.setCanBecomeVisibleWithoutLogin_(True)
         self.backdropWindow.setFrame_display_(rect, True)
@@ -169,11 +176,23 @@ class MainController(NSObject):
         self.backdropWindow.setCollectionBehavior_(NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorCanJoinAllSpaces)
 
     def loadBackgroundImage(self, urlString):
+        if self.backgroundWindowSetting() == u"never":
+            return
+        NSLog(u"Loading background image")
+        if self.backgroundWindowSetting() == u"auto":
+            runningApps = [x.bundleIdentifier() for x in NSWorkspace.sharedWorkspace().runningApplications()]
+            if u"com.apple.dock" not in runningApps:
+                self.performSelectorOnMainThread_withObject_waitUntilDone_(
+                    self.showBackdropWindow, None, YES)
+            else:
+                NSLog(u"Not showing background window as Dock.app is running")
+        
         def gcd(a, b):
             """Return greatest common divisor of two numbers"""
             if b == 0:
                 return a
             return gcd(b, a % b)
+        
         if not urlString.endswith(u"?"):
             try:
                 verplist = FoundationPlist.readPlist("/System/Library/CoreServices/SystemVersion.plist")
