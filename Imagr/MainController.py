@@ -29,7 +29,7 @@ import time
 class MainController(NSObject):
 
     mainWindow = objc.IBOutlet()
-    backdropWindow = objc.IBOutlet()
+    backgroundWindow = objc.IBOutlet()
     
     utilities_menu = objc.IBOutlet()
     help_menu = objc.IBOutlet()
@@ -144,7 +144,7 @@ class MainController(NSObject):
     def runStartupTasks(self):
         NSLog(u"background_window is set to %@", repr(self.backgroundWindowSetting()))
         if self.backgroundWindowSetting() == u"always":
-            self.showBackdropWindow()
+            self.showBackgroundWindow()
         
         self.mainWindow.center()
         # Run app startup - get the images, password, volumes - anything that takes a while
@@ -160,20 +160,20 @@ class MainController(NSObject):
     def backgroundWindowSetting(self):
         return Utils.getPlistData(u"background_window") or u"auto"
     
-    def showBackdropWindow(self):
-        # Create a backdrop window that covers the whole screen.
+    def showBackgroundWindow(self):
+        # Create a background window that covers the whole screen.
         NSLog(u"Showing background window")
         rect = NSScreen.mainScreen().frame()
-        self.backdropWindow.setCanBecomeVisibleWithoutLogin_(True)
-        self.backdropWindow.setFrame_display_(rect, True)
+        self.backgroundWindow.setCanBecomeVisibleWithoutLogin_(True)
+        self.backgroundWindow.setFrame_display_(rect, True)
         backgroundColor = NSColor.darkGrayColor()
-        self.backdropWindow.setBackgroundColor_(backgroundColor)
-        self.backdropWindow.setOpaque_(False)
-        self.backdropWindow.setIgnoresMouseEvents_(False)
-        self.backdropWindow.setAlphaValue_(1.0)
-        self.backdropWindow.orderFrontRegardless()
-        self.backdropWindow.setLevel_(kCGNormalWindowLevel - 1)
-        self.backdropWindow.setCollectionBehavior_(NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorCanJoinAllSpaces)
+        self.backgroundWindow.setBackgroundColor_(backgroundColor)
+        self.backgroundWindow.setOpaque_(False)
+        self.backgroundWindow.setIgnoresMouseEvents_(False)
+        self.backgroundWindow.setAlphaValue_(1.0)
+        self.backgroundWindow.orderFrontRegardless()
+        self.backgroundWindow.setLevel_(kCGNormalWindowLevel - 1)
+        self.backgroundWindow.setCollectionBehavior_(NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorCanJoinAllSpaces)
 
     def loadBackgroundImage(self, urlString):
         if self.backgroundWindowSetting() == u"never":
@@ -183,7 +183,7 @@ class MainController(NSObject):
             runningApps = [x.bundleIdentifier() for x in NSWorkspace.sharedWorkspace().runningApplications()]
             if u"com.apple.dock" not in runningApps:
                 self.performSelectorOnMainThread_withObject_waitUntilDone_(
-                    self.showBackdropWindow, None, YES)
+                    self.showBackgroundWindow, None, YES)
             else:
                 NSLog(u"Not showing background window as Dock.app is running")
                 return
@@ -214,8 +214,8 @@ class MainController(NSObject):
             self.setBackgroundImage, image, YES)
     
     def setBackgroundImage(self, image):
-        self.backdropWindow.contentView().setWantsLayer_(True)
-        self.backdropWindow.contentView().layer().setContents_(image)
+        self.backgroundWindow.contentView().setWantsLayer_(True)
+        self.backgroundWindow.contentView().layer().setContents_(image)
     
     def registerForWorkspaceNotifications(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
