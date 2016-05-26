@@ -32,7 +32,7 @@ autonbi:
 autonbi-rcnetboot:
 	if [ ! -f ./rc.netboot ]; then \
 		curl -fsSL $(AUTONBIRCNBURL) -o ./rc.netboot; \
-		chmod 755 ./AutoNBI.py; \
+		chmod 755 ./rc.netboot; \
 	fi
 
 clean:
