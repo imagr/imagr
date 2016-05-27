@@ -90,7 +90,7 @@
         <customObject id="420" customClass="NSFontManager"/>
         <customObject id="664" customClass="MainController">
             <connections>
-                <outlet property="backdropWindow" destination="58G-aZ-OKf" id="jaI-Lh-m64"/>
+                <outlet property="backgroundWindow" destination="58G-aZ-OKf" id="jaI-Lh-m64"/>
                 <outlet property="cancelAndRestartButton" destination="474" id="724"/>
                 <outlet property="chooseTargetCancelButton" destination="708" id="718"/>
                 <outlet property="chooseTargetDropDown" destination="706" id="719"/>
