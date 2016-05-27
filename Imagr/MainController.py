@@ -290,7 +290,7 @@ class MainController(NSObject):
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
         self.volumes = macdisk.MountedVolumes()
-
+        self.buildUtilitiesMenu()
         theURL = Utils.getServerURL()
 
         if theURL:
@@ -348,7 +348,6 @@ class MainController(NSObject):
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
         else:
-            self.buildUtilitiesMenu()
             if self.hasLoggedIn:
                 self.enableWorkflowViewControls()
                 self.theTabView.selectTabViewItem_(self.mainTab)
