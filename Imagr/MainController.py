@@ -255,7 +255,7 @@ class MainController(NSObject):
         self.reloadVolumes()
 
     def reloadVolumes(self):
-        self.volumes = macdisk.MountedVolumes()
+        self.volumes = Utils.mountedVolumes()
         self.chooseTargetDropDown.removeAllItems()
         volume_list = []
         for volume in self.volumes:
@@ -322,7 +322,7 @@ class MainController(NSObject):
 
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
-        self.volumes = macdisk.MountedVolumes()
+        self.volumes = Utils.mountedVolumes()
         self.buildUtilitiesMenu()
         Utils.set_date()
         theURL = Utils.getServerURL()
@@ -824,7 +824,7 @@ class MainController(NSObject):
             if self.should_update_volume_list == True:
                 NSLog("Refreshing volume list.")
                 # again, this needs to be refactored
-                self.volumes = macdisk.MountedVolumes()
+                self.volumes = Utils.mountedVolumes()
                 self.chooseTargetDropDown.removeAllItems()
                 volume_list = []
                 for volume in self.volumes:
