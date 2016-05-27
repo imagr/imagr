@@ -26,6 +26,7 @@ import xml.sax.saxutils
 import logging
 import urlparse
 import socket
+import urllib2
 
 from gurl import Gurl
 
@@ -271,29 +272,47 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                         connection.headers.get('http_result_description', ''))
 
 def downloadFile(url, additional_headers=None):
-    temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
-    try:
-        headers = get_url(url, temp_file, additional_headers=additional_headers)
-    except HTTPError, err:
-        NSLog("HTTP Error: %@", err)
-        return False
-    except GurlError, err:
-        NSLog("Gurl Error: %@", err)
-        return False
-    try:
-        file_handle = open(temp_file)
-        data = file_handle.read()
-        file_handle.close()
-    except (OSError, IOError):
-        NSLog('Couldn\'t read %@', temp_file)
-        return False
-    try:
-        os.unlink(temp_file)
-        os.rmdir(os.path.dirname(temp_file))
-    except (OSError, IOError):
-        pass
-    return data
-
+    url_parse = urlparse.urlparse(url)
+    err=None
+    if url_parse.scheme in ['http', 'https']:
+        # Use gurl to download the file
+        temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
+        try:
+            headers = get_url(url, temp_file, additional_headers=additional_headers)
+        except HTTPError, err:
+            NSLog("HTTP Error: %@", err)
+            err.url = url
+            data=False
+        except GurlError, err:
+            NSLog("Gurl Error: %@", err)
+            err.url = url
+            data=False
+        try:
+            file_handle = open(temp_file)
+            data = file_handle.read()
+            file_handle.close()
+        except (OSError, IOError):
+            NSLog('Couldn\'t read %@', temp_file)
+            data=False
+        try:
+            os.unlink(temp_file)
+            os.rmdir(os.path.dirname(temp_file))
+        except (OSError, IOError):
+            pass
+    elif url_parse.scheme == 'file':
+        # File resources should be handled natively
+        try:
+            data = urllib2.urlopen(url).read()
+        except urllib2.URLError, err:
+            err.reason = err[0][1]
+            err.url = url
+            data=False
+    else:
+        err = type("err", (object,), dict())
+        setattr(err,'reason','The following URL is unsupported')
+        setattr(err,'url',url)
+        data=False
+    return data, err
 
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
@@ -519,14 +538,30 @@ def unmountdmg(mountpoint):
 
 def downloadChunks(url, file, progress_method=None, additional_headers=None):
     message = "Downloading %s" % os.path.basename(url)
-    try:
-        headers = get_url(url, file, message=message, progress_method=progress_method, additional_headers=additional_headers)
-    except HTTPError, err:
-        NSLog("HTTP Error: %@", err)
-        return False, err
-    except GurlError, err:
-        NSLog("Gurl Error: %@", err)
-        return False, err
+    url_parse = urlparse.urlparse(url)
+    if url_parse.scheme in ['http', 'https']:
+        # Use gurl to download the file
+        try:
+            headers = get_url(url, file, message=message, progress_method=progress_method, additional_headers=additional_headers)
+        except HTTPError, err:
+            NSLog("HTTP Error: %@", err)
+            return False, err
+        except GurlError, err:
+            NSLog("Gurl Error: %@", err)
+            return False, err
+    elif url_parse.scheme == 'file':
+        # File resources should be handled natively. Space characters, %20, need to be removed 
+        # for /usr/sbin/installer and shutil.copy to function properly.  
+        source = url_parse.path.replace("%20", " ")
+        try:
+            if os.path.isfile(source):
+                shutil.copy(source, file)
+            else:
+                shutil.copytree(source, file)
+            return source, None
+        except:
+            error = "Unable to copy %s" % url
+            return False, error
     else:
         return file, None
 

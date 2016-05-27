@@ -57,14 +57,17 @@ def validate_url(name, urlstring):
         url = urlparse.urlparse(urlstring)
     except:
         fail('%s is not a valid URL' % urlstring)
-    if not url.netloc or not url.scheme:
+    if ' ' in urlstring:
+        print 'WARNING: %s URL has a space character. Please encode as %%20, else you might have unexpected results' % (urlstring)
+    if url.scheme in ['http', 'https', 'file']:
+        request = urllib2.Request(urlstring)
+        request.get_method = lambda: 'HEAD'
+        try:
+            response = urllib2.urlopen(request)
+        except BaseException as e:
+            print 'WARNING: %s URL request failed: %s' % (urlstring, str(e))
+    else:
         fail('%s is not a valid URL' % urlstring)
-    request = urllib2.Request(urlstring)
-    request.get_method = lambda: 'HEAD'
-    try:
-        response = urllib2.urlopen(request)
-    except BaseException as e:
-        print 'WARNING: %s URL request failed: %s' % (urlstring, str(e))
     
 
 def validate_component(component, workflow):
