@@ -9,7 +9,7 @@ AutoNBI.py
 FoundationPlist*
 Imagr.xcodeproj/project.xcworkspace/xcuserdata/*
 config.mk
-
+rc.netboot
 *.pyc
 
 Imagr/post_test.py
