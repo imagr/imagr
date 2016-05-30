@@ -1022,7 +1022,7 @@ class MainController(NSObject):
                 dmgmountpoint = dmgmountpoints[0]
             except:
                 self.errorMessage = "Couldn't mount %s" % url
-                return False
+                return False, self.errorMessage
 
             # Now we're going to go over everything that ends .pkg or
             # .mpkg and install it
@@ -1039,7 +1039,7 @@ class MainController(NSObject):
                 Utils.unmountdmg(dmgmountpoint)
             except:
                 self.errorMessage = "Couldn't unmount %s" % dmgmountpoint
-                return False
+                return False, self.errorMessage
 
         if os.path.basename(url).endswith('.pkg'):
 
@@ -1105,7 +1105,7 @@ class MainController(NSObject):
             dmgmountpoint = dmgmountpoints[0]
         except:
             self.errorMessage = "Couldn't mount %s" % url
-            return False
+            return False, self.errorMessage
 
         # Now we're going to go over everything that ends .pkg or
         # .mpkg and install it
