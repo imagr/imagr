@@ -745,13 +745,9 @@ def mountedVolumes():
         plist = plistlib.readPlistFromString(output)
         volumeNames = plist[u"VolumesFromDisks"]
         for disk in plist[u"AllDisksAndPartitions"]:
-            if disk[u"Content"] == u"Apple_HFS":
-                if (u"MountPoint" in disk) and (disk.get(u"VolumeName") in volumeNames):
-                    volumes.append(macdisk.Disk(disk[u"DeviceIdentifier"]))
-                    continue
-            if not u"Partitions" in disk:
-                continue
-            for part in disk[u"Partitions"]:
+            if (u"MountPoint" in disk) and (disk.get(u"VolumeName") in volumeNames):
+                volumes.append(macdisk.Disk(disk[u"DeviceIdentifier"]))
+            for part in disk.get(u"Partitions", []):
                 if (u"MountPoint" in part) and (part.get(u"VolumeName") in volumeNames):
                     volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
         return volumes
