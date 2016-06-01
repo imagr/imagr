@@ -543,6 +543,7 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
         # Use gurl to download the file
         try:
             headers = get_url(url, file, message=message, progress_method=progress_method, additional_headers=additional_headers)
+            return file, None
         except HTTPError, err:
             NSLog("HTTP Error: %@", err)
             return False, err
@@ -563,7 +564,9 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
             error = "Unable to copy %s" % url
             return False, error
     else:
-        return file, None
+        # Garbage in garbage out. We don't know what to do with this type of url.
+        error = "Cannot handle url scheme: '%s' from %s" % (url_parse.scheme, url) 
+        return False, error
 
 
 def copyFirstBoot(root):
