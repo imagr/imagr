@@ -7,7 +7,7 @@
 (Include debug logs if possible and relevant.)
 
 ### Versions Report
-(Production [release](https://github.com/grahamgilbert/imagr/releases) which version (v.1.X.X) or master branch. Please also include NBI creation tool used.)
+(Production [release](https://github.com/grahamgilbert/imagr/releases) and which version (v.1.X.X) or master branch. Please also include NBI creation tool used.)
 
 ### References
 (Remove this section if not relevant)
