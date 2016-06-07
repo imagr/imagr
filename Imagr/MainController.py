@@ -741,6 +741,16 @@ class MainController(NSObject):
         self.autorunWorkflow = None
 
         Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'])
+
+        # Bless the target if we need to
+        if self.blessTarget == True:
+            try:
+                self.targetVolume.SetStartupDisk()
+            except:
+                for volume in self.volumes:
+                    if str(volume.mountpoint) == str(self.targetVolume):
+                        volume.SetStartupDisk()
+
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
@@ -1210,15 +1220,6 @@ class MainController(NSObject):
         self.restartToImagedVolume()
 
     def restartToImagedVolume(self):
-        # set the startup disk to the restored volume
-        if self.blessTarget == True:
-            try:
-                self.targetVolume.SetStartupDisk()
-            except:
-                for volume in self.volumes:
-                    if str(volume.mountpoint) == str(self.targetVolume):
-                        volume.SetStartupDisk()
-
         if self.restartAction == 'restart':
             cmd = ['/sbin/reboot']
         elif self.restartAction == 'shutdown':
