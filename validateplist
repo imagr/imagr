@@ -185,7 +185,9 @@ def main():
     temp_dir = tempfile.mkdtemp()
     temp_plist = os.path.join(temp_dir, 'config.plist')
 
+    plist_url = None
     if plist.startswith('http://') or plist.startswith('https://'):
+        plist_url = plist
         temp_dir = tempfile.mkdtemp()
         cmd = ['/usr/bin/curl', '-fsSL', plist, '-o', temp_plist]
         task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -278,6 +280,9 @@ def main():
         
 
     # if we get this far, it looks good.
+    if plist_url != None:
+        plist = plist_url
+        
     print "SUCCESS: %s looks like a valid Imagr configuration plist." % plist
 
 if __name__ == '__main__':
