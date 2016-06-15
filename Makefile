@@ -91,6 +91,9 @@ foundation:
 	fi
 
 dl:
+	if [ -d /Volumes/Imagr ]; then \
+		hdiutil eject /Volumes/Imagr; \
+	fi
 ifeq ($(DMGPATH),none)
 	rm -f ./Imagr*.dmg
 	rm -rf Imagr.app
