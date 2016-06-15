@@ -16,6 +16,7 @@ FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/cli
 INDEX="5001"
 VALIDATE=True
 SYSLOG=none
+TMPMOUNT="/private/tmp/imagr-mount"
 
 -include config.mk
 
@@ -91,9 +92,6 @@ foundation:
 	fi
 
 dl:
-	if [ -d /Volumes/Imagr ]; then \
-		hdiutil eject /Volumes/Imagr; \
-	fi
 ifeq ($(DMGPATH),none)
 	rm -f ./Imagr*.dmg
 	rm -rf Imagr.app
@@ -101,12 +99,14 @@ ifeq ($(DMGPATH),none)
 		https://api.github.com/repos/grahamgilbert/imagr/releases | \
 		python -c 'import json,sys;obj=json.load(sys.stdin); \
 		print obj[0]["assets"][0]["browser_download_url"]')
-	hdiutil attach Imagr.dmg
+	hdiutil attach "Imagr.dmg" -mountpoint "$(TMPMOUNT)"
 else
-	hdiutil attach $(DMGPATH)
+	hdiutil attach "$(DMGPATH)" -mountpoint "$(TMPMOUNT)"
 endif
-	cp -r /Volumes/Imagr/Imagr.app .
-	hdiutil detach /Volumes/Imagr
+	
+
+	cp -r "$(TMPMOUNT)"/Imagr.app .
+	hdiutil detach "$(TMPMOUNT)"
 ifeq ($(DMGPATH),none)
 	rm ./Imagr.dmg
 endif
