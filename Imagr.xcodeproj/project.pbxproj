@@ -10,7 +10,7 @@
 		050D9F831CE5FF1000250591 /* LLBorderlessWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 050D9F821CE5FF1000250591 /* LLBorderlessWindow.m */; };
 		C06979C21AE83F3500914535 /* gurl.py in Resources */ = {isa = PBXBuildFile; fileRef = C06979C11AE83F3500914535 /* gurl.py */; };
 		FC21F1741C6235DA0039D923 /* localize.sh in Resources */ = {isa = PBXBuildFile; fileRef = FC21F1731C6235DA0039D923 /* localize.sh */; };
-		FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */; };
+		FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */; };
 		FC98DA241AD6B2DC00F90405 /* first-boot in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA201AD6B2DC00F90405 /* first-boot */; };
 		FC98DA251AD6B2DC00F90405 /* LoginLog.app in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA211AD6B2DC00F90405 /* LoginLog.app */; };
 		FC98DA261AD6B2DC00F90405 /* se.gu.it.LoginLog.plist in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA221AD6B2DC00F90405 /* se.gu.it.LoginLog.plist */; };
@@ -64,7 +64,7 @@
 		050D9F821CE5FF1000250591 /* LLBorderlessWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LLBorderlessWindow.m; sourceTree = "<group>"; };
 		C06979C11AE83F3500914535 /* gurl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gurl.py; sourceTree = "<group>"; };
 		FC21F1731C6235DA0039D923 /* localize.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = localize.sh; sourceTree = "<group>"; };
-		FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "com.grahamgilbert.first-boot-pkg.plist"; sourceTree = "<group>"; };
+		FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "com.grahamgilbert.imagr-first-boot-pkg.plist"; sourceTree = "<group>"; };
 		FC98DA201AD6B2DC00F90405 /* first-boot */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "first-boot"; sourceTree = "<group>"; };
 		FC98DA211AD6B2DC00F90405 /* LoginLog.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; path = LoginLog.app; sourceTree = "<group>"; };
 		FC98DA221AD6B2DC00F90405 /* se.gu.it.LoginLog.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = se.gu.it.LoginLog.plist; sourceTree = "<group>"; };
@@ -136,7 +136,7 @@
 			children = (
 				FC21F1731C6235DA0039D923 /* localize.sh */,
 				FCED84641B0201B20072AC1C /* set_computer_name.sh */,
-				FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist */,
+				FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */,
 				FC98DA201AD6B2DC00F90405 /* first-boot */,
 				FC98DA211AD6B2DC00F90405 /* LoginLog.app */,
 				FC98DA221AD6B2DC00F90405 /* se.gu.it.LoginLog.plist */,
@@ -330,7 +330,7 @@
 				FCEA81011AD018E500DBA039 /* macdisk_test.py in Resources */,
 				FCEA81091AD018E500DBA039 /* wifi_network_order_test.py in Resources */,
 				FCEA80C71AD0101100DBA039 /* Images.xcassets in Resources */,
-				FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.first-boot-pkg.plist in Resources */,
+				FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist in Resources */,
 				FCEA80F31AD018E500DBA039 /* applescript_test.py in Resources */,
 				FCEA80FB1AD018E500DBA039 /* experiments_test.py in Resources */,
 				FCEA81051AD018E500DBA039 /* systemconfig_test.py in Resources */,

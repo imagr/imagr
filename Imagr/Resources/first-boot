@@ -42,7 +42,7 @@ def cleanup():
     log_path = open(logfile, 'a')
     log.info('%%{color=magenta}No more packages or scripts have been found, cleaning up.')
     # remove launchdaemon
-    os.remove('/Library/LaunchDaemons/com.grahamgilbert.first-boot-pkg.plist')
+    os.remove('/Library/LaunchDaemons/com.grahamgilbert.imagr-first-boot-pkg.plist')
     # remove launchagent
     os.remove('/Library/LaunchAgents/se.gu.it.LoginLog.plist')
     # remove loginlog.app

@@ -589,15 +589,15 @@ def copyFirstBoot(root):
         os.makedirs(launchDaemon_dir)
 
     if not os.path.exists(os.path.join(launchDaemon_dir,
-    'com.grahamgilbert.first-boot-pkg.plist')):
+    'com.grahamgilbert.imagr-first-boot-pkg.plist')):
         shutil.copy(os.path.join(script_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'), os.path.join(launchDaemon_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'))
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'), os.path.join(launchDaemon_dir,
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'))
         # Set the permisisons
         os.chmod(os.path.join(launchDaemon_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'), 0644)
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'), 0644)
         os.chown(os.path.join(launchDaemon_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'), 0, 0)
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'), 0, 0)
 
     launchAgent_dir = os.path.join(root, 'Library', 'LaunchAgents')
     if not os.path.exists(launchAgent_dir):
