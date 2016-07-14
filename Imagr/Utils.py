@@ -273,7 +273,8 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
 
 def downloadFile(url, additional_headers=None):
     url_parse = urlparse.urlparse(url)
-    err=None
+    error=None
+    error=type("err", (object,), dict())
     if url_parse.scheme in ['http', 'https']:
         # Use gurl to download the file
         temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
@@ -281,11 +282,11 @@ def downloadFile(url, additional_headers=None):
             headers = get_url(url, temp_file, additional_headers=additional_headers)
         except HTTPError, err:
             NSLog("HTTP Error: %@", err)
-            err.url = url
+            setattr(error,'reason',err)
             data=False
         except GurlError, err:
             NSLog("Gurl Error: %@", err)
-            err.url = url
+            setattr(error,'reason',err)
             data=False
         try:
             file_handle = open(temp_file)
@@ -304,15 +305,14 @@ def downloadFile(url, additional_headers=None):
         try:
             data = urllib2.urlopen(url).read()
         except urllib2.URLError, err:
-            err.reason = err[0][1]
-            err.url = url
+            setattr(error,'reason',err[0][1])
             data=False
     else:
-        err = type("err", (object,), dict())
         setattr(err,'reason','The following URL is unsupported')
-        setattr(err,'url',url)
         data=False
-    return data, err
+
+    setattr(error,'url',url)
+    return data, error
 
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
