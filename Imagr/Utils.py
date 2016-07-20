@@ -160,8 +160,15 @@ def post_url(url, post_data, message=None, follow_redirects=False,
         raise HTTPError(connection.status,
                         connection.headers.get('http_result_description', ''))
 
+
+def NSLogWrapper(message):
+    '''A wrapper around NSLog so certain characters sent to NSLog don't trigger string
+    substitution'''
+    NSLog('%@', message)
+
+
 def get_url(url, destinationpath, message=None, follow_redirects=False,
-            progress_method=None, additional_headers=None):
+            progress_method=None, additional_headers=None, username=None, password=None):
     """Gets an HTTP or HTTPS URL and stores it in
     destination path. Returns a dictionary of headers, which includes
     http_result_code and http_result_description.
@@ -181,7 +188,9 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                'file': tempdownloadpath,
                'follow_redirects': follow_redirects,
                'additional_headers': header_dict_from_list(additional_headers),
-               'logging_function': NSLog}
+               'username': username,
+               'password': password,
+               'logging_function': NSLogWrapper}
     NSLog('gurl options: %@', options)
 
     connection = Gurl.alloc().initWithOptions_(options)
@@ -271,7 +280,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         raise HTTPError(connection.status,
                         connection.headers.get('http_result_description', ''))
 
-def downloadFile(url, additional_headers=None):
+def downloadFile(url, additional_headers=None, username=None, password=None):
     url_parse = urlparse.urlparse(url)
     error=None
     error=type("err", (object,), dict())
@@ -279,7 +288,9 @@ def downloadFile(url, additional_headers=None):
         # Use gurl to download the file
         temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
         try:
-            headers = get_url(url, temp_file, additional_headers=additional_headers)
+            headers = get_url(
+                url, temp_file, additional_headers=additional_headers,
+                username=username, password=password)
         except HTTPError, err:
             NSLog("HTTP Error: %@", err)
             setattr(error,'reason',err)
