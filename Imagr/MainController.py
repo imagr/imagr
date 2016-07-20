@@ -294,20 +294,25 @@ class MainController(NSObject):
         self.imagingProgressDetail.setFrameSize_(NSSize(431, 17))
 
     def showAuthenticationPanel(self):
+        '''Show the authentication panel'''
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
             self.authenticationPanel, self.mainWindow, self, None, None)
 
     @objc.IBAction
     def cancelAuthenticationPanel_(self, sender):
+        '''Called when user clicks 'Quit' in the authentication panel'''
         NSApp.endSheet_(self.authenticationPanel)
         NSApp.terminate_(self)
 
     @objc.IBAction
     def endAuthenticationPanel_(self, sender):
+        '''Called when user clicks 'Continue' in the authentication panel'''
+        # store the username and password
         self.authenticatedUsername = self.authenticationPanelUsernameField.stringValue()
         self.authenticatedPassword = self.authenticationPanelPasswordField.stringValue()
         NSApp.endSheet_(self.authenticationPanel)
         self.authenticationPanel.orderOut_(self)
+        # re-request the workflows.plist, this time with username and password available
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
     
     def loadData(self):
@@ -322,7 +327,12 @@ class MainController(NSObject):
             if error:
                 try:
                     if error.reason[0] in [401, -1012, -1013]:
+                        # 401:   HTTP status code: authentication required
+                        # -1012: NSURLErrorDomain code "User cancelled authentication" -- returned
+                        #        when we try a given name and password and fail
+                        # -1013: NSURLErrorDomain code "User Authentication Required"
                         NSLog("Configuration plist requires authentication.")
+                        # show authentication panel using the main thread
                         self.performSelectorOnMainThread_withObject_waitUntilDone_(
                             self.showAuthenticationPanel, None, YES)
                         del pool
