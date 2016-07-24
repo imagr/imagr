@@ -49,6 +49,10 @@ class MainController(NSObject):
 
     progressIndicator = objc.IBOutlet()
     progressText = objc.IBOutlet()
+    
+    authenticationPanel = objc.IBOutlet()
+    authenticationPanelUsernameField = objc.IBOutlet()
+    authenticationPanelPasswordField = objc.IBOutlet()
 
     startUpDiskPanel = objc.IBOutlet()
     startUpDiskText = objc.IBOutlet()
@@ -103,6 +107,8 @@ class MainController(NSObject):
     first_boot_items = None
     autorunWorkflow = None
     cancelledAutorun = False
+    authenticatedUsername = None
+    authenticatedPassword = None
 
     # For localize script
     keyboard_layout_name = None
@@ -287,6 +293,28 @@ class MainController(NSObject):
         self.imagingProgressDetail.setFrameOrigin_(NSPoint(18, 20))
         self.imagingProgressDetail.setFrameSize_(NSSize(431, 17))
 
+    def showAuthenticationPanel(self):
+        '''Show the authentication panel'''
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.authenticationPanel, self.mainWindow, self, None, None)
+
+    @objc.IBAction
+    def cancelAuthenticationPanel_(self, sender):
+        '''Called when user clicks 'Quit' in the authentication panel'''
+        NSApp.endSheet_(self.authenticationPanel)
+        NSApp.terminate_(self)
+
+    @objc.IBAction
+    def endAuthenticationPanel_(self, sender):
+        '''Called when user clicks 'Continue' in the authentication panel'''
+        # store the username and password
+        self.authenticatedUsername = self.authenticationPanelUsernameField.stringValue()
+        self.authenticatedPassword = self.authenticationPanelPasswordField.stringValue()
+        NSApp.endSheet_(self.authenticationPanel)
+        self.authenticationPanel.orderOut_(self)
+        # re-request the workflows.plist, this time with username and password available
+        NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
+    
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
         self.volumes = macdisk.MountedVolumes()
@@ -294,7 +322,23 @@ class MainController(NSObject):
         theURL = Utils.getServerURL()
 
         if theURL:
-            (plistData, error) = Utils.downloadFile(theURL)
+            (plistData, error) = Utils.downloadFile(
+                theURL, username=self.authenticatedUsername, password=self.authenticatedPassword)
+            if error:
+                try:
+                    if error.reason[0] in [401, -1012, -1013]:
+                        # 401:   HTTP status code: authentication required
+                        # -1012: NSURLErrorDomain code "User cancelled authentication" -- returned
+                        #        when we try a given name and password and fail
+                        # -1013: NSURLErrorDomain code "User Authentication Required"
+                        NSLog("Configuration plist requires authentication.")
+                        # show authentication panel using the main thread
+                        self.performSelectorOnMainThread_withObject_waitUntilDone_(
+                            self.showAuthenticationPanel, None, YES)
+                        del pool
+                        return
+                except AttributeError, IndexError:
+                    pass
 
             if plistData:
                 try:
