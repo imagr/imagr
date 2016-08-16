@@ -25,12 +25,13 @@ import tempfile
 import shutil
 import Quartz
 import time
+import powermgr
 
 class MainController(NSObject):
 
     mainWindow = objc.IBOutlet()
     backgroundWindow = objc.IBOutlet()
-    
+
     utilities_menu = objc.IBOutlet()
     help_menu = objc.IBOutlet()
 
@@ -149,9 +150,10 @@ class MainController(NSObject):
 
     def runStartupTasks(self):
         NSLog(u"background_window is set to %@", repr(self.backgroundWindowSetting()))
+        
         if self.backgroundWindowSetting() == u"always":
             self.showBackgroundWindow()
-        
+
         self.mainWindow.center()
         # Run app startup - get the images, password, volumes - anything that takes a while
 
@@ -162,10 +164,10 @@ class MainController(NSObject):
         self.progressIndicator.startAnimation_(self)
         self.registerForWorkspaceNotifications()
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
-    
+
     def backgroundWindowSetting(self):
         return Utils.getPlistData(u"background_window") or u"auto"
-    
+
     def showBackgroundWindow(self):
         # Create a background window that covers the whole screen.
         NSLog(u"Showing background window")
@@ -193,13 +195,13 @@ class MainController(NSObject):
             else:
                 NSLog(u"Not showing background window as Dock.app is running")
                 return
-        
+
         def gcd(a, b):
             """Return greatest common divisor of two numbers"""
             if b == 0:
                 return a
             return gcd(b, a % b)
-        
+
         if not urlString.endswith(u"?"):
             try:
                 verplist = FoundationPlist.readPlist("/System/Library/CoreServices/SystemVersion.plist")
@@ -218,11 +220,11 @@ class MainController(NSObject):
         image = NSImage.alloc().initWithContentsOfURL_(url)
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.setBackgroundImage, image, YES)
-    
+
     def setBackgroundImage(self, image):
         self.backgroundWindow.contentView().setWantsLayer_(True)
         self.backgroundWindow.contentView().layer().setContents_(image)
-    
+
     def registerForWorkspaceNotifications(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
         nc.addObserver_selector_name_object_(
@@ -351,7 +353,7 @@ class MainController(NSObject):
                     NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadBackgroundImage, self, urlString)
                 except:
                     pass
-                
+
                 try:
                     self.passwordHash = converted_plist['password']
                 except:

@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		050D9F831CE5FF1000250591 /* LLBorderlessWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 050D9F821CE5FF1000250591 /* LLBorderlessWindow.m */; };
+		100FA3EC1D51DC6C000F1C1C /* powermgr.py in Resources */ = {isa = PBXBuildFile; fileRef = 100FA3EB1D51DC6C000F1C1C /* powermgr.py */; };
+		100FA3EE1D51E52C000F1C1C /* cocoaDialog.app in Resources */ = {isa = PBXBuildFile; fileRef = 100FA3ED1D51E52C000F1C1C /* cocoaDialog.app */; };
 		C06979C21AE83F3500914535 /* gurl.py in Resources */ = {isa = PBXBuildFile; fileRef = C06979C11AE83F3500914535 /* gurl.py */; };
 		FC21F1741C6235DA0039D923 /* localize.sh in Resources */ = {isa = PBXBuildFile; fileRef = FC21F1731C6235DA0039D923 /* localize.sh */; };
 		FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */; };
@@ -62,6 +64,8 @@
 /* Begin PBXFileReference section */
 		050D9F811CE5FF1000250591 /* LLBorderlessWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LLBorderlessWindow.h; sourceTree = "<group>"; };
 		050D9F821CE5FF1000250591 /* LLBorderlessWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LLBorderlessWindow.m; sourceTree = "<group>"; };
+		100FA3EB1D51DC6C000F1C1C /* powermgr.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = powermgr.py; sourceTree = "<group>"; };
+		100FA3ED1D51E52C000F1C1C /* cocoaDialog.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; path = cocoaDialog.app; sourceTree = "<group>"; };
 		C06979C11AE83F3500914535 /* gurl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gurl.py; sourceTree = "<group>"; };
 		FC21F1731C6235DA0039D923 /* localize.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = localize.sh; sourceTree = "<group>"; };
 		FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "com.grahamgilbert.imagr-first-boot-pkg.plist"; sourceTree = "<group>"; };
@@ -134,6 +138,7 @@
 		FC98DA1E1AD6B2DC00F90405 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				100FA3ED1D51E52C000F1C1C /* cocoaDialog.app */,
 				FC21F1731C6235DA0039D923 /* localize.sh */,
 				FCED84641B0201B20072AC1C /* set_computer_name.sh */,
 				FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */,
@@ -188,6 +193,7 @@
 				FCEA80C11AD0101100DBA039 /* AppDelegate.py */,
 				FCEA80CF1AD010D100DBA039 /* MainController.py */,
 				FCEA810A1AD02C9A00DBA039 /* Utils.py */,
+				100FA3EB1D51DC6C000F1C1C /* powermgr.py */,
 				FCEA80C61AD0101100DBA039 /* Images.xcassets */,
 				FCEA80BC1AD0101100DBA039 /* SharedLibraries */,
 				FCEA80B51AD0101100DBA039 /* Supporting Files */,
@@ -334,6 +340,7 @@
 				FCEA80F31AD018E500DBA039 /* applescript_test.py in Resources */,
 				FCEA80FB1AD018E500DBA039 /* experiments_test.py in Resources */,
 				FCEA81051AD018E500DBA039 /* systemconfig_test.py in Resources */,
+				100FA3EE1D51E52C000F1C1C /* cocoaDialog.app in Resources */,
 				FCEA80D01AD010D100DBA039 /* MainController.py in Resources */,
 				FCEA80EF1AD018E500DBA039 /* __init__.py in Resources */,
 				FC98DA261AD6B2DC00F90405 /* se.gu.it.LoginLog.plist in Resources */,
@@ -359,6 +366,7 @@
 				FCEA810B1AD02C9A00DBA039 /* Utils.py in Resources */,
 				FCEA80F71AD018E500DBA039 /* defaults.py in Resources */,
 				FCEA80F91AD018E500DBA039 /* ds_test.py in Resources */,
+				100FA3EC1D51DC6C000F1C1C /* powermgr.py in Resources */,
 				FCEA80FC1AD018E500DBA039 /* getauth.py in Resources */,
 				FCF6B3101AD1D73E00311D3A /* package.icns in Resources */,
 			);

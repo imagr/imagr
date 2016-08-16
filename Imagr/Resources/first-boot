@@ -113,10 +113,11 @@ Imagr First Boot %s
                 log_path = open(logfile, 'a')  # so that data written to it will be appended
                 task = subprocess.Popen(script_path, stdout=log_path, stderr=log_path, shell=True)
                 task.communicate()
-                try:
-                    os.remove(script_path)
-                except:
-                    shutil.rmtree(script_path)
+                if task.returncode == 0:
+                    try:
+                        os.remove(script_path)
+                    except:
+                        shutil.rmtree(script_path)
             all_done()
 
     # We're done, reboot. Wait 20 seconds so the log window can be read.
