@@ -178,10 +178,8 @@ class Disk(object):
     self.Refresh()
     # pylint: disable=no-member
     if not self.Mounted():
-      command = ["/usr/sbin/bless", "--device", self.deviceidentifier,
-                 "--setBoot"]
-    else:
-      command = ["/usr/sbin/bless", "--mount", self.mountpoint, "--setBoot"]
+      self.EnsureMountedWithRefresh()
+    command = ["/usr/sbin/bless", "--mount", self.mountpoint, "--setBoot"]
     rc = gmacpyutil.RunProcess(command)[2]
     if rc == 0:
       return True

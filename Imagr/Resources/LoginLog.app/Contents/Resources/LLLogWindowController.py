@@ -19,17 +19,75 @@ class LLLogViewDataSource(NSObject):
     """reading is handled."""
     
     logFileData = NSMutableArray.alloc().init()
+    logFileColor = NSMutableArray.alloc().init()
     lastLineIsPartial = False
     
     def addLine_partial_(self, line, isPartial):
         if self.lastLineIsPartial:
-            joinedLine = self.logFileData.lastObject() + line
+            newLine, color = self.parseLineAttr_(self.logFileData.lastObject() + line)
             self.logFileData.removeLastObject()
-            self.logFileData.addObject_(joinedLine)
+            self.logFileColor.removeLastObject()
+            self.logFileData.addObject_(newLine)
+            self.logFileColor.addObject_(color)
         else:
-            self.logFileData.addObject_(line)
+            newLine, color = self.parseLineAttr_(line)
+            self.logFileData.addObject_(newLine)
+            self.logFileColor.addObject_(color)
         self.lastLineIsPartial = isPartial
     
+    def nsColorForColor_(self, color):
+        if color == u"black":
+            return NSColor.blackColor()
+        elif color == u"blue":
+            return NSColor.blueColor()
+        elif color == u"brown":
+            return NSColor.brownColor()
+        elif color == u"cyan":
+            return NSColor.cyanColor()
+        elif color == u"darkgray":
+            return NSColor.darkGrayColor()
+        elif color == u"gray":
+            return NSColor.grayColor()
+        elif color == u"green":
+            return NSColor.greenColor()
+        elif color == u"lightgray":
+            return NSColor.lightGrayColor()
+        elif color == u"magenta":
+            return NSColor.magentaColor()
+        elif color == u"orange":
+            return NSColor.orangeColor()
+        elif color == u"purple":
+            return NSColor.purpleColor()
+        elif color == u"red":
+            return NSColor.redColor()
+        elif color == u"white":
+            return NSColor.lightGrayColor()
+            #return NSColor.whiteColor()
+        elif color == u"yellow":
+            return NSColor.yellowColor()
+        else:
+            return NSColor.blackColor()
+
+    def parseLineAttr_(self, line):
+        if line.startswith(u"%{") and u"}" in line:
+            attrStr, _, rest = line[2:].partition(u"}")
+            NSLog(u"attrStr = %@", repr(attrStr))
+            color = NSColor.blackColor()
+            for attr in [x.strip() for x in attrStr.split(u",")]:
+                NSLog(u"attr = %@", repr(attr))
+                if u"=" in attr:
+                    key, value = [x.strip().lower() for x in attr.split(u"=", 1)]
+                    NSLog(u"key = %@, value = %@", repr(key), repr(value))
+                    if key == u"color":
+                        color = self.nsColorForColor_(value)
+                    else:
+                        NSLog(u"Unknown attribute key: %@", repr(key))
+                else:
+                    NSLog(u"Unknown attribute: %@", repr(attr))
+            return rest, color
+        else:
+            return line, NSColor.blackColor()
+
     def removeAllLines(self):
         self.logFileData.removeAllObjects()
     
@@ -41,7 +99,16 @@ class LLLogViewDataSource(NSObject):
     
     def tableView_objectValueForTableColumn_row_(self, tableView, column, row):
         return self.logFileData.objectAtIndex_(row)
-    
+
+    def tableView_dataCellForTableColumn_row_(self, tableView, column, row):
+        if column:
+            cell = column.dataCell()
+            cell.setTextColor_(self.logFileColor[row])
+            return cell
+        else:
+            return None
+
+
 
 class LLLogWindowController(NSObject):
     
@@ -53,6 +120,8 @@ class LLLogWindowController(NSObject):
     updateTimer = None
     
     def showLogWindow_(self, title):
+        self.logView.setDelegate_(self.logFileData)
+        
         # Base all sizes on the screen's dimensions.
         screenRect = NSScreen.mainScreen().frame()
         
@@ -70,7 +139,7 @@ class LLLogWindowController(NSObject):
         windowRect.size.width -= 200.0
         windowRect.size.height -= 300.0
         NSAnimationContext.beginGrouping()
-        NSAnimationContext.currentContext().setDuration_(0.5)
+        NSAnimationContext.currentContext().setDuration_(0.1)
         self.window.animator().setFrame_display_(windowRect, True)
         NSAnimationContext.endGrouping()
         
@@ -86,7 +155,7 @@ class LLLogWindowController(NSObject):
         self.backdropWindow.setAlphaValue_(0.0)
         self.backdropWindow.orderFrontRegardless()
         NSAnimationContext.beginGrouping()
-        NSAnimationContext.currentContext().setDuration_(2.0)
+        NSAnimationContext.currentContext().setDuration_(1.0)
         self.backdropWindow.animator().setAlphaValue_(1.0)
         NSAnimationContext.endGrouping()
     

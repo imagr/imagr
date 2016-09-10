@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-	<string>com.grahamgilbert.first-boot-pkg</string>
+	<string>com.grahamgilbert.imagr-first-boot-pkg</string>
 	<key>ProgramArguments</key>
 	<array>
 		<string>/usr/local/first-boot/first-boot</string>

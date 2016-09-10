@@ -26,6 +26,7 @@ import xml.sax.saxutils
 import logging
 import urlparse
 import socket
+import urllib2
 
 from gurl import Gurl
 
@@ -159,8 +160,15 @@ def post_url(url, post_data, message=None, follow_redirects=False,
         raise HTTPError(connection.status,
                         connection.headers.get('http_result_description', ''))
 
+
+def NSLogWrapper(message):
+    '''A wrapper around NSLog so certain characters sent to NSLog don't trigger string
+    substitution'''
+    NSLog('%@', message)
+
+
 def get_url(url, destinationpath, message=None, follow_redirects=False,
-            progress_method=None, additional_headers=None):
+            progress_method=None, additional_headers=None, username=None, password=None):
     """Gets an HTTP or HTTPS URL and stores it in
     destination path. Returns a dictionary of headers, which includes
     http_result_code and http_result_description.
@@ -180,7 +188,9 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                'file': tempdownloadpath,
                'follow_redirects': follow_redirects,
                'additional_headers': header_dict_from_list(additional_headers),
-               'logging_function': NSLog}
+               'username': username,
+               'password': password,
+               'logging_function': NSLogWrapper}
     NSLog('gurl options: %@', options)
 
     connection = Gurl.alloc().initWithOptions_(options)
@@ -270,30 +280,50 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         raise HTTPError(connection.status,
                         connection.headers.get('http_result_description', ''))
 
-def downloadFile(url, additional_headers=None):
-    temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
-    try:
-        headers = get_url(url, temp_file, additional_headers=additional_headers)
-    except HTTPError, err:
-        NSLog("HTTP Error: %@", err)
-        return False
-    except GurlError, err:
-        NSLog("Gurl Error: %@", err)
-        return False
-    try:
-        file_handle = open(temp_file)
-        data = file_handle.read()
-        file_handle.close()
-    except (OSError, IOError):
-        NSLog('Couldn\'t read %@', temp_file)
-        return False
-    try:
-        os.unlink(temp_file)
-        os.rmdir(os.path.dirname(temp_file))
-    except (OSError, IOError):
-        pass
-    return data
+def downloadFile(url, additional_headers=None, username=None, password=None):
+    url_parse = urlparse.urlparse(url)
+    error=None
+    error=type("err", (object,), dict())
+    if url_parse.scheme in ['http', 'https']:
+        # Use gurl to download the file
+        temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
+        try:
+            headers = get_url(
+                url, temp_file, additional_headers=additional_headers,
+                username=username, password=password)
+        except HTTPError, err:
+            NSLog("HTTP Error: %@", err)
+            setattr(error,'reason',err)
+            data=False
+        except GurlError, err:
+            NSLog("Gurl Error: %@", err)
+            setattr(error,'reason',err)
+            data=False
+        try:
+            file_handle = open(temp_file)
+            data = file_handle.read()
+            file_handle.close()
+        except (OSError, IOError):
+            NSLog('Couldn\'t read %@', temp_file)
+            data=False
+        try:
+            os.unlink(temp_file)
+            os.rmdir(os.path.dirname(temp_file))
+        except (OSError, IOError):
+            pass
+    elif url_parse.scheme == 'file':
+        # File resources should be handled natively
+        try:
+            data = urllib2.urlopen(url).read()
+        except urllib2.URLError, err:
+            setattr(error,'reason',err[0][1])
+            data=False
+    else:
+        setattr(err,'reason','The following URL is unsupported')
+        data=False
 
+    setattr(error,'url',url)
+    return data, error
 
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
@@ -363,6 +393,15 @@ def sendReport(status, message):
         else:
             log.info(log_message)
 
+def bringToFront(bundleID):
+    startTime = time.time()
+    while time.time() - startTime < 10:
+        for runapp in NSRunningApplication.runningApplicationsWithBundleIdentifier_(bundleID):
+            runapp.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
+            if runapp.isActive():
+                return
+        time.sleep(1/10.0)
+
 def launchApp(app_path):
     # Get the binary path so we can launch it using a threaded subprocess
     try:
@@ -370,23 +409,16 @@ def launchApp(app_path):
         binary = app_plist['CFBundleExecutable']
     except:
         NSLog("Failed to get app binary location, cannot launch.")
-
-    app_list =  NSWorkspace.sharedWorkspace().runningApplications()
-    # Before launching the app, check to see if it is already running
-    app_running = False
-    for app in app_list:
-        if app_plist['CFBundleIdentifier'] == app.bundleIdentifier():
-            app_running = True
-
-    # Only launch the app if it isn't already running
-    if not app_running:
-        thread = CustomThread(os.path.join(app_path,'Contents', 'MacOS', binary))
+        return
+    
+    if not NSRunningApplication.runningApplicationsWithBundleIdentifier_(app_plist['CFBundleIdentifier']):
+        # Only launch the app if it isn't already running
+        thread = CustomThread(os.path.join(app_path, 'Contents', 'MacOS', binary))
         thread.daemon = True
         thread.start()
-        time.sleep(1)
 
     # Bring application to the front as they launch in the background in Netboot for some reason
-    NSWorkspace.sharedWorkspace().launchApplication_(app_path)
+    bringToFront(app_plist['CFBundleIdentifier'])
 
 def get_hardware_info():
     '''Uses system profiler to get hardware info for this machine'''
@@ -517,16 +549,35 @@ def unmountdmg(mountpoint):
 
 def downloadChunks(url, file, progress_method=None, additional_headers=None):
     message = "Downloading %s" % os.path.basename(url)
-    try:
-        headers = get_url(url, file, message=message, progress_method=progress_method, additional_headers=additional_headers)
-    except HTTPError, err:
-        NSLog("HTTP Error: %@", err)
-        return False, err
-    except GurlError, err:
-        NSLog("Gurl Error: %@", err)
-        return False, err
+    url_parse = urlparse.urlparse(url)
+    if url_parse.scheme in ['http', 'https']:
+        # Use gurl to download the file
+        try:
+            headers = get_url(url, file, message=message, progress_method=progress_method, additional_headers=additional_headers)
+            return file, None
+        except HTTPError, err:
+            NSLog("HTTP Error: %@", err)
+            return False, err
+        except GurlError, err:
+            NSLog("Gurl Error: %@", err)
+            return False, err
+    elif url_parse.scheme == 'file':
+        # File resources should be handled natively. Space characters, %20, need to be removed 
+        # for /usr/sbin/installer and shutil.copy to function properly.  
+        source = url_parse.path.replace("%20", " ")
+        try:
+            if os.path.isfile(source):
+                shutil.copy(source, file)
+            else:
+                shutil.copytree(source, file)
+            return source, None
+        except:
+            error = "Unable to copy %s" % url
+            return False, error
     else:
-        return file, None
+        # Garbage in garbage out. We don't know what to do with this type of url.
+        error = "Cannot handle url scheme: '%s' from %s" % (url_parse.scheme, url) 
+        return False, error
 
 
 def copyFirstBoot(root):
@@ -549,15 +600,15 @@ def copyFirstBoot(root):
         os.makedirs(launchDaemon_dir)
 
     if not os.path.exists(os.path.join(launchDaemon_dir,
-    'com.grahamgilbert.first-boot-pkg.plist')):
+    'com.grahamgilbert.imagr-first-boot-pkg.plist')):
         shutil.copy(os.path.join(script_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'), os.path.join(launchDaemon_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'))
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'), os.path.join(launchDaemon_dir,
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'))
         # Set the permisisons
         os.chmod(os.path.join(launchDaemon_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'), 0644)
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'), 0644)
         os.chown(os.path.join(launchDaemon_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'), 0, 0)
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'), 0, 0)
 
     launchAgent_dir = os.path.join(root, 'Library', 'LaunchAgents')
     if not os.path.exists(launchAgent_dir):

@@ -14,6 +14,7 @@ from SystemConfiguration import *
 from Foundation import *
 from AppKit import *
 from Cocoa import *
+from Quartz.CoreGraphics import *
 import subprocess
 import sys
 import macdisk
@@ -24,10 +25,12 @@ import tempfile
 import shutil
 import Quartz
 import time
+import powermgr
 
 class MainController(NSObject):
 
     mainWindow = objc.IBOutlet()
+    backgroundWindow = objc.IBOutlet()
 
     utilities_menu = objc.IBOutlet()
     help_menu = objc.IBOutlet()
@@ -47,6 +50,10 @@ class MainController(NSObject):
 
     progressIndicator = objc.IBOutlet()
     progressText = objc.IBOutlet()
+    
+    authenticationPanel = objc.IBOutlet()
+    authenticationPanelUsernameField = objc.IBOutlet()
+    authenticationPanelPasswordField = objc.IBOutlet()
 
     startUpDiskPanel = objc.IBOutlet()
     startUpDiskText = objc.IBOutlet()
@@ -101,6 +108,8 @@ class MainController(NSObject):
     first_boot_items = None
     autorunWorkflow = None
     cancelledAutorun = False
+    authenticatedUsername = None
+    authenticatedPassword = None
 
     # For localize script
     keyboard_layout_name = None
@@ -140,6 +149,11 @@ class MainController(NSObject):
             self.setStartupDisk_(self)
 
     def runStartupTasks(self):
+        NSLog(u"background_window is set to %@", repr(self.backgroundWindowSetting()))
+        
+        if self.backgroundWindowSetting() == u"always":
+            self.showBackgroundWindow()
+
         self.mainWindow.center()
         # Run app startup - get the images, password, volumes - anything that takes a while
 
@@ -150,6 +164,66 @@ class MainController(NSObject):
         self.progressIndicator.startAnimation_(self)
         self.registerForWorkspaceNotifications()
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
+
+    def backgroundWindowSetting(self):
+        return Utils.getPlistData(u"background_window") or u"auto"
+
+    def showBackgroundWindow(self):
+        # Create a background window that covers the whole screen.
+        NSLog(u"Showing background window")
+        rect = NSScreen.mainScreen().frame()
+        self.backgroundWindow.setCanBecomeVisibleWithoutLogin_(True)
+        self.backgroundWindow.setFrame_display_(rect, True)
+        backgroundColor = NSColor.darkGrayColor()
+        self.backgroundWindow.setBackgroundColor_(backgroundColor)
+        self.backgroundWindow.setOpaque_(False)
+        self.backgroundWindow.setIgnoresMouseEvents_(False)
+        self.backgroundWindow.setAlphaValue_(1.0)
+        self.backgroundWindow.orderFrontRegardless()
+        self.backgroundWindow.setLevel_(kCGNormalWindowLevel - 1)
+        self.backgroundWindow.setCollectionBehavior_(NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorCanJoinAllSpaces)
+
+    def loadBackgroundImage(self, urlString):
+        if self.backgroundWindowSetting() == u"never":
+            return
+        NSLog(u"Loading background image")
+        if self.backgroundWindowSetting() == u"auto":
+            runningApps = [x.bundleIdentifier() for x in NSWorkspace.sharedWorkspace().runningApplications()]
+            if u"com.apple.dock" not in runningApps:
+                self.performSelectorOnMainThread_withObject_waitUntilDone_(
+                    self.showBackgroundWindow, None, YES)
+            else:
+                NSLog(u"Not showing background window as Dock.app is running")
+                return
+
+        def gcd(a, b):
+            """Return greatest common divisor of two numbers"""
+            if b == 0:
+                return a
+            return gcd(b, a % b)
+
+        if not urlString.endswith(u"?"):
+            try:
+                verplist = FoundationPlist.readPlist("/System/Library/CoreServices/SystemVersion.plist")
+                osver = verplist[u"ProductUserVisibleVersion"]
+                osbuild = verplist[u"ProductBuildVersion"]
+                size = NSScreen.mainScreen().frame().size
+                w = int(size.width)
+                h = int(size.height)
+                divisor = gcd(w, h)
+                aw = w / divisor
+                ah = h / divisor
+                urlString += u"?osver=%s&osbuild=%s&w=%d&h=%d&a=%d-%d" % (osver, osbuild, w, h, aw, ah)
+            except:
+                pass
+        url = NSURL.URLWithString_(urlString)
+        image = NSImage.alloc().initWithContentsOfURL_(url)
+        self.performSelectorOnMainThread_withObject_waitUntilDone_(
+            self.setBackgroundImage, image, YES)
+
+    def setBackgroundImage(self, image):
+        self.backgroundWindow.contentView().setWantsLayer_(True)
+        self.backgroundWindow.contentView().layer().setContents_(image)
 
     def registerForWorkspaceNotifications(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
@@ -221,20 +295,64 @@ class MainController(NSObject):
         self.imagingProgressDetail.setFrameOrigin_(NSPoint(18, 20))
         self.imagingProgressDetail.setFrameSize_(NSSize(431, 17))
 
+    def showAuthenticationPanel(self):
+        '''Show the authentication panel'''
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.authenticationPanel, self.mainWindow, self, None, None)
+
+    @objc.IBAction
+    def cancelAuthenticationPanel_(self, sender):
+        '''Called when user clicks 'Quit' in the authentication panel'''
+        NSApp.endSheet_(self.authenticationPanel)
+        NSApp.terminate_(self)
+
+    @objc.IBAction
+    def endAuthenticationPanel_(self, sender):
+        '''Called when user clicks 'Continue' in the authentication panel'''
+        # store the username and password
+        self.authenticatedUsername = self.authenticationPanelUsernameField.stringValue()
+        self.authenticatedPassword = self.authenticationPanelPasswordField.stringValue()
+        NSApp.endSheet_(self.authenticationPanel)
+        self.authenticationPanel.orderOut_(self)
+        # re-request the workflows.plist, this time with username and password available
+        NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
+    
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
         self.volumes = macdisk.MountedVolumes()
-
+        self.buildUtilitiesMenu()
         theURL = Utils.getServerURL()
 
         if theURL:
-            plistData = Utils.downloadFile(theURL)
+            (plistData, error) = Utils.downloadFile(
+                theURL, username=self.authenticatedUsername, password=self.authenticatedPassword)
+            if error:
+                try:
+                    if error.reason[0] in [401, -1012, -1013]:
+                        # 401:   HTTP status code: authentication required
+                        # -1012: NSURLErrorDomain code "User cancelled authentication" -- returned
+                        #        when we try a given name and password and fail
+                        # -1013: NSURLErrorDomain code "User Authentication Required"
+                        NSLog("Configuration plist requires authentication.")
+                        # show authentication panel using the main thread
+                        self.performSelectorOnMainThread_withObject_waitUntilDone_(
+                            self.showAuthenticationPanel, None, YES)
+                        del pool
+                        return
+                except AttributeError, IndexError:
+                    pass
 
             if plistData:
                 try:
                     converted_plist = FoundationPlist.readPlistFromString(plistData)
                 except:
                     self.errorMessage = "Configuration plist couldn't be read."
+
+                try:
+                    urlString = converted_plist['background_image']
+                    NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadBackgroundImage, self, urlString)
+                except:
+                    pass
 
                 try:
                     self.passwordHash = converted_plist['password']
@@ -261,7 +379,7 @@ class MainController(NSObject):
                 except:
                     pass
             else:
-                self.errorMessage = "Couldn't get configuration plist from server."
+                self.errorMessage = "Couldn't get configuration plist. \n %s. \n '%s'" % (error.reason, error.url)
         else:
             self.errorMessage = "Configuration URL wasn't set."
         Utils.setup_logging()
@@ -276,7 +394,6 @@ class MainController(NSObject):
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
         else:
-            self.buildUtilitiesMenu()
             if self.hasLoggedIn:
                 self.enableWorkflowViewControls()
                 self.theTabView.selectTabViewItem_(self.mainTab)
@@ -670,6 +787,16 @@ class MainController(NSObject):
         self.autorunWorkflow = None
 
         Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'])
+
+        # Bless the target if we need to
+        if self.blessTarget == True:
+            try:
+                self.targetVolume.SetStartupDisk()
+            except:
+                for volume in self.volumes:
+                    if str(volume.mountpoint) == str(self.targetVolume):
+                        volume.SetStartupDisk()
+
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
@@ -701,7 +828,7 @@ class MainController(NSObject):
             # Restore image
             if item.get('type') == 'image' and item.get('url'):
                 Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
-                self.Clone(item.get('url'), self.targetVolume)
+                self.Clone(item.get('url'), self.targetVolume, verify=item.get('verify', True))
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
@@ -716,9 +843,11 @@ class MainController(NSObject):
                 Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
-                        self.copyFirstBootScript(Utils.downloadFile(item.get('url'), item.get('additional_headers')), self.counter)
+                        (data, error) = Utils.downloadFile(item.get('url'), item.get('additional_headers'))
+                        self.copyFirstBootScript(data, self.counter)
                     else:
-                        self.copyFirstBootScript(Utils.downloadFile(item.get('url')), self.counter)
+                        (data, error) = Utils.downloadFile(item.get('url'))
+                        self.copyFirstBootScript(data, self.counter)
                 else:
                     self.copyFirstBootScript(item.get('content'), self.counter)
                 self.first_boot_items = True
@@ -727,9 +856,11 @@ class MainController(NSObject):
                 Utils.sendReport('in_progress', 'Running script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
-                        self.runPreFirstBootScript(Utils.downloadFile(item.get('url'), item.get('additional_headers')), self.counter)
+                        (data, error) = Utils.downloadFile(item.get('url'), item.get('additional_headers'))
+                        self.runPreFirstBootScript(data, self.counter)
                     else:
-                        self.runPreFirstBootScript(Utils.downloadFile(item.get('url')), self.counter)
+                        (data, error) = Utils.downloadFile(item.get('url'))
+                        self.runPreFirstBootScript(data, self.counter)
                 else:
                     self.runPreFirstBootScript(item.get('content'), self.counter)
             # Partition a disk
@@ -947,7 +1078,7 @@ class MainController(NSObject):
                 dmgmountpoint = dmgmountpoints[0]
             except:
                 self.errorMessage = "Couldn't mount %s" % url
-                return False
+                return False, self.errorMessage
 
             # Now we're going to go over everything that ends .pkg or
             # .mpkg and install it
@@ -964,7 +1095,7 @@ class MainController(NSObject):
                 Utils.unmountdmg(dmgmountpoint)
             except:
                 self.errorMessage = "Couldn't unmount %s" % dmgmountpoint
-                return False
+                return False, self.errorMessage
 
         if os.path.basename(url).endswith('.pkg'):
 
@@ -975,7 +1106,7 @@ class MainController(NSObject):
             (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(temp_dir,
             packagename), additional_headers=additional_headers)
             if error:
-                self.errorMessage = "Couldn't download - %s %s" % (url, error)
+                self.errorMessage = "Couldn't download - %s \n %s" % (url, error)
                 return False
             # Install it
             retcode = self.installPkg(downloaded_file, target, progress_method=progress_method)
@@ -1030,7 +1161,7 @@ class MainController(NSObject):
             dmgmountpoint = dmgmountpoints[0]
         except:
             self.errorMessage = "Couldn't mount %s" % url
-            return False
+            return False, self.errorMessage
 
         # Now we're going to go over everything that ends .pkg or
         # .mpkg and install it
@@ -1135,15 +1266,6 @@ class MainController(NSObject):
         self.restartToImagedVolume()
 
     def restartToImagedVolume(self):
-        # set the startup disk to the restored volume
-        if self.blessTarget == True:
-            try:
-                self.targetVolume.SetStartupDisk()
-            except:
-                for volume in self.volumes:
-                    if str(volume.mountpoint) == str(self.targetVolume):
-                        volume.SetStartupDisk()
-
         if self.restartAction == 'restart':
             cmd = ['/sbin/reboot']
         elif self.restartAction == 'shutdown':

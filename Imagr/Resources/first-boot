@@ -40,9 +40,9 @@ def all_done():
 
 def cleanup():
     log_path = open(logfile, 'a')
-    log.info('No more packages or scripts have been found, cleaning up.')
+    log.info('%%{color=magenta}No more packages or scripts have been found, cleaning up.')
     # remove launchdaemon
-    os.remove('/Library/LaunchDaemons/com.grahamgilbert.first-boot-pkg.plist')
+    os.remove('/Library/LaunchDaemons/com.grahamgilbert.imagr-first-boot-pkg.plist')
     # remove launchagent
     os.remove('/Library/LaunchAgents/se.gu.it.LoginLog.plist')
     # remove loginlog.app
@@ -64,10 +64,10 @@ Imagr First Boot %s
         while True:
             print ip_addresses()
             if ip_addresses().strip() != "0":
-                log.info('Network connection is active. ')
+                log.info('%{color=green}Network connection is active. ')
                 break
             else:
-                log.info('Network connection is inactive, retrying...')
+                log.info('%{color=orange}Network connection is inactive, retrying...')
                 time.sleep(10)
     retry_limit = plist_opts.get('RetryCount')
     # if the packages dir isn't empty, loop over them
@@ -79,7 +79,7 @@ Imagr First Boot %s
         # We're installing, wait to see the output
         for item in os.listdir(items_dir):
             if item.endswith(".pkg") or item.endswith(".mpkg"):
-                log.info(('Installing %s...') % item)
+                log.info(('%%{color=magenta}Installing %s...') % item)
                 package_path = os.path.join(items_dir, item)
                 command = [installer, '-pkg', package_path, '-target', '/']
                 # check if we've reached the retry limit
@@ -91,32 +91,33 @@ Imagr First Boot %s
                     task.communicate()
                     if task.returncode == 0:
                         # Package installed ok, we're good to remove it
-                        log.info(('%s installed successfully.') % item)
+                        log.info(('%%{color=green}%s installed successfully.') % item)
                         try:
                             os.remove(package_path)
                         except:
                             shutil.rmtree(package_path)
                     else:
-                        log.info(('%s didn\'t install successfully. Will retry on next boot.') % package)
+                        log.info(('%%{color=red}%s didn\'t install successfully. Will retry on next boot.') % package)
                         retry_count = retry_count + 1
                         plist_opts[retry_key] = retry_count
                         plistlib.writePlist(plist_opts, os.path.join(firstboot_dir, 'config.plist'))
                 else:
-                    log.info(('Error limit for %s has been reached, removing the package.') % package)
+                    log.info(('%%{color=red}Error limit for %s has been reached, removing the package.') % package)
                     try:
                         os.remove(package_path)
                     except:
                         shutil.rmtree(package_path)
             else:
-                log.info(('Running %s...') % item)
+                log.info(('%%{color=magenta}Running %s...') % item)
                 script_path = os.path.join(items_dir, item)
                 log_path = open(logfile, 'a')  # so that data written to it will be appended
                 task = subprocess.Popen(script_path, stdout=log_path, stderr=log_path, shell=True)
                 task.communicate()
-                try:
-                    os.remove(script_path)
-                except:
-                    shutil.rmtree(script_path)
+                if task.returncode == 0:
+                    try:
+                        os.remove(script_path)
+                    except:
+                        shutil.rmtree(script_path)
             all_done()
 
     # We're done, reboot. Wait 20 seconds so the log window can be read.
