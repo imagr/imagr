@@ -194,7 +194,7 @@ def main():
         proc = task.communicate()[0]
 
         if task.returncode != 0:
-            fail(proc)
+            fail("Download of %s failed with %s" % (plist, task.returncode))
         plist = temp_plist
 
     if not os.path.exists(plist):
