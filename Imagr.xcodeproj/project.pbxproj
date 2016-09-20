@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		050D9F831CE5FF1000250591 /* LLBorderlessWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 050D9F821CE5FF1000250591 /* LLBorderlessWindow.m */; };
 		100FA3EC1D51DC6C000F1C1C /* powermgr.py in Resources */ = {isa = PBXBuildFile; fileRef = 100FA3EB1D51DC6C000F1C1C /* powermgr.py */; };
-		100FA3EE1D51E52C000F1C1C /* cocoaDialog.app in Resources */ = {isa = PBXBuildFile; fileRef = 100FA3ED1D51E52C000F1C1C /* cocoaDialog.app */; };
 		C06979C21AE83F3500914535 /* gurl.py in Resources */ = {isa = PBXBuildFile; fileRef = C06979C11AE83F3500914535 /* gurl.py */; };
 		FC21F1741C6235DA0039D923 /* localize.sh in Resources */ = {isa = PBXBuildFile; fileRef = FC21F1731C6235DA0039D923 /* localize.sh */; };
 		FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */; };
@@ -65,7 +64,6 @@
 		050D9F811CE5FF1000250591 /* LLBorderlessWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LLBorderlessWindow.h; sourceTree = "<group>"; };
 		050D9F821CE5FF1000250591 /* LLBorderlessWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LLBorderlessWindow.m; sourceTree = "<group>"; };
 		100FA3EB1D51DC6C000F1C1C /* powermgr.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = powermgr.py; sourceTree = "<group>"; };
-		100FA3ED1D51E52C000F1C1C /* cocoaDialog.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; path = cocoaDialog.app; sourceTree = "<group>"; };
 		C06979C11AE83F3500914535 /* gurl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gurl.py; sourceTree = "<group>"; };
 		FC21F1731C6235DA0039D923 /* localize.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = localize.sh; sourceTree = "<group>"; };
 		FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "com.grahamgilbert.imagr-first-boot-pkg.plist"; sourceTree = "<group>"; };
@@ -138,7 +136,6 @@
 		FC98DA1E1AD6B2DC00F90405 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				100FA3ED1D51E52C000F1C1C /* cocoaDialog.app */,
 				FC21F1731C6235DA0039D923 /* localize.sh */,
 				FCED84641B0201B20072AC1C /* set_computer_name.sh */,
 				FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */,
@@ -290,7 +287,7 @@
 		FCEA80A31AD0101100DBA039 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0620;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = "Graham Gilbert";
 				TargetAttributes = {
 					FCEA80AA1AD0101100DBA039 = {
@@ -340,7 +337,6 @@
 				FCEA80F31AD018E500DBA039 /* applescript_test.py in Resources */,
 				FCEA80FB1AD018E500DBA039 /* experiments_test.py in Resources */,
 				FCEA81051AD018E500DBA039 /* systemconfig_test.py in Resources */,
-				100FA3EE1D51E52C000F1C1C /* cocoaDialog.app in Resources */,
 				FCEA80D01AD010D100DBA039 /* MainController.py in Resources */,
 				FCEA80EF1AD018E500DBA039 /* __init__.py in Resources */,
 				FC98DA261AD6B2DC00F90405 /* se.gu.it.LoginLog.plist in Resources */,
@@ -435,15 +431,19 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "";
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -484,8 +484,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "";
@@ -494,6 +496,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -527,6 +530,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.grahamgilbert.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -544,6 +548,7 @@
 					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.grahamgilbert.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
