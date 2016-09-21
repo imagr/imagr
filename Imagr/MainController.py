@@ -50,7 +50,7 @@ class MainController(NSObject):
 
     progressIndicator = objc.IBOutlet()
     progressText = objc.IBOutlet()
-    
+
     authenticationPanel = objc.IBOutlet()
     authenticationPanelUsernameField = objc.IBOutlet()
     authenticationPanelPasswordField = objc.IBOutlet()
@@ -150,7 +150,7 @@ class MainController(NSObject):
 
     def runStartupTasks(self):
         NSLog(u"background_window is set to %@", repr(self.backgroundWindowSetting()))
-        
+
         if self.backgroundWindowSetting() == u"always":
             self.showBackgroundWindow()
 
@@ -316,7 +316,7 @@ class MainController(NSObject):
         self.authenticationPanel.orderOut_(self)
         # re-request the workflows.plist, this time with username and password available
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
-    
+
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
         self.volumes = macdisk.MountedVolumes()

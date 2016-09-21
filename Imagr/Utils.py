@@ -410,7 +410,7 @@ def launchApp(app_path):
     except:
         NSLog("Failed to get app binary location, cannot launch.")
         return
-    
+
     if not NSRunningApplication.runningApplicationsWithBundleIdentifier_(app_plist['CFBundleIdentifier']):
         # Only launch the app if it isn't already running
         thread = CustomThread(os.path.join(app_path, 'Contents', 'MacOS', binary))
@@ -494,7 +494,7 @@ def replacePlaceholders(script, target, computer_name=None, keyboard_layout_id=N
 
     for placeholder, value in placeholders.iteritems():
         script = script.replace(placeholder, str(value))
-        
+
     script = xml.sax.saxutils.unescape(script)
     return script
 
@@ -562,8 +562,8 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
             NSLog("Gurl Error: %@", err)
             return False, err
     elif url_parse.scheme == 'file':
-        # File resources should be handled natively. Space characters, %20, need to be removed 
-        # for /usr/sbin/installer and shutil.copy to function properly.  
+        # File resources should be handled natively. Space characters, %20, need to be removed
+        # for /usr/sbin/installer and shutil.copy to function properly.
         source = url_parse.path.replace("%20", " ")
         try:
             if os.path.isfile(source):
@@ -576,7 +576,7 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
             return False, error
     else:
         # Garbage in garbage out. We don't know what to do with this type of url.
-        error = "Cannot handle url scheme: '%s' from %s" % (url_parse.scheme, url) 
+        error = "Cannot handle url scheme: '%s' from %s" % (url_parse.scheme, url)
         return False, error
 
 
@@ -620,6 +620,13 @@ def copyFirstBoot(root):
         # Set the permisisons
         os.chmod(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.plist'), 0644)
         os.chown(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.plist'), 0, 0)
+
+    if not os.path.exists(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.login.plist')):
+        shutil.copy(os.path.join(script_dir, 'se.gu.it.LoginLog.login.plist'),
+        os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.login.plist'))
+        # Set the permisisons
+        os.chmod(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.login.plist'), 0644)
+        os.chown(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.login.plist'), 0, 0)
 
     helperTools_dir = os.path.join(root, 'Library', 'PrivilegedHelperTools')
     if not os.path.exists(helperTools_dir):

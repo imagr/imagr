@@ -31,6 +31,10 @@ def ip_addresses():
     proc = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
     return proc.communicate()[0].replace('\n', '')
 
+def remove_item(path):
+    if os.path.exists(path):
+        os.remove(path)
+
 def all_done():
     if not os.listdir(items_dir):
         sleep_time=10
@@ -40,15 +44,18 @@ def all_done():
 
 def cleanup():
     log_path = open(logfile, 'a')
-    log.info('%%{color=magenta}No more packages or scripts have been found, cleaning up.')
+    log.info('%{color=magenta}No more packages or scripts have been found, cleaning up.')
     # remove launchdaemon
-    os.remove('/Library/LaunchDaemons/com.grahamgilbert.imagr-first-boot-pkg.plist')
-    # remove launchagent
-    os.remove('/Library/LaunchAgents/se.gu.it.LoginLog.plist')
+    remove_item('/Library/LaunchDaemons/com.grahamgilbert.imagr-first-boot-pkg.plist')
+    # remove launchagents
+    remove_item('/Library/LaunchAgents/se.gu.it.LoginLog.plist')
+    remove_item('/Library/LaunchAgents/se.gu.it.LoginLog.login.plist')
     # remove loginlog.app
-    shutil.rmtree('/Library/PrivilegedHelperTools/LoginLog.app')
+    if os.path.exists('/Library/PrivilegedHelperTools/LoginLog.app'):
+        shutil.rmtree('/Library/PrivilegedHelperTools/LoginLog.app')
     # remove firstboot_dir
-    shutil.rmtree(firstboot_dir)
+    if os.path.exists(firstboot_dir):
+        shutil.rmtree(firstboot_dir)
 
 def main():
     log.info(('''
