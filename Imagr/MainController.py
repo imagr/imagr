@@ -356,11 +356,6 @@ class MainController(NSObject):
                     pass
 
                 try:
-                    self.firstBootReboot = converted_plist['first_boot_reboot']
-                except:
-                    pass
-
-                try:
                     urlString = converted_plist['background_image']
                     NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadBackgroundImage, self, urlString)
                 except:
@@ -637,6 +632,8 @@ class MainController(NSObject):
         if self.selectedWorkflow:
             if 'restart_action' in self.selectedWorkflow:
                 self.restartAction = self.selectedWorkflow['restart_action']
+            if 'first_boot_reboot' in self.selectedWorkflow:
+                self.firstBootReboot = self.selectedWorkflow['first_boot_reboot']
             if 'bless_target' in self.selectedWorkflow:
                 self.blessTarget = self.selectedWorkflow['bless_target']
             else:
