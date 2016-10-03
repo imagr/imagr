@@ -580,11 +580,10 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
         return False, error
 
 
-def copyFirstBoot(root):
+def copyFirstBoot(root, network=True):
     NSLog("Copying first boot pkg install tools")
     # Create the config plist
     config_plist = {}
-    network = True
     retry_count = 10
     config_plist['Network'] = network
     config_plist['RetryCount'] = retry_count

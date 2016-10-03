@@ -106,6 +106,7 @@ class MainController(NSObject):
     computerName = None
     counter = 0.0
     first_boot_items = None
+    waitForNetwork = True
     autorunWorkflow = None
     cancelledAutorun = False
     authenticatedUsername = None
@@ -347,6 +348,11 @@ class MainController(NSObject):
                     converted_plist = FoundationPlist.readPlistFromString(plistData)
                 except:
                     self.errorMessage = "Configuration plist couldn't be read."
+
+                try:
+                    self.waitForNetwork = converted_plist['wait_for_network']
+                except:
+                    pass
 
                 try:
                     urlString = converted_plist['background_image']
@@ -771,7 +777,7 @@ class MainController(NSObject):
                 packages_dir = os.path.join(self.targetVolume.mountpoint, 'usr/local/first-boot/')
                 if not os.path.exists(packages_dir):
                     os.makedirs(packages_dir)
-                Utils.copyFirstBoot(self.targetVolume.mountpoint)
+                Utils.copyFirstBoot(self.targetVolume.mountpoint, self.waitForNetwork)
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.processWorkflowOnThreadComplete, None, YES)
