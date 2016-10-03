@@ -43,8 +43,10 @@ def all_done(reboot):
         time.sleep(sleep_time)
         cleanup()
         if reboot is True:
+            log.info('Triggering Reboot.')
             subprocess.call(['/sbin/reboot'])
         else:
+            log.info('Killing LoginLog.')
             subprocess.call(['/usr/bin/killall', 'LoginLog'])
 
 
