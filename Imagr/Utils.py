@@ -607,14 +607,14 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
         return False, error
 
 
-def copyFirstBoot(root, network=True, reboot=False):
+def copyFirstBoot(root, network=True, reboot=True):
     NSLog("Copying first boot pkg install tools")
     # Create the config plist
     config_plist = {}
     retry_count = 10
     config_plist['Network'] = network
     config_plist['RetryCount'] = retry_count
-    config_plist['NoReboot'] = reboot
+    config_plist['Reboot'] = reboot
     firstboot_dir = 'usr/local/first-boot'
     if not os.path.exists(os.path.join(root, firstboot_dir)):
         os.makedirs(os.path.join(root, firstboot_dir))
