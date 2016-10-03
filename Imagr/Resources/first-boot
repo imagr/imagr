@@ -11,7 +11,6 @@ firstboot_dir = '/usr/local/first-boot'
 config_plist = os.path.join(firstboot_dir, 'config.plist')
 items_dir = os.path.join(firstboot_dir, 'items')
 items_done = None
-default_noreboot = False
 installer = '/usr/sbin/installer'
 logfile = '/var/log/first-boot.log'
 
@@ -142,7 +141,7 @@ Imagr First Boot %s
     # We're done, reboot. Wait 20 seconds so the log window can be read.
     time.sleep(sleep_time)
     reboot = True
-    if plist_opts.get('NoReboot') is True:
+    if plist_opts.get('Reboot') is False:
         log.info('%{color=green}Skipping reboot due to preference. ')
         reboot = False
     all_done(reboot)
