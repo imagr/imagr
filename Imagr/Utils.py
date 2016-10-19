@@ -30,11 +30,14 @@ import urllib2
 
 from gurl import Gurl
 
+
 class GurlError(Exception):
     pass
 
+
 class HTTPError(Exception):
     pass
+
 
 class CustomThread(threading.Thread):
     '''Class for running a process in its own thread'''
@@ -50,6 +53,7 @@ class CustomThread(threading.Thread):
         proc = subprocess.call(self.cmd)
         pass
 
+
 def header_dict_from_list(array):
     """Given a list of strings in http header format, return a dict.
     If array is None, return None"""
@@ -62,8 +66,9 @@ def header_dict_from_list(array):
             header_dict[key.strip()] = value.strip()
     return header_dict
 
+
 def post_url(url, post_data, message=None, follow_redirects=False,
-            progress_method=None, additional_headers=None):
+             progress_method=None, additional_headers=None):
     """Sends POST data to a URL and then returns the result.
     Accepts the URL to send the POST to, URL encoded data and
     optionally can follow redirects
@@ -123,7 +128,7 @@ def post_url(url, post_data, message=None, follow_redirects=False,
         # Re-raise the error as a GurlError
         raise GurlError(-1, str(err))
 
-    if connection.error != None:
+    if connection.error is not None:
         # Gurl returned an error
         NSLog('Download error %@: %@', connection.error.code(),
               connection.error.localizedDescription())
@@ -133,7 +138,7 @@ def post_url(url, post_data, message=None, follow_redirects=False,
         raise GurlError(connection.error.code(),
                         connection.error.localizedDescription())
 
-    if connection.response != None:
+    if connection.response is not None:
         NSLog('Status: %@', connection.status)
         NSLog('Headers: %@', connection.headers)
     if connection.redirection != []:
@@ -162,13 +167,14 @@ def post_url(url, post_data, message=None, follow_redirects=False,
 
 
 def NSLogWrapper(message):
-    '''A wrapper around NSLog so certain characters sent to NSLog don't trigger string
-    substitution'''
+    '''A wrapper around NSLog so certain characters sent to NSLog don't '''
+    '''trigger string substitution'''
     NSLog('%@', message)
 
 
 def get_url(url, destinationpath, message=None, follow_redirects=False,
-            progress_method=None, additional_headers=None, username=None, password=None):
+            progress_method=None, additional_headers=None, username=None,
+            password=None):
     """Gets an HTTP or HTTPS URL and stores it in
     destination path. Returns a dictionary of headers, which includes
     http_result_code and http_result_description.
@@ -239,7 +245,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         # Re-raise the error as a GurlError
         raise GurlError(-1, str(err))
 
-    if connection.error != None:
+    if connection.error is not None:
         # Gurl returned an error
         NSLog('Download error %@: %@', connection.error.code(),
               connection.error.localizedDescription())
@@ -251,7 +257,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         raise GurlError(connection.error.code(),
                         connection.error.localizedDescription())
 
-    if connection.response != None:
+    if connection.response is not None:
         NSLog('Status: %@', connection.status)
         NSLog('Headers: %@', connection.headers)
     if connection.redirection != []:
@@ -280,10 +286,11 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         raise HTTPError(connection.status,
                         connection.headers.get('http_result_description', ''))
 
+
 def downloadFile(url, additional_headers=None, username=None, password=None):
     url_parse = urlparse.urlparse(url)
-    error=None
-    error=type("err", (object,), dict())
+    error = None
+    error = type("err", (object,), dict())
     if url_parse.scheme in ['http', 'https']:
         # Use gurl to download the file
         temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
@@ -293,19 +300,19 @@ def downloadFile(url, additional_headers=None, username=None, password=None):
                 username=username, password=password)
         except HTTPError, err:
             NSLog("HTTP Error: %@", err)
-            setattr(error,'reason',err)
-            data=False
+            setattr(error, 'reason', err)
+            data = False
         except GurlError, err:
             NSLog("Gurl Error: %@", err)
-            setattr(error,'reason',err)
-            data=False
+            setattr(error, 'reason', err)
+            data = False
         try:
             file_handle = open(temp_file)
             data = file_handle.read()
             file_handle.close()
         except (OSError, IOError):
             NSLog('Couldn\'t read %@', temp_file)
-            data=False
+            data = False
         try:
             os.unlink(temp_file)
             os.rmdir(os.path.dirname(temp_file))
@@ -316,17 +323,19 @@ def downloadFile(url, additional_headers=None, username=None, password=None):
         try:
             data = urllib2.urlopen(url).read()
         except urllib2.URLError, err:
-            setattr(error,'reason',err[0][1])
-            data=False
+            setattr(error, 'reason', err[0][1])
+            data = False
     else:
-        setattr(err,'reason','The following URL is unsupported')
-        data=False
+        setattr(err, 'reason', 'The following URL is unsupported')
+        data = False
 
-    setattr(error,'url',url)
+    setattr(error, 'url', url)
     return data, error
+
 
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
+
 
 def getPlistData(data):
     # Try the user's homedir
@@ -353,8 +362,10 @@ def getPlistData(data):
     except:
         pass
 
+
 def getServerURL():
     return getPlistData('serverurl')
+
 
 def getReportURL():
     report_url = getPlistData('reporturl')
@@ -376,9 +387,10 @@ def sendReport(status, message):
             'serial': SERIAL,
             'message': message
         }
-        NSLog('Report: %@', data )
+        NSLog('Report: %@', data)
         data = urllib.urlencode(data)
-        # silently fail here, sending reports is a nice to have, if server is down, meh.
+        # silently fail here, sending reports is a nice to have, if server is
+        # down, meh.
         try:
             post_url(report_url, data)
         except:
@@ -393,6 +405,7 @@ def sendReport(status, message):
         else:
             log.info(log_message)
 
+
 def bringToFront(bundleID):
     startTime = time.time()
     while time.time() - startTime < 10:
@@ -401,6 +414,7 @@ def bringToFront(bundleID):
             if runapp.isActive():
                 return
         time.sleep(1/10.0)
+
 
 def launchApp(app_path):
     # Get the binary path so we can launch it using a threaded subprocess
@@ -413,12 +427,15 @@ def launchApp(app_path):
 
     if not NSRunningApplication.runningApplicationsWithBundleIdentifier_(app_plist['CFBundleIdentifier']):
         # Only launch the app if it isn't already running
-        thread = CustomThread(os.path.join(app_path, 'Contents', 'MacOS', binary))
+        thread = CustomThread(os.path.join(app_path, 'Contents', 'MacOS',
+                                           binary))
         thread.daemon = True
         thread.start()
 
-    # Bring application to the front as they launch in the background in Netboot for some reason
+    # Bring application to the front as they launch in the background in
+    # Netboot for some reason
     bringToFront(app_plist['CFBundleIdentifier'])
+
 
 def get_hardware_info():
     '''Uses system profiler to get hardware info for this machine'''
@@ -436,6 +453,7 @@ def get_hardware_info():
         return sp_hardware_dict
     except Exception:
         return {}
+
 
 def setup_logging():
     syslog = getPlistData('syslog')
@@ -466,7 +484,10 @@ def setup_logging():
     logging.getLogger("Imagr").addHandler(handler)
     logging.getLogger("Imagr").setLevel("INFO")
 
-def replacePlaceholders(script, target, computer_name=None, keyboard_layout_id=None, keyboard_layout_name=None, language=None, locale=None, timezone=None):
+
+def replacePlaceholders(script, target, computer_name=None,
+                        keyboard_layout_id=None, keyboard_layout_name=None,
+                        language=None, locale=None, timezone=None):
     hardware_info = get_hardware_info()
     placeholders = {
         "{{target_volume}}": target,
@@ -497,6 +518,7 @@ def replacePlaceholders(script, target, computer_name=None, keyboard_layout_id=N
 
     script = xml.sax.saxutils.unescape(script)
     return script
+
 
 def mountdmg(dmgpath):
     """
@@ -553,7 +575,9 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
     if url_parse.scheme in ['http', 'https']:
         # Use gurl to download the file
         try:
-            headers = get_url(url, file, message=message, progress_method=progress_method, additional_headers=additional_headers)
+            headers = get_url(url, file, message=message,
+                              progress_method=progress_method,
+                              additional_headers=additional_headers)
             return file, None
         except HTTPError, err:
             NSLog("HTTP Error: %@", err)
@@ -562,7 +586,8 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
             NSLog("Gurl Error: %@", err)
             return False, err
     elif url_parse.scheme == 'file':
-        # File resources should be handled natively. Space characters, %20, need to be removed
+        # File resources should be handled natively. Space characters, %20,
+        # need to be removed
         # for /usr/sbin/installer and shutil.copy to function properly.
         source = url_parse.path.replace("%20", " ")
         try:
@@ -575,22 +600,26 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
             error = "Unable to copy %s" % url
             return False, error
     else:
-        # Garbage in garbage out. We don't know what to do with this type of url.
-        error = "Cannot handle url scheme: '%s' from %s" % (url_parse.scheme, url)
+        # Garbage in garbage out. We don't know what to do with this type of
+        # url.
+        error = "Cannot handle url scheme: '%s' from %s" % (url_parse.scheme,
+                                                            url)
         return False, error
 
 
-def copyFirstBoot(root, network=True):
+def copyFirstBoot(root, network=True, reboot=True):
     NSLog("Copying first boot pkg install tools")
     # Create the config plist
     config_plist = {}
     retry_count = 10
     config_plist['Network'] = network
     config_plist['RetryCount'] = retry_count
+    config_plist['Reboot'] = reboot
     firstboot_dir = 'usr/local/first-boot'
     if not os.path.exists(os.path.join(root, firstboot_dir)):
         os.makedirs(os.path.join(root, firstboot_dir))
-    plistlib.writePlist(config_plist, os.path.join(root, firstboot_dir, 'config.plist'))
+    plistlib.writePlist(config_plist, os.path.join(root, firstboot_dir,
+                                                   'config.plist'))
 
     # Copy the LaunchDaemon, LaunchAgent and Log.app to the right places
     script_dir = os.path.dirname(os.path.realpath(__file__))

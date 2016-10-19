@@ -107,6 +107,7 @@ class MainController(NSObject):
     counter = 0.0
     first_boot_items = None
     waitForNetwork = True
+    firstBootReboot = True
     autorunWorkflow = None
     cancelledAutorun = False
     authenticatedUsername = None
@@ -631,6 +632,8 @@ class MainController(NSObject):
         if self.selectedWorkflow:
             if 'restart_action' in self.selectedWorkflow:
                 self.restartAction = self.selectedWorkflow['restart_action']
+            if 'first_boot_reboot' in self.selectedWorkflow:
+                self.firstBootReboot = self.selectedWorkflow['first_boot_reboot']
             if 'bless_target' in self.selectedWorkflow:
                 self.blessTarget = self.selectedWorkflow['bless_target']
             else:
@@ -777,7 +780,8 @@ class MainController(NSObject):
                 packages_dir = os.path.join(self.targetVolume.mountpoint, 'usr/local/first-boot/')
                 if not os.path.exists(packages_dir):
                     os.makedirs(packages_dir)
-                Utils.copyFirstBoot(self.targetVolume.mountpoint, self.waitForNetwork)
+                Utils.copyFirstBoot(self.targetVolume.mountpoint,
+                                    self.waitForNetwork, self.firstBootReboot)
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.processWorkflowOnThreadComplete, None, YES)
