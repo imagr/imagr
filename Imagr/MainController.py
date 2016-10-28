@@ -108,6 +108,7 @@ class MainController(NSObject):
     first_boot_items = None
     waitForNetwork = True
     firstBootReboot = True
+    autoRunTime = 30
     autorunWorkflow = None
     cancelledAutorun = False
     authenticatedUsername = None
@@ -352,6 +353,11 @@ class MainController(NSObject):
 
                 try:
                     self.waitForNetwork = converted_plist['wait_for_network']
+                except:
+                    pass
+
+                try:
+                    self.autoRunTime = converted_plist['autorun_time']
                 except:
                     pass
 
@@ -698,17 +704,19 @@ class MainController(NSObject):
             self.processCountdownOnThread, self, None)
 
     def processCountdownOnThread(self, sender):
-        '''Count down for 30s'''
+        '''Count down for 30s or admin provided'''
+        countdown = self.autoRunTime
         #pool = NSAutoreleasePool.alloc().init()
         if self.autorunWorkflow and self.targetVolume:
             self.should_update_volume_list = False
 
-            # Count down for 30s.
-            for remaining in range(30, 0, -1):
+            # Count down for 30s or admin provided.
+            for remaining in range(countdown, 0, -1):
                 if not self.autorunWorkflow:
                     break
 
-                self.updateProgressTitle_Percent_Detail_(None, 30 - remaining, "Beginning in {}s".format(remaining))
+                self.updateProgressTitle_Percent_Detail_(None, countdown - remaining, "Beginning in {}s".format(remaining))
+                import time
                 time.sleep(1)
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
