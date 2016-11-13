@@ -596,7 +596,7 @@ class MainController(NSObject):
         if enabled:
             self.workflowDescription.setTextColor_(NSColor.controlTextColor())
         else:
-            self.workflowDescription.setTextColor_(NSColor.disabledTextColor())
+            self.workflowDescription.setTextColor_(NSColor.disabledControlTextColor())
 
     def disableWorkflowViewControls(self):
         self.reloadWorkflowsButton.setEnabled_(False)
