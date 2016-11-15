@@ -10,8 +10,8 @@ NBI="Imagr"
 DMGPATH=none
 ARGS= --enable-nbi --add-python
 BUILD=Release
-AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
-AUTONBIRCNBURL=https://bitbucket.org/bruienne/autonbi/raw/f1e4e9c9688b766e73ed6e7633d2f4e7d1c223cf/rc.netboot
+AUTONBIURL=https://raw.githubusercontent.com/bruienne/autonbi/master/AutoNBI.py
+AUTONBIRCNBURL=https://raw.githubusercontent.com/bruienne/autonbi/feature/ramdisk/rc.netboot
 FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py
 INDEX="5001"
 VALIDATE=True
@@ -103,7 +103,7 @@ ifeq ($(DMGPATH),none)
 else
 	hdiutil attach "$(DMGPATH)" -mountpoint "$(TMPMOUNT)"
 endif
-	
+
 
 	cp -r "$(TMPMOUNT)"/Imagr.app .
 	hdiutil detach "$(TMPMOUNT)"
