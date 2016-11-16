@@ -1085,8 +1085,8 @@ class MainController(NSObject):
             additional_headers=custom_headers)
 
     def downloadAndInstallPackage(self, url, target, progress_method=None, additional_headers=None):
-        if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.dmg'):
-            self.errorMessage = "%s doesn't end with either '.pkg' or '.dmg'" % url
+        if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.mpkg') and not os.path.basename(url).endswith('.dmg'):
+            self.errorMessage = "%s doesn't end with either '.pkg' '.mpkg' or '.dmg'" % url
             return False
         if os.path.basename(url).endswith('.dmg'):
             error = None
@@ -1115,7 +1115,7 @@ class MainController(NSObject):
                 self.errorMessage = "Couldn't unmount %s" % dmgmountpoint
                 return False, self.errorMessage
 
-        if os.path.basename(url).endswith('.pkg'):
+        if os.path.basename(url).endswith('.pkg') or os.path.basename(url).endswith('.mpkg'):
 
             # Make our temp directory on the target
             temp_dir = tempfile.mkdtemp(dir=target)
@@ -1156,8 +1156,8 @@ class MainController(NSObject):
         dest_dir = os.path.join(target, 'usr/local/first-boot/items')
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
-        if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.dmg'):
-            error = "%s doesn't end with either '.pkg' or '.dmg'" % url
+        if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.mpkg') and not os.path.basename(url).endswith('.dmg'):
+            error = "%s doesn't end with either '.pkg' '.mpkg' or '.dmg'" % url
             return False, error
         if os.path.basename(url).endswith('.dmg'):
             NSLog("Copying pkg(s) from %@", url)
