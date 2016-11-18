@@ -330,6 +330,11 @@ def downloadFile(url, additional_headers=None, username=None, password=None):
         data = False
 
     setattr(error, 'url', url)
+    # Force universal newlines so Imagr can handle CRLF and CR file encoding.
+    # This only affects script when they are embedded or file:/// resources.
+    # https://docs.python.org/2/glossary.html#term-universal-newlines
+    if data is not False:
+        data = '\n'.join(data.splitlines())
     return data, error
 
 
