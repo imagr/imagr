@@ -323,18 +323,31 @@ def downloadFile(url, additional_headers=None, username=None, password=None):
         try:
             data = urllib2.urlopen(url).read()
         except urllib2.URLError, err:
-            setattr(error, 'reason', err[0][1])
+            setattr(error, 'reason', err)
             data = False
+        except urllib2.HTTPError, err:
+            setattr(error, 'reason', err)
+            data = False
+
+        # path = url.replace('file://','')
+        # NSLog("%@", path)
+        # try:
+        #     file_handle = open(path)
+        #     data = file_handle.read()
+        #     file_handle.close()
+        # except:
+        #     setattr(error, 'reason', sys.exc_info()[0])
+        #     data = False
     else:
-        setattr(err, 'reason', 'The following URL is unsupported')
+        setattr(error, 'reason', 'The following URL is unsupported')
         data = False
 
     setattr(error, 'url', url)
     # Force universal newlines so Imagr can handle CRLF and CR file encoding.
     # This only affects script when they are embedded or file:/// resources.
     # https://docs.python.org/2/glossary.html#term-universal-newlines
-    if data is not False:
-        data = '\n'.join(data.splitlines())
+    # if data is not False:
+    #     data = '\n'.join(data.splitlines())
     return data, error
 
 

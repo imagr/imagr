@@ -117,6 +117,18 @@ def validate_component(component, workflow):
         if 'url' in component:
             validate_url('Script', component['url'])
 
+    if component['type'] == 'restart_action':
+        # Rule 9
+        if 'action' not in component:
+            fail("'action' is a required key in a 'restart_action' component.")
+
+        else:
+            if component['action'] != 'none' and \
+                component['action'] != 'restart' and \
+                component['action'] != 'shutdown':
+                fail("restart_action is not one of 'none', 'shutdown' or 'restart' in workflow %s" \
+                                                                              % workflow['name'])
+
     if component['type'] == 'partition':
         # Rule 11
         if 'partitions' not in component:

@@ -910,6 +910,11 @@ class MainController(NSObject):
                 Utils.sendReport('in_progress', 'Localizing Mac')
                 self.copyLocalize(item)
                 self.first_boot_items = True
+
+            # Workflow specific restart action
+            elif item.get('type') == 'restart_action':
+                Utils.sendReport('in_progress', 'Setting restart_action to %s', item.get('action'))
+                self.restartAction = item.get('action')
             else:
                 Utils.sendReport('error', 'Found an unknown workflow item.')
                 self.errorMessage = "Found an unknown workflow item."
@@ -924,7 +929,7 @@ class MainController(NSObject):
         if 'script' in item:
             if progress_method:
                 progress_method("Running script to determine included workflow...", -1, '')
-            script = Utils.replacePlaceholders(item['script'], self.targetVolume.mountpoint)
+            script = Utils.replacePlaceholders(item.get('script'), self.targetVolume.mountpoint)
             script_file = tempfile.NamedTemporaryFile(delete=False)
             script_file.write(script)
             script_file.close()
@@ -945,6 +950,7 @@ class MainController(NSObject):
                         break
         else:
             included_workflow = item['name']
+       
         return included_workflow
 
     def runIncludedWorkflow(self, item):
