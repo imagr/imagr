@@ -1237,8 +1237,10 @@ class MainController(NSObject):
             progress_method=self.updateProgressTitle_Percent_Detail_)
 
         if retcode != 0:
-            # self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
-            self.errorMessage = error_output
+            if error_output is not None:
+                self.errorMessage = error_output
+            else:
+                self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
 
     def runScript(self, script, target, progress_method=None):
         """
