@@ -1232,12 +1232,13 @@ class MainController(NSObject):
         if not self.targetVolume.Mounted():
             self.targetVolume.Mount()
 
-        retcode = self.runScript(
+        retcode, error_output = self.runScript(
             script, self.targetVolume.mountpoint,
             progress_method=self.updateProgressTitle_Percent_Detail_)
 
         if retcode != 0:
-            self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
+            # self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
+            self.errorMessage = error_output
 
     def runScript(self, script, target, progress_method=None):
         """
@@ -1245,7 +1246,8 @@ class MainController(NSObject):
         """
         # replace the placeholders in the script
         script = Utils.replacePlaceholders(script, target)
-
+        error_output = None
+        output_list = []
         # Copy script content to a temporary location and make executable
         script_file = tempfile.NamedTemporaryFile(delete=False)
         script_file.write(script)
@@ -1256,10 +1258,13 @@ class MainController(NSObject):
         proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         while proc.poll() is None:
             output = proc.stdout.readline().strip().decode('UTF-8')
+            output_list.append(output)
             if progress_method:
                 progress_method(None, None, output)
         os.remove(script_file.name)
-        return proc.returncode
+        if proc.returncode != 0:
+            error_output = '\n'.join(output_list)
+        return proc.returncode, error_output
 
     def copyScript(self, script, target, number, progress_method=None):
         """
