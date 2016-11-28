@@ -814,7 +814,6 @@ class MainController(NSObject):
                 for volume in self.volumes:
                     if str(volume.mountpoint) == str(self.targetVolume):
                         volume.SetStartupDisk()
-
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
@@ -913,7 +912,7 @@ class MainController(NSObject):
 
             # Workflow specific restart action
             elif item.get('type') == 'restart_action':
-                Utils.sendReport('in_progress', 'Setting restart_action to %s', item.get('action'))
+                Utils.sendReport('in_progress', 'Setting restart_action to %s' % item.get('action'))
                 self.restartAction = item.get('action')
             else:
                 Utils.sendReport('error', 'Found an unknown workflow item.')
