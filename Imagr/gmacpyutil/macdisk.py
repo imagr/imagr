@@ -94,11 +94,13 @@ class Disk(object):
       command = ["diskutil", "mount", self.deviceid]
       rc = gmacpyutil.RunProcess(command)[2]
       if rc == 0:
-        command = ["diskutil", "enableOwnership", self.deviceid]
-        rc = gmacpyutil.RunProcess(command)[2]
-        if rc == 0:
-          self.Refresh()
-          return True
+        try:
+          command = ["diskutil", "enableOwnership", self.deviceid]
+          rc = gmacpyutil.RunProcess(command)[2]
+        except:
+          pass
+        self.Refresh()
+        return True
 
   def EnsureMountedWithRefresh(self):
     """Mounts single volumes for partitions, all volumes for whole disks.
