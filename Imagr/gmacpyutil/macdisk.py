@@ -117,11 +117,13 @@ class Disk(object):
     #     command[1] = "mountDisk"
       rc = gmacpyutil.RunProcess(command)[2]
       if rc == 0:
-        command = ["diskutil", "enableOwnership", self.deviceid]
-        rc = gmacpyutil.RunProcess(command)[2]
-        if rc == 0:
-          self.Refresh()
-          return True
+        try:
+          command = ["diskutil", "enableOwnership", self.deviceid]
+          rc = gmacpyutil.RunProcess(command)[2]
+        except:
+          pass
+        self.Refresh()
+        return True
 
   def Unmount(self, force=False):
     """Unounts single volumes for partitions, all volumes for whole disks."""

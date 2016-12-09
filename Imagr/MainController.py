@@ -1072,6 +1072,7 @@ class MainController(NSObject):
             self.targetVolume.EnsureMountedWithRefresh()
             return False
         if task.poll() == 0:
+            self.targetVolume.EnsureMountedWithRefresh()
             return True
 
     def downloadAndInstallPackages(self, item):
@@ -1079,10 +1080,8 @@ class MainController(NSObject):
         custom_headers = item.get('additional_headers')
         self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
         # mount the target
-        NSLog("%@", self.targetVolume.mountpoint)
-        if not self.targetVolume.Mounted():
-            self.targetVolume.Mount()
-
+        self.targetVolume.EnsureMountedWithRefresh()
+        
         package_name = os.path.basename(url)
         self.downloadAndInstallPackage(
             url, self.targetVolume.mountpoint,
