@@ -27,6 +27,7 @@ import logging
 import urlparse
 import socket
 import urllib2
+import datetime
 
 from gurl import Gurl
 
@@ -379,6 +380,25 @@ def getPlistData(data):
         return plist[data]
     except:
         pass
+
+def set_date():
+    utc = None
+    time_api_url = 'http://www.timeapi.org/utc/now?format=\s'
+
+    try:
+        utc = urllib2.urlopen(time_api_url, timeout = 1).read()
+    except:
+        pass
+
+    if utc:
+        # Timestamp to epoch
+        timestamp = datetime.datetime.fromtimestamp(int(utc))
+        # date {month}{day}{hour}{minute}{year}
+        formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
+        try:
+            subprocess.call(['/bin/date', formatted_date])
+        except:
+            pass
 
 
 def getServerURL():
