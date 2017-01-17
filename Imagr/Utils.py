@@ -28,6 +28,7 @@ import urlparse
 import socket
 import urllib2
 import datetime
+import json
 
 from gurl import Gurl
 
@@ -382,20 +383,29 @@ def getPlistData(data):
         pass
 
 def set_date():
-    utc = None
-    time_api_url = 'http://www.timeapi.org/utc/now?format=\s'
+    date_data = None
+    time_api_url = 'https://script.google.com/macros/s/AKfycbyd5AcbAnWi2Yn0xhFRbyzS4qMq1VucMVgVvhul5XqS9HkAyJY/exec?tz=UTC'
 
     try:
-        utc = urllib2.urlopen(time_api_url, timeout = 1).read()
+        date_data = urllib2.urlopen(time_api_url, timeout = 1).read()
     except:
         pass
 
-    if utc:
-        # Timestamp to epoch
-        timestamp = datetime.datetime.fromtimestamp(int(utc))
-        # date {month}{day}{hour}{minute}{year}
-        formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
+    if date_data:
         try:
+            # Timestamp to epoch
+            utc_data = json.loads(date_data)
+            timestamp = datetime.datetime(
+                                        utc_data['year'],
+                                        utc_data['month'],
+                                        utc_data['day'],
+                                        utc_data['hours'],
+                                        utc_data['minutes'],
+                                        utc_data['seconds'],
+                                        0)
+            # date {month}{day}{hour}{minute}{year}
+            formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
+        
             subprocess.call(['/bin/date', formatted_date])
         except:
             pass
