@@ -383,33 +383,7 @@ def getPlistData(data):
         pass
 
 def set_date():
-    date_data = None
-    time_api_url = 'https://script.google.com/macros/s/AKfycbyd5AcbAnWi2Yn0xhFRbyzS4qMq1VucMVgVvhul5XqS9HkAyJY/exec?tz=UTC'
-
-    try:
-        date_data = urllib2.urlopen(time_api_url, timeout = 1).read()
-    except:
-        pass
-
-    if date_data:
-        try:
-            # Timestamp to epoch
-            utc_data = json.loads(date_data)
-            timestamp = datetime.datetime(
-                                        utc_data['year'],
-                                        utc_data['month'],
-                                        utc_data['day'],
-                                        utc_data['hours'],
-                                        utc_data['minutes'],
-                                        utc_data['seconds'],
-                                        0)
-            # date {month}{day}{hour}{minute}{year}
-            formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
-        
-            subprocess.call(['/bin/date', formatted_date])
-        except:
-            pass
-
+    subprocess.call(['/usr/sbin/ntpdate', '-su', 'time.apple.com'])
 
 def getServerURL():
     return getPlistData('serverurl')
