@@ -383,7 +383,18 @@ def getPlistData(data):
         pass
 
 def set_date():
-    subprocess.call(['/usr/sbin/ntpdate', '-su', 'time.apple.com'])
+    # Try setting system time to time.apple.com via NTP
+    try:
+        subprocess.check_call(['/usr/sbin/ntpdate', '-su', 'time.apple.com'])
+        return
+    except OSError:
+        pass # ntpupdate binary not found
+    except subprocess.CalledProcessError: # try NTP pool if time.apple.com fails
+        try:
+            subprocess.check_call(['/usr/sbin/ntpdate', '-su', 'pool.ntp.org'])
+            return
+        except:
+            pass
 
 def getServerURL():
     return getPlistData('serverurl')
