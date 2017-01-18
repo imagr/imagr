@@ -383,6 +383,19 @@ def getPlistData(data):
         pass
 
 def set_date():
+    # Try setting system time to time.apple.com via NTP
+    try:
+        subprocess.check_call(['/usr/sbin/ntpdate', '-su', 'time.apple.com'])
+        return
+    except OSError:
+        pass # ntpupdate binary not found
+    except subprocess.CalledProcessError: # try NTP pool if time.apple.com fails
+        try:
+            subprocess.check_call(['/usr/sbin/ntpdate', '-su', 'pool.ntp.org'])
+            return
+        except:
+            pass
+
     date_data = None
     time_api_url = 'https://script.google.com/macros/s/AKfycbyd5AcbAnWi2Yn0xhFRbyzS4qMq1VucMVgVvhul5XqS9HkAyJY/exec?tz=UTC'
 
@@ -405,11 +418,10 @@ def set_date():
                                         0)
             # date {month}{day}{hour}{minute}{year}
             formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
-        
+
             subprocess.call(['/bin/date', formatted_date])
         except:
             pass
-
 
 def getServerURL():
     return getPlistData('serverurl')
