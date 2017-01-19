@@ -820,13 +820,7 @@ class MainController(NSObject):
         else:
             if self.should_update_volume_list == True:
                 NSLog("Refreshing volume list.")
-                # again, this needs to be refactored
-                self.volumes = Utils.mountedVolumes()
-                self.chooseTargetDropDown.removeAllItems()
-                volume_list = self.validTargetVolumes()
-                self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
-                self.targetVolume = volume_list[0]
-                self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
+                self.reloadVolumes()
             self.openEndWorkflowPanel()
 
     def runComponent(self, item):
