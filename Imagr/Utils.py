@@ -402,7 +402,7 @@ def set_date():
     try:
         request = urllib2.Request(time_api_url)
         request.get_method = lambda : 'HEAD'
-        response = request.urlopen(request, timeout=1)
+        response = urllib2.urlopen(request, timeout=1)
         date_data = response.info().getheader('Date')
     except:
         pass
