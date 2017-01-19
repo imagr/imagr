@@ -28,27 +28,44 @@ log.addHandler(handler_file)
 
 def ip_addresses():
     command = "ifconfig  | grep -E 'inet.[0-9]' | grep -v '127.0.0.1' | awk '{ print $2}' | wc -l"
-    proc = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
+    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     return proc.communicate()[0].replace('\n', '')
 
-def all_done():
+
+def remove_item(path):
+    if os.path.exists(path):
+        os.remove(path)
+
+
+def all_done(reboot):
     if not os.listdir(items_dir):
-        sleep_time=10
-        time.sleep(sleep_time)
+        sleep_time = 10
         cleanup()
-        subprocess.call(['/sbin/reboot'])
+        time.sleep(sleep_time)
+        if reboot is True:
+            log.info('Triggering Reboot.')
+            subprocess.call(['/sbin/reboot'])
+        else:
+            log.info('Killing LoginLog.')
+            subprocess.call(['/usr/bin/killall', 'LoginLog'])
+
+
 
 def cleanup():
     log_path = open(logfile, 'a')
-    log.info('%%{color=magenta}No more packages or scripts have been found, cleaning up.')
+    log.info('%{color=magenta}No more packages or scripts have been found, cleaning up.')
     # remove launchdaemon
-    os.remove('/Library/LaunchDaemons/com.grahamgilbert.first-boot-pkg.plist')
-    # remove launchagent
-    os.remove('/Library/LaunchAgents/se.gu.it.LoginLog.plist')
+    remove_item('/Library/LaunchDaemons/com.grahamgilbert.imagr-first-boot-pkg.plist')
+    # remove launchagents
+    remove_item('/Library/LaunchAgents/se.gu.it.LoginLog.plist')
+    remove_item('/Library/LaunchAgents/se.gu.it.LoginLog.login.plist')
     # remove loginlog.app
-    shutil.rmtree('/Library/PrivilegedHelperTools/LoginLog.app')
+    if os.path.exists('/Library/PrivilegedHelperTools/LoginLog.app'):
+        shutil.rmtree('/Library/PrivilegedHelperTools/LoginLog.app')
     # remove firstboot_dir
-    shutil.rmtree(firstboot_dir)
+    if os.path.exists(firstboot_dir):
+        shutil.rmtree(firstboot_dir)
+
 
 def main():
     log.info(('''
@@ -58,21 +75,25 @@ Imagr First Boot %s
 ''') % time.strftime("%Y-%m-%d %H:%M:%S"))
     plist_opts = plistlib.readPlist(config_plist)
     # Detect new network hardware
-    subprocess.call(['/usr/sbin/networksetup', '-detectnewhardware'])
-    if plist_opts.get('Network') == True:
+    if plist_opts.get('Network') is True:
+        subprocess.call(['/usr/sbin/networksetup', '-detectnewhardware'])
         # Check if the network is up
         while True:
-            print ip_addresses()
             if ip_addresses().strip() != "0":
                 log.info('%{color=green}Network connection is active. ')
                 break
             else:
                 log.info('%{color=orange}Network connection is inactive, retrying...')
-                time.sleep(10)
+                time.sleep(1)
     retry_limit = plist_opts.get('RetryCount')
     # if the packages dir isn't empty, loop over them
     if not os.path.exists(items_dir):
         os.makedirs(items_dir)
+
+    reboot = True
+    if plist_opts.get('Reboot') is False:
+        log.info('%{color=green}Skipping reboot due to preference. ')
+        reboot = False
 
     sleep_time = 20
     if os.listdir(items_dir):
@@ -86,8 +107,10 @@ Imagr First Boot %s
                 retry_key = item + '_count'
                 retry_count = plist_opts.get(retry_key, 0)
                 if retry_count <= retry_limit:
-                    log_path = open(logfile, 'a')  # so that data written to it will be appended
-                    task = subprocess.Popen(command, stdout=log_path, stderr=log_path)
+                    log_path = open(logfile, 'a')
+                    # so that data written to it will be appended
+                    task = subprocess.Popen(command, stdout=log_path,
+                                            stderr=log_path)
                     task.communicate()
                     if task.returncode == 0:
                         # Package installed ok, we're good to remove it
@@ -110,19 +133,22 @@ Imagr First Boot %s
             else:
                 log.info(('%%{color=magenta}Running %s...') % item)
                 script_path = os.path.join(items_dir, item)
-                log_path = open(logfile, 'a')  # so that data written to it will be appended
-                task = subprocess.Popen(script_path, stdout=log_path, stderr=log_path, shell=True)
+                log_path = open(logfile, 'a')
+                # so that data written to it will be appended
+                task = subprocess.Popen(script_path, stdout=log_path,
+                                        stderr=log_path, shell=True)
                 task.communicate()
-                try:
-                    os.remove(script_path)
-                except:
-                    shutil.rmtree(script_path)
-            all_done()
+                if task.returncode == 0:
+                    try:
+                        os.remove(script_path)
+                    except:
+                        shutil.rmtree(script_path)
+            all_done(reboot)
 
     # We're done, reboot. Wait 20 seconds so the log window can be read.
     time.sleep(sleep_time)
-    all_done()
-    subprocess.call(['/sbin/reboot'])
+    all_done(reboot)
+
 
 if __name__ == '__main__':
     main()

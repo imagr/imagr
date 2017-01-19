@@ -4,18 +4,19 @@
 
 URL="http://192.168.178.135/imagr_config.plist"
 REPORTURL=none
-APP="/Applications/Install OS X El Capitan.app"
+APP="/Applications/Install macOS Sierra.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
 DMGPATH=none
 ARGS= --enable-nbi --add-python
 BUILD=Release
-AUTONBIURL=https://bitbucket.org/bruienne/autonbi/raw/master/AutoNBI.py
-AUTONBIRCNBURL=https://bitbucket.org/bruienne/autonbi/raw/f1e4e9c9688b766e73ed6e7633d2f4e7d1c223cf/rc.netboot
+AUTONBIURL=https://raw.githubusercontent.com/bruienne/autonbi/master/AutoNBI.py
+AUTONBIRCNBURL=https://raw.githubusercontent.com/bruienne/autonbi/feature/ramdisk/rc.netboot
 FOUNDATIONPLISTURL=https://raw.githubusercontent.com/munki/munki/master/code/client/munkilib/FoundationPlist.py
 INDEX="5001"
 VALIDATE=True
 SYSLOG=none
+TMPMOUNT="/private/tmp/imagr-mount"
 
 -include config.mk
 
@@ -98,12 +99,14 @@ ifeq ($(DMGPATH),none)
 		https://api.github.com/repos/grahamgilbert/imagr/releases | \
 		python -c 'import json,sys;obj=json.load(sys.stdin); \
 		print obj[0]["assets"][0]["browser_download_url"]')
-	hdiutil attach Imagr.dmg
+	hdiutil attach "Imagr.dmg" -mountpoint "$(TMPMOUNT)"
 else
-	hdiutil attach $(DMGPATH)
+	hdiutil attach "$(DMGPATH)" -mountpoint "$(TMPMOUNT)"
 endif
-	cp -r /Volumes/Imagr/Imagr.app .
-	hdiutil detach /Volumes/Imagr
+
+
+	cp -r "$(TMPMOUNT)"/Imagr.app .
+	hdiutil detach "$(TMPMOUNT)"
 ifeq ($(DMGPATH),none)
 	rm ./Imagr.dmg
 endif

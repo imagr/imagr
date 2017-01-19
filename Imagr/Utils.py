@@ -27,14 +27,19 @@ import logging
 import urlparse
 import socket
 import urllib2
+import datetime
+import json
 
 from gurl import Gurl
+
 
 class GurlError(Exception):
     pass
 
+
 class HTTPError(Exception):
     pass
+
 
 class CustomThread(threading.Thread):
     '''Class for running a process in its own thread'''
@@ -50,6 +55,7 @@ class CustomThread(threading.Thread):
         proc = subprocess.call(self.cmd)
         pass
 
+
 def header_dict_from_list(array):
     """Given a list of strings in http header format, return a dict.
     If array is None, return None"""
@@ -62,8 +68,9 @@ def header_dict_from_list(array):
             header_dict[key.strip()] = value.strip()
     return header_dict
 
+
 def post_url(url, post_data, message=None, follow_redirects=False,
-            progress_method=None, additional_headers=None):
+             progress_method=None, additional_headers=None):
     """Sends POST data to a URL and then returns the result.
     Accepts the URL to send the POST to, URL encoded data and
     optionally can follow redirects
@@ -123,7 +130,7 @@ def post_url(url, post_data, message=None, follow_redirects=False,
         # Re-raise the error as a GurlError
         raise GurlError(-1, str(err))
 
-    if connection.error != None:
+    if connection.error is not None:
         # Gurl returned an error
         NSLog('Download error %@: %@', connection.error.code(),
               connection.error.localizedDescription())
@@ -133,7 +140,7 @@ def post_url(url, post_data, message=None, follow_redirects=False,
         raise GurlError(connection.error.code(),
                         connection.error.localizedDescription())
 
-    if connection.response != None:
+    if connection.response is not None:
         NSLog('Status: %@', connection.status)
         NSLog('Headers: %@', connection.headers)
     if connection.redirection != []:
@@ -160,8 +167,16 @@ def post_url(url, post_data, message=None, follow_redirects=False,
         raise HTTPError(connection.status,
                         connection.headers.get('http_result_description', ''))
 
+
+def NSLogWrapper(message):
+    '''A wrapper around NSLog so certain characters sent to NSLog don't '''
+    '''trigger string substitution'''
+    NSLog('%@', message)
+
+
 def get_url(url, destinationpath, message=None, follow_redirects=False,
-            progress_method=None, additional_headers=None):
+            progress_method=None, additional_headers=None, username=None,
+            password=None):
     """Gets an HTTP or HTTPS URL and stores it in
     destination path. Returns a dictionary of headers, which includes
     http_result_code and http_result_description.
@@ -181,7 +196,9 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                'file': tempdownloadpath,
                'follow_redirects': follow_redirects,
                'additional_headers': header_dict_from_list(additional_headers),
-               'logging_function': NSLog}
+               'username': username,
+               'password': password,
+               'logging_function': NSLogWrapper}
     NSLog('gurl options: %@', options)
 
     connection = Gurl.alloc().initWithOptions_(options)
@@ -230,7 +247,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         # Re-raise the error as a GurlError
         raise GurlError(-1, str(err))
 
-    if connection.error != None:
+    if connection.error is not None:
         # Gurl returned an error
         NSLog('Download error %@: %@', connection.error.code(),
               connection.error.localizedDescription())
@@ -242,7 +259,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         raise GurlError(connection.error.code(),
                         connection.error.localizedDescription())
 
-    if connection.response != None:
+    if connection.response is not None:
         NSLog('Status: %@', connection.status)
         NSLog('Headers: %@', connection.headers)
     if connection.redirection != []:
@@ -271,29 +288,33 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
         raise HTTPError(connection.status,
                         connection.headers.get('http_result_description', ''))
 
-def downloadFile(url, additional_headers=None):
+
+def downloadFile(url, additional_headers=None, username=None, password=None):
     url_parse = urlparse.urlparse(url)
-    err=None
+    error = None
+    error = type("err", (object,), dict())
     if url_parse.scheme in ['http', 'https']:
         # Use gurl to download the file
         temp_file = os.path.join(tempfile.mkdtemp(), 'tempdata')
         try:
-            headers = get_url(url, temp_file, additional_headers=additional_headers)
+            headers = get_url(
+                url, temp_file, additional_headers=additional_headers,
+                username=username, password=password)
         except HTTPError, err:
             NSLog("HTTP Error: %@", err)
-            err.url = url
-            data=False
+            setattr(error, 'reason', err)
+            data = False
         except GurlError, err:
             NSLog("Gurl Error: %@", err)
-            err.url = url
-            data=False
+            setattr(error, 'reason', err)
+            data = False
         try:
             file_handle = open(temp_file)
             data = file_handle.read()
             file_handle.close()
         except (OSError, IOError):
             NSLog('Couldn\'t read %@', temp_file)
-            data=False
+            data = False
         try:
             os.unlink(temp_file)
             os.rmdir(os.path.dirname(temp_file))
@@ -304,18 +325,37 @@ def downloadFile(url, additional_headers=None):
         try:
             data = urllib2.urlopen(url).read()
         except urllib2.URLError, err:
-            err.reason = err[0][1]
-            err.url = url
-            data=False
+            setattr(error, 'reason', err)
+            data = False
+        except urllib2.HTTPError, err:
+            setattr(error, 'reason', err)
+            data = False
+
+        # path = url.replace('file://','')
+        # NSLog("%@", path)
+        # try:
+        #     file_handle = open(path)
+        #     data = file_handle.read()
+        #     file_handle.close()
+        # except:
+        #     setattr(error, 'reason', sys.exc_info()[0])
+        #     data = False
     else:
-        err = type("err", (object,), dict())
-        setattr(err,'reason','The following URL is unsupported')
-        setattr(err,'url',url)
-        data=False
-    return data, err
+        setattr(error, 'reason', 'The following URL is unsupported')
+        data = False
+
+    setattr(error, 'url', url)
+    # Force universal newlines so Imagr can handle CRLF and CR file encoding.
+    # This only affects script when they are embedded or file:/// resources.
+    # https://docs.python.org/2/glossary.html#term-universal-newlines
+    # if data is not False:
+    #     data = '\n'.join(data.splitlines())
+    return data, error
+
 
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
+
 
 def getPlistData(data):
     # Try the user's homedir
@@ -342,8 +382,50 @@ def getPlistData(data):
     except:
         pass
 
+def set_date():
+    # Try setting system time to time.apple.com via NTP
+    try:
+        subprocess.check_call(['/usr/sbin/ntpdate', '-su', 'time.apple.com'])
+        return
+    except OSError:
+        pass # ntpupdate binary not found
+    except subprocess.CalledProcessError: # try NTP pool if time.apple.com fails
+        try:
+            subprocess.check_call(['/usr/sbin/ntpdate', '-su', 'pool.ntp.org'])
+            return
+        except:
+            pass
+
+    date_data = None
+    time_api_url = 'https://script.google.com/macros/s/AKfycbyd5AcbAnWi2Yn0xhFRbyzS4qMq1VucMVgVvhul5XqS9HkAyJY/exec?tz=UTC'
+
+    try:
+        date_data = urllib2.urlopen(time_api_url, timeout = 1).read()
+    except:
+        pass
+
+    if date_data:
+        try:
+            # Timestamp to epoch
+            utc_data = json.loads(date_data)
+            timestamp = datetime.datetime(
+                                        utc_data['year'],
+                                        utc_data['month'],
+                                        utc_data['day'],
+                                        utc_data['hours'],
+                                        utc_data['minutes'],
+                                        utc_data['seconds'],
+                                        0)
+            # date {month}{day}{hour}{minute}{year}
+            formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
+
+            subprocess.call(['/bin/date', formatted_date])
+        except:
+            pass
+
 def getServerURL():
     return getPlistData('serverurl')
+
 
 def getReportURL():
     report_url = getPlistData('reporturl')
@@ -365,9 +447,10 @@ def sendReport(status, message):
             'serial': SERIAL,
             'message': message
         }
-        NSLog('Report: %@', data )
+        NSLog('Report: %@', data)
         data = urllib.urlencode(data)
-        # silently fail here, sending reports is a nice to have, if server is down, meh.
+        # silently fail here, sending reports is a nice to have, if server is
+        # down, meh.
         try:
             post_url(report_url, data)
         except:
@@ -382,6 +465,7 @@ def sendReport(status, message):
         else:
             log.info(log_message)
 
+
 def bringToFront(bundleID):
     startTime = time.time()
     while time.time() - startTime < 10:
@@ -391,6 +475,7 @@ def bringToFront(bundleID):
                 return
         time.sleep(1/10.0)
 
+
 def launchApp(app_path):
     # Get the binary path so we can launch it using a threaded subprocess
     try:
@@ -399,15 +484,18 @@ def launchApp(app_path):
     except:
         NSLog("Failed to get app binary location, cannot launch.")
         return
-    
+
     if not NSRunningApplication.runningApplicationsWithBundleIdentifier_(app_plist['CFBundleIdentifier']):
         # Only launch the app if it isn't already running
-        thread = CustomThread(os.path.join(app_path, 'Contents', 'MacOS', binary))
+        thread = CustomThread(os.path.join(app_path, 'Contents', 'MacOS',
+                                           binary))
         thread.daemon = True
         thread.start()
 
-    # Bring application to the front as they launch in the background in Netboot for some reason
+    # Bring application to the front as they launch in the background in
+    # Netboot for some reason
     bringToFront(app_plist['CFBundleIdentifier'])
+
 
 def get_hardware_info():
     '''Uses system profiler to get hardware info for this machine'''
@@ -425,6 +513,7 @@ def get_hardware_info():
         return sp_hardware_dict
     except Exception:
         return {}
+
 
 def setup_logging():
     syslog = getPlistData('syslog')
@@ -455,7 +544,10 @@ def setup_logging():
     logging.getLogger("Imagr").addHandler(handler)
     logging.getLogger("Imagr").setLevel("INFO")
 
-def replacePlaceholders(script, target, computer_name=None, keyboard_layout_id=None, keyboard_layout_name=None, language=None, locale=None, timezone=None):
+
+def replacePlaceholders(script, target, computer_name=None,
+                        keyboard_layout_id=None, keyboard_layout_name=None,
+                        language=None, locale=None, timezone=None):
     hardware_info = get_hardware_info()
     placeholders = {
         "{{target_volume}}": target,
@@ -483,9 +575,10 @@ def replacePlaceholders(script, target, computer_name=None, keyboard_layout_id=N
 
     for placeholder, value in placeholders.iteritems():
         script = script.replace(placeholder, str(value))
-        
+
     script = xml.sax.saxutils.unescape(script)
     return script
+
 
 def mountdmg(dmgpath):
     """
@@ -542,7 +635,10 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
     if url_parse.scheme in ['http', 'https']:
         # Use gurl to download the file
         try:
-            headers = get_url(url, file, message=message, progress_method=progress_method, additional_headers=additional_headers)
+            headers = get_url(url, file, message=message,
+                              progress_method=progress_method,
+                              additional_headers=additional_headers)
+            return file, None
         except HTTPError, err:
             NSLog("HTTP Error: %@", err)
             return False, err
@@ -550,8 +646,9 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
             NSLog("Gurl Error: %@", err)
             return False, err
     elif url_parse.scheme == 'file':
-        # File resources should be handled natively. Space characters, %20, need to be removed 
-        # for /usr/sbin/installer and shutil.copy to function properly.  
+        # File resources should be handled natively. Space characters, %20,
+        # need to be removed
+        # for /usr/sbin/installer and shutil.copy to function properly.
         source = url_parse.path.replace("%20", " ")
         try:
             if os.path.isfile(source):
@@ -563,21 +660,26 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
             error = "Unable to copy %s" % url
             return False, error
     else:
-        return file, None
+        # Garbage in garbage out. We don't know what to do with this type of
+        # url.
+        error = "Cannot handle url scheme: '%s' from %s" % (url_parse.scheme,
+                                                            url)
+        return False, error
 
 
-def copyFirstBoot(root):
+def copyFirstBoot(root, network=True, reboot=True):
     NSLog("Copying first boot pkg install tools")
     # Create the config plist
     config_plist = {}
-    network = True
     retry_count = 10
     config_plist['Network'] = network
     config_plist['RetryCount'] = retry_count
+    config_plist['Reboot'] = reboot
     firstboot_dir = 'usr/local/first-boot'
     if not os.path.exists(os.path.join(root, firstboot_dir)):
         os.makedirs(os.path.join(root, firstboot_dir))
-    plistlib.writePlist(config_plist, os.path.join(root, firstboot_dir, 'config.plist'))
+    plistlib.writePlist(config_plist, os.path.join(root, firstboot_dir,
+                                                   'config.plist'))
 
     # Copy the LaunchDaemon, LaunchAgent and Log.app to the right places
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -586,15 +688,15 @@ def copyFirstBoot(root):
         os.makedirs(launchDaemon_dir)
 
     if not os.path.exists(os.path.join(launchDaemon_dir,
-    'com.grahamgilbert.first-boot-pkg.plist')):
+    'com.grahamgilbert.imagr-first-boot-pkg.plist')):
         shutil.copy(os.path.join(script_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'), os.path.join(launchDaemon_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'))
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'), os.path.join(launchDaemon_dir,
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'))
         # Set the permisisons
         os.chmod(os.path.join(launchDaemon_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'), 0644)
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'), 0644)
         os.chown(os.path.join(launchDaemon_dir,
-        'com.grahamgilbert.first-boot-pkg.plist'), 0, 0)
+        'com.grahamgilbert.imagr-first-boot-pkg.plist'), 0, 0)
 
     launchAgent_dir = os.path.join(root, 'Library', 'LaunchAgents')
     if not os.path.exists(launchAgent_dir):
@@ -606,6 +708,13 @@ def copyFirstBoot(root):
         # Set the permisisons
         os.chmod(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.plist'), 0644)
         os.chown(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.plist'), 0, 0)
+
+    if not os.path.exists(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.login.plist')):
+        shutil.copy(os.path.join(script_dir, 'se.gu.it.LoginLog.login.plist'),
+        os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.login.plist'))
+        # Set the permisisons
+        os.chmod(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.login.plist'), 0644)
+        os.chown(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.login.plist'), 0, 0)
 
     helperTools_dir = os.path.join(root, 'Library', 'PrivilegedHelperTools')
     if not os.path.exists(helperTools_dir):

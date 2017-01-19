@@ -97,6 +97,11 @@ ssl_error_codes = {
     -9848: u'Configuration error',
     -9849: u'Unexpected (skipped) record in DTLS'}
 
+supported_auth_methods = ['NSURLAuthenticationMethodDefault',
+                          'NSURLAuthenticationMethodHTTPBasic',
+                          'NSURLAuthenticationMethodHTTPDigest',
+                          'NSURLAuthenticationMethodNegotiate',
+                          'NSURLAuthenticationMethodNTLM']
 
 class Gurl(NSObject):
     '''A class for getting content from a URL
@@ -404,10 +409,7 @@ class Gurl(NSObject):
             # we have the wrong credentials. just fail
             self.log('Previous authentication attempt failed.')
             challenge.sender().cancelAuthenticationChallenge_(challenge)
-        if self.username and self.password and authenticationMethod in [
-                'NSURLAuthenticationMethodDefault',
-                'NSURLAuthenticationMethodHTTPBasic',
-                'NSURLAuthenticationMethodHTTPDigest']:
+        if self.username and self.password and authenticationMethod in supported_auth_methods:
             self.log('Will attempt to authenticate.')
             self.log('Username: %s Password: %s'
                      % (self.username, ('*' * len(self.password or ''))))
@@ -442,10 +444,7 @@ class Gurl(NSObject):
             authenticationMethod = protectionSpace.authenticationMethod()
             self.log('Protection space found. Host: %s Realm: %s AuthMethod: %s'
                      % (host, realm, authenticationMethod))
-            if self.username and self.password and authenticationMethod in [
-                    'NSURLAuthenticationMethodDefault',
-                    'NSURLAuthenticationMethodHTTPBasic',
-                    'NSURLAuthenticationMethodHTTPDigest']:
+            if self.username and self.password and authenticationMethod in supported_auth_methods:
                 # we know how to handle this
                 self.log('Can handle this authentication request')
                 return True
@@ -475,10 +474,7 @@ class Gurl(NSObject):
             # we have the wrong credentials. just fail
             self.log('Previous authentication attempt failed.')
             challenge.sender().cancelAuthenticationChallenge_(challenge)
-        if self.username and self.password and authenticationMethod in [
-                'NSURLAuthenticationMethodDefault',
-                'NSURLAuthenticationMethodHTTPBasic',
-                'NSURLAuthenticationMethodHTTPDigest']:
+        if self.username and self.password and authenticationMethod in supported_auth_methods:
             self.log('Will attempt to authenticate.')
             self.log('Username: %s Password: %s'
                      % (self.username, ('*' * len(self.password or ''))))

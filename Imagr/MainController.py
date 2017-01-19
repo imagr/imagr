@@ -25,12 +25,13 @@ import tempfile
 import shutil
 import Quartz
 import time
+import powermgr
 
 class MainController(NSObject):
 
     mainWindow = objc.IBOutlet()
     backgroundWindow = objc.IBOutlet()
-    
+
     utilities_menu = objc.IBOutlet()
     help_menu = objc.IBOutlet()
 
@@ -49,6 +50,10 @@ class MainController(NSObject):
 
     progressIndicator = objc.IBOutlet()
     progressText = objc.IBOutlet()
+
+    authenticationPanel = objc.IBOutlet()
+    authenticationPanelUsernameField = objc.IBOutlet()
+    authenticationPanelPasswordField = objc.IBOutlet()
 
     startUpDiskPanel = objc.IBOutlet()
     startUpDiskText = objc.IBOutlet()
@@ -101,8 +106,13 @@ class MainController(NSObject):
     computerName = None
     counter = 0.0
     first_boot_items = None
+    waitForNetwork = True
+    firstBootReboot = True
+    autoRunTime = 30
     autorunWorkflow = None
     cancelledAutorun = False
+    authenticatedUsername = None
+    authenticatedPassword = None
 
     # For localize script
     keyboard_layout_name = None
@@ -143,9 +153,10 @@ class MainController(NSObject):
 
     def runStartupTasks(self):
         NSLog(u"background_window is set to %@", repr(self.backgroundWindowSetting()))
+
         if self.backgroundWindowSetting() == u"always":
             self.showBackgroundWindow()
-        
+
         self.mainWindow.center()
         # Run app startup - get the images, password, volumes - anything that takes a while
 
@@ -156,10 +167,10 @@ class MainController(NSObject):
         self.progressIndicator.startAnimation_(self)
         self.registerForWorkspaceNotifications()
         NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
-    
+
     def backgroundWindowSetting(self):
         return Utils.getPlistData(u"background_window") or u"auto"
-    
+
     def showBackgroundWindow(self):
         # Create a background window that covers the whole screen.
         NSLog(u"Showing background window")
@@ -187,13 +198,13 @@ class MainController(NSObject):
             else:
                 NSLog(u"Not showing background window as Dock.app is running")
                 return
-        
+
         def gcd(a, b):
             """Return greatest common divisor of two numbers"""
             if b == 0:
                 return a
             return gcd(b, a % b)
-        
+
         if not urlString.endswith(u"?"):
             try:
                 verplist = FoundationPlist.readPlist("/System/Library/CoreServices/SystemVersion.plist")
@@ -212,11 +223,11 @@ class MainController(NSObject):
         image = NSImage.alloc().initWithContentsOfURL_(url)
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.setBackgroundImage, image, YES)
-    
+
     def setBackgroundImage(self, image):
         self.backgroundWindow.contentView().setWantsLayer_(True)
         self.backgroundWindow.contentView().layer().setContents_(image)
-    
+
     def registerForWorkspaceNotifications(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
         nc.addObserver_selector_name_object_(
@@ -287,14 +298,53 @@ class MainController(NSObject):
         self.imagingProgressDetail.setFrameOrigin_(NSPoint(18, 20))
         self.imagingProgressDetail.setFrameSize_(NSSize(431, 17))
 
+    def showAuthenticationPanel(self):
+        '''Show the authentication panel'''
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.authenticationPanel, self.mainWindow, self, None, None)
+
+    @objc.IBAction
+    def cancelAuthenticationPanel_(self, sender):
+        '''Called when user clicks 'Quit' in the authentication panel'''
+        NSApp.endSheet_(self.authenticationPanel)
+        NSApp.terminate_(self)
+
+    @objc.IBAction
+    def endAuthenticationPanel_(self, sender):
+        '''Called when user clicks 'Continue' in the authentication panel'''
+        # store the username and password
+        self.authenticatedUsername = self.authenticationPanelUsernameField.stringValue()
+        self.authenticatedPassword = self.authenticationPanelPasswordField.stringValue()
+        NSApp.endSheet_(self.authenticationPanel)
+        self.authenticationPanel.orderOut_(self)
+        # re-request the workflows.plist, this time with username and password available
+        NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadData, self, None)
+
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
         self.volumes = macdisk.MountedVolumes()
         self.buildUtilitiesMenu()
+        Utils.set_date()
         theURL = Utils.getServerURL()
 
         if theURL:
-            (plistData, error) = Utils.downloadFile(theURL)
+            (plistData, error) = Utils.downloadFile(
+                theURL, username=self.authenticatedUsername, password=self.authenticatedPassword)
+            if error:
+                try:
+                    if error.reason[0] in [401, -1012, -1013]:
+                        # 401:   HTTP status code: authentication required
+                        # -1012: NSURLErrorDomain code "User cancelled authentication" -- returned
+                        #        when we try a given name and password and fail
+                        # -1013: NSURLErrorDomain code "User Authentication Required"
+                        NSLog("Configuration plist requires authentication.")
+                        # show authentication panel using the main thread
+                        self.performSelectorOnMainThread_withObject_waitUntilDone_(
+                            self.showAuthenticationPanel, None, YES)
+                        del pool
+                        return
+                except AttributeError, IndexError:
+                    pass
 
             if plistData:
                 try:
@@ -303,11 +353,21 @@ class MainController(NSObject):
                     self.errorMessage = "Configuration plist couldn't be read."
 
                 try:
+                    self.waitForNetwork = converted_plist['wait_for_network']
+                except:
+                    pass
+
+                try:
+                    self.autoRunTime = converted_plist['autorun_time']
+                except:
+                    pass
+
+                try:
                     urlString = converted_plist['background_image']
                     NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadBackgroundImage, self, urlString)
                 except:
                     pass
-                
+
                 try:
                     self.passwordHash = converted_plist['password']
                 except:
@@ -537,7 +597,7 @@ class MainController(NSObject):
         if enabled:
             self.workflowDescription.setTextColor_(NSColor.controlTextColor())
         else:
-            self.workflowDescription.setTextColor_(NSColor.disabledTextColor())
+            self.workflowDescription.setTextColor_(NSColor.disabledControlTextColor())
 
     def disableWorkflowViewControls(self):
         self.reloadWorkflowsButton.setEnabled_(False)
@@ -579,6 +639,8 @@ class MainController(NSObject):
         if self.selectedWorkflow:
             if 'restart_action' in self.selectedWorkflow:
                 self.restartAction = self.selectedWorkflow['restart_action']
+            if 'first_boot_reboot' in self.selectedWorkflow:
+                self.firstBootReboot = self.selectedWorkflow['first_boot_reboot']
             if 'bless_target' in self.selectedWorkflow:
                 self.blessTarget = self.selectedWorkflow['bless_target']
             else:
@@ -643,17 +705,19 @@ class MainController(NSObject):
             self.processCountdownOnThread, self, None)
 
     def processCountdownOnThread(self, sender):
-        '''Count down for 30s'''
+        '''Count down for 30s or admin provided'''
+        countdown = self.autoRunTime
         #pool = NSAutoreleasePool.alloc().init()
         if self.autorunWorkflow and self.targetVolume:
             self.should_update_volume_list = False
 
-            # Count down for 30s.
-            for remaining in range(30, 0, -1):
+            # Count down for 30s or admin provided.
+            for remaining in range(countdown, 0, -1):
                 if not self.autorunWorkflow:
                     break
 
-                self.updateProgressTitle_Percent_Detail_(None, 30 - remaining, "Beginning in {}s".format(remaining))
+                self.updateProgressTitle_Percent_Detail_(None, countdown - remaining, "Beginning in {}s".format(remaining))
+                import time
                 time.sleep(1)
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
@@ -725,7 +789,8 @@ class MainController(NSObject):
                 packages_dir = os.path.join(self.targetVolume.mountpoint, 'usr/local/first-boot/')
                 if not os.path.exists(packages_dir):
                     os.makedirs(packages_dir)
-                Utils.copyFirstBoot(self.targetVolume.mountpoint)
+                Utils.copyFirstBoot(self.targetVolume.mountpoint,
+                                    self.waitForNetwork, self.firstBootReboot)
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.processWorkflowOnThreadComplete, None, YES)
@@ -741,6 +806,15 @@ class MainController(NSObject):
         self.autorunWorkflow = None
 
         Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'])
+
+        # Bless the target if we need to
+        if self.blessTarget == True:
+            try:
+                self.targetVolume.SetStartupDisk()
+            except:
+                for volume in self.volumes:
+                    if str(volume.mountpoint) == str(self.targetVolume):
+                        volume.SetStartupDisk()
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
             self.errorPanel(self.errorMessage)
@@ -836,6 +910,11 @@ class MainController(NSObject):
                 Utils.sendReport('in_progress', 'Localizing Mac')
                 self.copyLocalize(item)
                 self.first_boot_items = True
+
+            # Workflow specific restart action
+            elif item.get('type') == 'restart_action':
+                Utils.sendReport('in_progress', 'Setting restart_action to %s' % item.get('action'))
+                self.restartAction = item.get('action')
             else:
                 Utils.sendReport('error', 'Found an unknown workflow item.')
                 self.errorMessage = "Found an unknown workflow item."
@@ -850,7 +929,7 @@ class MainController(NSObject):
         if 'script' in item:
             if progress_method:
                 progress_method("Running script to determine included workflow...", -1, '')
-            script = Utils.replacePlaceholders(item['script'], self.targetVolume.mountpoint)
+            script = Utils.replacePlaceholders(item.get('script'), self.targetVolume.mountpoint)
             script_file = tempfile.NamedTemporaryFile(delete=False)
             script_file.write(script)
             script_file.close()
@@ -871,6 +950,7 @@ class MainController(NSObject):
                         break
         else:
             included_workflow = item['name']
+       
         return included_workflow
 
     def runIncludedWorkflow(self, item):
@@ -993,6 +1073,7 @@ class MainController(NSObject):
             self.targetVolume.EnsureMountedWithRefresh()
             return False
         if task.poll() == 0:
+            self.targetVolume.EnsureMountedWithRefresh()
             return True
 
     def downloadAndInstallPackages(self, item):
@@ -1000,10 +1081,8 @@ class MainController(NSObject):
         custom_headers = item.get('additional_headers')
         self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
         # mount the target
-        NSLog("%@", self.targetVolume.mountpoint)
-        if not self.targetVolume.Mounted():
-            self.targetVolume.Mount()
-
+        self.targetVolume.EnsureMountedWithRefresh()
+        
         package_name = os.path.basename(url)
         self.downloadAndInstallPackage(
             url, self.targetVolume.mountpoint,
@@ -1022,7 +1101,7 @@ class MainController(NSObject):
                 dmgmountpoint = dmgmountpoints[0]
             except:
                 self.errorMessage = "Couldn't mount %s" % url
-                return False
+                return False, self.errorMessage
 
             # Now we're going to go over everything that ends .pkg or
             # .mpkg and install it
@@ -1039,7 +1118,7 @@ class MainController(NSObject):
                 Utils.unmountdmg(dmgmountpoint)
             except:
                 self.errorMessage = "Couldn't unmount %s" % dmgmountpoint
-                return False
+                return False, self.errorMessage
 
         if os.path.basename(url).endswith('.pkg'):
 
@@ -1105,7 +1184,7 @@ class MainController(NSObject):
             dmgmountpoint = dmgmountpoints[0]
         except:
             self.errorMessage = "Couldn't mount %s" % url
-            return False
+            return False, self.errorMessage
 
         # Now we're going to go over everything that ends .pkg or
         # .mpkg and install it
@@ -1152,12 +1231,15 @@ class MainController(NSObject):
         if not self.targetVolume.Mounted():
             self.targetVolume.Mount()
 
-        retcode = self.runScript(
+        retcode, error_output = self.runScript(
             script, self.targetVolume.mountpoint,
             progress_method=self.updateProgressTitle_Percent_Detail_)
 
         if retcode != 0:
-            self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
+            if error_output is not None:
+                self.errorMessage = error_output
+            else:
+                self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
 
     def runScript(self, script, target, progress_method=None):
         """
@@ -1165,7 +1247,8 @@ class MainController(NSObject):
         """
         # replace the placeholders in the script
         script = Utils.replacePlaceholders(script, target)
-
+        error_output = None
+        output_list = []
         # Copy script content to a temporary location and make executable
         script_file = tempfile.NamedTemporaryFile(delete=False)
         script_file.write(script)
@@ -1176,10 +1259,13 @@ class MainController(NSObject):
         proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         while proc.poll() is None:
             output = proc.stdout.readline().strip().decode('UTF-8')
+            output_list.append(output)
             if progress_method:
                 progress_method(None, None, output)
         os.remove(script_file.name)
-        return proc.returncode
+        if proc.returncode != 0:
+            error_output = '\n'.join(output_list)
+        return proc.returncode, error_output
 
     def copyScript(self, script, target, number, progress_method=None):
         """
@@ -1210,15 +1296,6 @@ class MainController(NSObject):
         self.restartToImagedVolume()
 
     def restartToImagedVolume(self):
-        # set the startup disk to the restored volume
-        if self.blessTarget == True:
-            try:
-                self.targetVolume.SetStartupDisk()
-            except:
-                for volume in self.volumes:
-                    if str(volume.mountpoint) == str(self.targetVolume):
-                        volume.SetStartupDisk()
-
         if self.restartAction == 'restart':
             cmd = ['/sbin/reboot']
         elif self.restartAction == 'shutdown':

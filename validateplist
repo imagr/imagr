@@ -68,7 +68,7 @@ def validate_url(name, urlstring):
             print 'WARNING: %s URL request failed: %s' % (urlstring, str(e))
     else:
         fail('%s is not a valid URL' % urlstring)
-    
+
 
 def validate_component(component, workflow):
     """
@@ -93,9 +93,9 @@ def validate_component(component, workflow):
                component['url'].endswith(".sparseimage"):
             fail("The 'url' in 'image' components must end with '.dmg' or \
                      '.sparseimage'. Not found in %s" % workflow['name'])
-        
+
         validate_url('Image', component['url'])
-    
+
     if component['type'] == 'package':
         # Rule 6
         if 'url' not in component:
@@ -108,7 +108,7 @@ def validate_component(component, workflow):
                                                Not found in %s" % workflow['name'])
 
         validate_url('Package', component['url'])
-    
+
     if component['type'] == 'script':
         # Rule 8
         if 'content' not in component and 'url' not in component:
@@ -116,6 +116,18 @@ def validate_component(component, workflow):
                                   Not found in %s" % workflow['name'])
         if 'url' in component:
             validate_url('Script', component['url'])
+
+    if component['type'] == 'restart_action':
+        # Rule 9
+        if 'action' not in component:
+            fail("'action' is a required key in a 'restart_action' component.")
+
+        else:
+            if component['action'] != 'none' and \
+                component['action'] != 'restart' and \
+                component['action'] != 'shutdown':
+                fail("restart_action is not one of 'none', 'shutdown' or 'restart' in workflow %s" \
+                                                                              % workflow['name'])
 
     if component['type'] == 'partition':
         # Rule 11
@@ -159,7 +171,7 @@ def validate_component(component, workflow):
             'first_boot' = True found in %s" % workflow['name'])
     except:
         pass
-    
+
     # Rule 19
     try:
         if (component['type'] == 'image') and (type(component['verify']) != bool):
@@ -185,14 +197,16 @@ def main():
     temp_dir = tempfile.mkdtemp()
     temp_plist = os.path.join(temp_dir, 'config.plist')
 
+    plist_url = None
     if plist.startswith('http://') or plist.startswith('https://'):
+        plist_url = plist
         temp_dir = tempfile.mkdtemp()
         cmd = ['/usr/bin/curl', '-fsSL', plist, '-o', temp_plist]
         task = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         proc = task.communicate()[0]
 
         if task.returncode != 0:
-            fail(proc)
+            fail("Download of %s failed with %s" % (plist, task.returncode))
         plist = temp_plist
 
     if not os.path.exists(plist):
@@ -275,9 +289,12 @@ def main():
     # Rule 20
     if 'background_image' in config:
         validate_url('Background image', config['background_image'])
-        
+
 
     # if we get this far, it looks good.
+    if plist_url != None:
+        plist = plist_url
+
     print "SUCCESS: %s looks like a valid Imagr configuration plist." % plist
 
 if __name__ == '__main__':

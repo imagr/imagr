@@ -13,9 +13,6 @@ import os
 
 
 _CD_APP = defaults.COCOADIALOG_PATH
-#_CD_APP = '/Users/grahamgilbert/Dropbox/src/Work/NetBootApp/cocoaDialog.app'
-
-#_CD = '%s/Contents/MacOS/CocoaDialog' % _CD_APP
 
 CD_BASE = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 _CD = os.path.join(CD_BASE, "cocoaDialog.app/Contents/MacOS/cocoaDialog")
@@ -98,7 +95,7 @@ class Dialog(object):
   width = property(GetWidth, SetWidth)
   height = property(GetHeight, SetHeight)
   not_string = property(GetNoString, SetNoString)
-  
+
 
   def GenerateCommand(self):
     """Generate the actual commands to execute.
