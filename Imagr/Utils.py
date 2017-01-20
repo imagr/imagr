@@ -397,31 +397,26 @@ def set_date():
             pass
 
     date_data = None
-    time_api_url = 'https://script.google.com/macros/s/AKfycbyd5AcbAnWi2Yn0xhFRbyzS4qMq1VucMVgVvhul5XqS9HkAyJY/exec?tz=UTC'
-
+    time_api_url = 'http://www.apple.com'
+    
     try:
-        date_data = urllib2.urlopen(time_api_url, timeout = 1).read()
+        request = urllib2.Request(time_api_url)
+        request.get_method = lambda : 'HEAD'
+        response = urllib2.urlopen(request, timeout=1)
+        date_data = response.info().getheader('Date')
     except:
         pass
 
     if date_data:
         try:
-            # Timestamp to epoch
-            utc_data = json.loads(date_data)
-            timestamp = datetime.datetime(
-                                        utc_data['year'],
-                                        utc_data['month'],
-                                        utc_data['day'],
-                                        utc_data['hours'],
-                                        utc_data['minutes'],
-                                        utc_data['seconds'],
-                                        0)
+            timestamp = datetime.datetime.strptime(date_data, '%a, %d %b %Y %H:%M:%S GMT')
             # date {month}{day}{hour}{minute}{year}
             formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
-
+            
             subprocess.call(['/bin/date', formatted_date])
         except:
             pass
+
 
 def getServerURL():
     return getPlistData('serverurl')
