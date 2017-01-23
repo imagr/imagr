@@ -324,7 +324,7 @@ class MainController(NSObject):
         pool = NSAutoreleasePool.alloc().init()
         self.volumes = macdisk.MountedVolumes()
         self.buildUtilitiesMenu()
-        Utils.set_date()
+        Utils.setDate()
         theURL = Utils.getServerURL()
 
         if theURL:
