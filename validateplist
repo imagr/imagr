@@ -25,6 +25,7 @@ This script will validate an Imagr configuration plist. Usage:
     #18 - If a destructive task comes after a non-destructive task, the admin should be warned
     #19 - If image components have a verify option it must be a bool
     #20 - Background images should have a valid url
+    #21 - Verify that named included workflows exist
 """
 
 import os
@@ -248,6 +249,7 @@ def main():
         fail('There are no workflows.')
 
     existing_names = []
+    seen_included_workflows = []
     for workflow in config['workflows']:
         # Rule 3
         if workflow['name'] in existing_names:
@@ -276,6 +278,9 @@ def main():
                                that comes after non destructive tasks. This may be intentional, \
                                 but the results of the previous actions may be removed from the \
                                       target disk.' % (component.get('type'), workflow['name'])
+            if component.get('type') == 'included_workflow':
+                if component.get('name') not in seen_included_workflows:
+                    seen_included_workflows.append(component.get('name'))
             seen_components.append(component)
 
     # Rule 16
@@ -289,6 +294,11 @@ def main():
     # Rule 20
     if 'background_image' in config:
         validate_url('Background image', config['background_image'])
+
+    # Rule 21
+    for seen_included_workflow in seen_included_workflows:
+        if seen_included_workflow not in existing_names:
+            fail('Included workflow %s is not defined' % seen_included_workflow)
 
 
     # if we get this far, it looks good.
