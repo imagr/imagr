@@ -327,27 +327,34 @@ class MainController(NSObject):
         pool = NSAutoreleasePool.alloc().init()
         self.volumes = Utils.mountedVolumes()
         self.buildUtilitiesMenu()
-        Utils.set_date()
         theURL = Utils.getServerURL()
 
         if theURL:
-            (plistData, error) = Utils.downloadFile(
-                theURL, username=self.authenticatedUsername, password=self.authenticatedPassword)
-            if error:
-                try:
-                    if error.reason[0] in [401, -1012, -1013]:
-                        # 401:   HTTP status code: authentication required
-                        # -1012: NSURLErrorDomain code "User cancelled authentication" -- returned
-                        #        when we try a given name and password and fail
-                        # -1013: NSURLErrorDomain code "User Authentication Required"
-                        NSLog("Configuration plist requires authentication.")
-                        # show authentication panel using the main thread
-                        self.performSelectorOnMainThread_withObject_waitUntilDone_(
-                            self.showAuthenticationPanel, None, YES)
-                        del pool
-                        return
-                except AttributeError, IndexError:
-                    pass
+            plistData = None
+            tries = 0
+            while (not plistData) and (tries < 3):
+                tries += 1
+                (plistData, error) = Utils.downloadFile(
+                    theURL, username=self.authenticatedUsername, password=self.authenticatedPassword)
+                if error:
+                    try:
+                        if error.reason[0] in [401, -1012, -1013]:
+                            # 401:   HTTP status code: authentication required
+                            # -1012: NSURLErrorDomain code "User cancelled authentication" -- returned
+                            #        when we try a given name and password and fail
+                            # -1013: NSURLErrorDomain code "User Authentication Required"
+                            NSLog("Configuration plist requires authentication.")
+                            # show authentication panel using the main thread
+                            self.performSelectorOnMainThread_withObject_waitUntilDone_(
+                                self.showAuthenticationPanel, None, YES)
+                            del pool
+                            return
+                        elif error.reason[0] < 0:
+                            NSLog("Failed to load configuration plist: %@", repr(error.reason))
+                            # Possibly ssl error due to a bad clock, try setting the time.
+                            Utils.setDate()
+                    except AttributeError, IndexError:
+                        pass
 
             if plistData:
                 try:

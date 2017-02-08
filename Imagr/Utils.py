@@ -383,23 +383,41 @@ def getPlistData(data):
     except:
         pass
 
-def set_date():
-    # Try setting system time to time.apple.com via NTP
-    try:
-        subprocess.check_call(['/usr/sbin/ntpdate', '-su', 'time.apple.com'])
+def setDate():
+    # Don't bother if we aren't running as root.
+    if os.getuid() != 0:
         return
-    except OSError:
-        pass # ntpupdate binary not found
-    except subprocess.CalledProcessError: # try NTP pool if time.apple.com fails
+    
+    def success():
+        NSLog("Time successfully set to %@", datetime.datetime.now())
+    
+    def failure():
+        NSLog("Failed to set time")
+    
+    # Try to set time with ntpdate.
+    time_servers = [
+        "time.apple.com",
+        "pool.ntp.org",
+    ]
+    for server in time_servers:
+        NSLog("Trying to set time with ntpdate from %@", server)
         try:
-            subprocess.check_call(['/usr/sbin/ntpdate', '-su', 'pool.ntp.org'])
+            subprocess.check_call(['/usr/sbin/ntpdate', '-su', server])
+            success()
             return
-        except:
-            pass
+        except OSError:
+            # Couldn't execute ntpdate, go to plan B.
+            break
+        except subprocess.CalledProcessError:
+            # Try next server.
+            continue
 
+    # ntpdate failed, so try making a HTTP request and then set the time from
+    # the response header's Date field.
     date_data = None
     time_api_url = 'http://www.apple.com'
     
+    NSLog("Trying to set time with http from %@", time_api_url)
     try:
         request = urllib2.Request(time_api_url)
         request.get_method = lambda : 'HEAD'
@@ -415,8 +433,12 @@ def set_date():
             formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
             
             subprocess.call(['/bin/date', formatted_date])
+            success()
+            return
         except:
             pass
+    
+    failure()
 
 
 def getServerURL():
