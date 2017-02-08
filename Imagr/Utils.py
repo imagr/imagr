@@ -29,6 +29,7 @@ import socket
 import urllib2
 import datetime
 import json
+import macdisk
 
 from gurl import Gurl
 
@@ -733,3 +734,30 @@ def copyFirstBoot(root, network=True, reboot=True):
         # Set the permisisons
         os.chmod(os.path.join(root, firstboot_dir, 'first-boot'), 0755)
         os.chown(os.path.join(root, firstboot_dir, 'first-boot'), 0, 0)
+
+
+def mountedVolumes():
+    """Return an array with information dictionaries for each mounted volume."""
+    volumes = []
+    cmd = ['/usr/sbin/diskutil', 'list', '-plist']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return volumes
+    
+    try:
+        plist = plistlib.readPlistFromString(output)
+        volumeNames = plist[u"VolumesFromDisks"]
+        for disk in plist[u"AllDisksAndPartitions"]:
+            if (u"MountPoint" in disk) and (disk.get(u"VolumeName") in volumeNames):
+                volumes.append(macdisk.Disk(disk[u"DeviceIdentifier"]))
+            for part in disk.get(u"Partitions", []):
+                if (u"MountPoint" in part) and (part.get(u"VolumeName") in volumeNames):
+                    volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
+        return volumes
+    except BaseException as e:
+        NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
+        return volumes

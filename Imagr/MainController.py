@@ -254,16 +254,19 @@ class MainController(NSObject):
             pass
         self.reloadVolumes()
 
-    def reloadVolumes(self):
-        self.volumes = macdisk.MountedVolumes()
-        self.chooseTargetDropDown.removeAllItems()
+    def validTargetVolumes(self):
         volume_list = []
         for volume in self.volumes:
             if volume.mountpoint != '/':
-                if volume.mountpoint.startswith("/Volumes"):
-                    if volume.mountpoint != '/Volumes':
-                        if volume.writable:
-                            volume_list.append(volume.mountpoint)
+                if volume.mountpoint.startswith("/Volumes/"):
+                    if volume.writable:
+                        volume_list.append(volume.mountpoint)
+        return volume_list
+
+    def reloadVolumes(self):
+        self.volumes = Utils.mountedVolumes()
+        self.chooseTargetDropDown.removeAllItems()
+        volume_list = self.validTargetVolumes()
         self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
         # reselect previously selected target if possible
         if self.targetVolume:
@@ -322,7 +325,7 @@ class MainController(NSObject):
 
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
-        self.volumes = macdisk.MountedVolumes()
+        self.volumes = Utils.mountedVolumes()
         self.buildUtilitiesMenu()
         Utils.set_date()
         theURL = Utils.getServerURL()
@@ -490,13 +493,7 @@ class MainController(NSObject):
     @objc.IBAction
     def chooseImagingTarget_(self, sender):
         self.chooseTargetDropDown.removeAllItems()
-        volume_list = []
-        for volume in self.volumes:
-            if volume.mountpoint != '/':
-                if volume.mountpoint.startswith("/Volumes"):
-                    if volume.mountpoint != '/Volumes':
-                        if volume.writable:
-                            volume_list.append(volume.mountpoint)
+        volume_list = self.validTargetVolumes()
          # No writable volumes, this is bad.
         if len(volume_list) == 0:
             alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
@@ -823,19 +820,7 @@ class MainController(NSObject):
         else:
             if self.should_update_volume_list == True:
                 NSLog("Refreshing volume list.")
-                # again, this needs to be refactored
-                self.volumes = macdisk.MountedVolumes()
-                self.chooseTargetDropDown.removeAllItems()
-                volume_list = []
-                for volume in self.volumes:
-                    if volume.mountpoint != '/':
-                        if volume.mountpoint.startswith("/Volumes"):
-                            if volume.mountpoint != '/Volumes':
-                                if volume.writable:
-                                    volume_list.append(volume.mountpoint)
-                self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
-                self.targetVolume = volume_list[0]
-                self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
+                self.reloadVolumes()
             self.openEndWorkflowPanel()
 
     def runComponent(self, item):
