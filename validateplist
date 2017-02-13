@@ -26,6 +26,7 @@ This script will validate an Imagr configuration plist. Usage:
     #19 - If image components have a verify option it must be a bool
     #20 - Background images should have a valid url
     #21 - Verify that named included workflows exist
+    #22 - Included workflow must contain 'name' or 'script' but not both, when 'script' is used it must not be empty
 """
 
 import os
@@ -180,6 +181,15 @@ def validate_component(component, workflow):
     except:
         pass
 
+    # Rule 22
+    if component['type'] == 'included_workflow':
+        if ('script' not in component) and ('name' not in component):
+            fail("'name' or 'script' is a required key in an 'included_workflow'")
+        elif ('script' in component) and ('name' in component):
+            fail("'name' and 'script' key can't be used together in the same 'included_workflow'")
+        elif ('script' in component) and (len(component['script']) == 0):
+            fail("'script' for 'included_workflow' must not be empty")
+
 def main():
     """
     Gimme some main
@@ -278,7 +288,7 @@ def main():
                                that comes after non destructive tasks. This may be intentional, \
                                 but the results of the previous actions may be removed from the \
                                       target disk.' % (component.get('type'), workflow['name'])
-            if component.get('type') == 'included_workflow':
+            if component.get('type') == 'included_workflow' and component.get('name') != None:
                 if component.get('name') not in seen_included_workflows:
                     seen_included_workflows.append(component.get('name'))
             seen_components.append(component)
