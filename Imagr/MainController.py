@@ -270,7 +270,7 @@ class MainController(NSObject):
         self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
         # reselect previously selected target if possible
         if self.targetVolume:
-            self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
+            self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume.mountpoint)
             selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
         else:
             selected_volume = volume_list[0]
