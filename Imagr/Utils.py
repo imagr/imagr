@@ -30,6 +30,7 @@ import urllib2
 import datetime
 import json
 import macdisk
+import objc
 
 from gurl import Gurl
 
@@ -516,7 +517,32 @@ def launchApp(app_path):
 
 
 def get_hardware_info():
-    '''Uses system profiler to get hardware info for this machine'''
+    
+    '''
+    system_profiler is not included in a 10.13 NetInstall NBI, therefore a new method of getting serial numer and model identifier is required
+    Thanks to frogor's work on how to access IOKit from python: https://gist.github.com/pudquick/c7dd1262bd81a32663f0
+    '''
+    
+    IOKit_bundle = NSBundle.bundleWithIdentifier_('com.apple.framework.IOKit')
+
+    functions = [("IOServiceGetMatchingService", b"II@"),
+                 ("IOServiceMatching", b"@*"),
+                 ("IORegistryEntryCreateCFProperty", b"@I@@I"),
+                ]
+
+    objc.loadBundleFunctions(IOKit_bundle, globals(), functions)
+
+    def io_key(keyname):
+        return IORegistryEntryCreateCFProperty(IOServiceGetMatchingService(0, IOServiceMatching("IOPlatformExpertDevice")), keyname, None, 0)
+    
+    hardware_info_plist = {}
+    hardware_info_plist['serial_number'] = io_key("IOPlatformSerialNumber")
+    hardware_info_plist['machine_model'] = str(io_key("model")).rstrip('\x00')
+        
+    return hardware_info_plist
+    
+    '''
+    Uses system profiler to get hardware info for this machine
     cmd = ['/usr/sbin/system_profiler', 'SPHardwareDataType', '-xml']
     proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
                             stdin=subprocess.PIPE,
@@ -531,7 +557,7 @@ def get_hardware_info():
         return sp_hardware_dict
     except Exception:
         return {}
-
+    '''
 
 def setup_logging():
     syslog = getPlistData('syslog')
