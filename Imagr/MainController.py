@@ -158,6 +158,9 @@ class MainController(NSObject):
             self.showBackgroundWindow()
 
         self.mainWindow.center()
+        self.mainWindow.setCanBecomeVisibleWithoutLogin_(True)
+        self.mainWindow.setLevel_(NSScreenSaverWindowLevel - 1)
+        self.mainWindow.orderFrontRegardless()
         # Run app startup - get the images, password, volumes - anything that takes a while
 
         self.progressText.setStringValue_("Application Starting...")
@@ -846,7 +849,11 @@ class MainController(NSObject):
             # Restore image
             if item.get('type') == 'image' and item.get('url'):
                 Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
-                self.Clone(item.get('url'), self.targetVolume, verify=item.get('verify', True))
+                self.Clone(
+                    item.get('url'),
+                    self.targetVolume,
+                    verify=item.get('verify', True)
+                )
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
@@ -950,7 +957,7 @@ class MainController(NSObject):
                         break
         else:
             included_workflow = item['name']
-       
+
         return included_workflow
 
     def runIncludedWorkflow(self, item):
@@ -1082,7 +1089,7 @@ class MainController(NSObject):
         self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
         # mount the target
         self.targetVolume.EnsureMountedWithRefresh()
-        
+
         package_name = os.path.basename(url)
         self.downloadAndInstallPackage(
             url, self.targetVolume.mountpoint,
