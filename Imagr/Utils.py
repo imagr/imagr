@@ -576,7 +576,7 @@ def replacePlaceholders(script, target, computer_name=None,
     if computer_name:
         placeholders['{{computer_name}}'] = computer_name
 
-    if keyboard_layout_id:
+    if isinstance(keyboard_layout_id, int):
         placeholders['{{keyboard_layout_id}}'] = keyboard_layout_id
 
     if keyboard_layout_name:
