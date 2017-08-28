@@ -419,7 +419,7 @@ def set_date():
             # date {month}{day}{hour}{minute}{year}
             formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
 
-            subprocess.call(['/bin/date', formatted_date])
+            _ = subprocess.Popen(['/bin/date', formatted_date], env={'TZ': 'GMT'}).communicate()
         except:
             pass
 
