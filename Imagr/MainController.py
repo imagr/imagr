@@ -553,7 +553,7 @@ class MainController(NSObject):
             if str(volume.mountpoint) == str(volume_name):
                 self.targetVolume = volume
                 break
-        NSLog("Imaging target is %@", self.targetVolume)
+        NSLog("Imaging target is %@", self.targetVolume.mountpoint)
 
 
     @objc.IBAction
@@ -817,7 +817,7 @@ class MainController(NSObject):
                 self.targetVolume.SetStartupDisk()
             except:
                 for volume in self.volumes:
-                    if str(volume.mountpoint) == str(self.targetVolume):
+                    if str(volume.mountpoint) == str(self.targetVolume.mountpoint):
                         volume.SetStartupDisk()
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
