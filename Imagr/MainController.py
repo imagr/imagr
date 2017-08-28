@@ -257,20 +257,23 @@ class MainController(NSObject):
             pass
         self.reloadVolumes()
 
-    def reloadVolumes(self):
-        self.volumes = macdisk.MountedVolumes()
-        self.chooseTargetDropDown.removeAllItems()
+    def validTargetVolumes(self):
         volume_list = []
         for volume in self.volumes:
             if volume.mountpoint != '/':
-                if volume.mountpoint.startswith("/Volumes"):
-                    if volume.mountpoint != '/Volumes':
-                        if volume.writable:
-                            volume_list.append(volume.mountpoint)
+                if volume.mountpoint.startswith("/Volumes/"):
+                    if volume.writable:
+                        volume_list.append(volume.mountpoint)
+        return volume_list
+
+    def reloadVolumes(self):
+        self.volumes = Utils.mountedVolumes()
+        self.chooseTargetDropDown.removeAllItems()
+        volume_list = self.validTargetVolumes()
         self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
         # reselect previously selected target if possible
         if self.targetVolume:
-            self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
+            self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume.mountpoint)
             selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
         else:
             selected_volume = volume_list[0]
@@ -325,29 +328,36 @@ class MainController(NSObject):
 
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
-        self.volumes = macdisk.MountedVolumes()
+        self.volumes = Utils.mountedVolumes()
         self.buildUtilitiesMenu()
-        Utils.set_date()
         theURL = Utils.getServerURL()
 
         if theURL:
-            (plistData, error) = Utils.downloadFile(
-                theURL, username=self.authenticatedUsername, password=self.authenticatedPassword)
-            if error:
-                try:
-                    if error.reason[0] in [401, -1012, -1013]:
-                        # 401:   HTTP status code: authentication required
-                        # -1012: NSURLErrorDomain code "User cancelled authentication" -- returned
-                        #        when we try a given name and password and fail
-                        # -1013: NSURLErrorDomain code "User Authentication Required"
-                        NSLog("Configuration plist requires authentication.")
-                        # show authentication panel using the main thread
-                        self.performSelectorOnMainThread_withObject_waitUntilDone_(
-                            self.showAuthenticationPanel, None, YES)
-                        del pool
-                        return
-                except AttributeError, IndexError:
-                    pass
+            plistData = None
+            tries = 0
+            while (not plistData) and (tries < 3):
+                tries += 1
+                (plistData, error) = Utils.downloadFile(
+                    theURL, username=self.authenticatedUsername, password=self.authenticatedPassword)
+                if error:
+                    try:
+                        if error.reason[0] in [401, -1012, -1013]:
+                            # 401:   HTTP status code: authentication required
+                            # -1012: NSURLErrorDomain code "User cancelled authentication" -- returned
+                            #        when we try a given name and password and fail
+                            # -1013: NSURLErrorDomain code "User Authentication Required"
+                            NSLog("Configuration plist requires authentication.")
+                            # show authentication panel using the main thread
+                            self.performSelectorOnMainThread_withObject_waitUntilDone_(
+                                self.showAuthenticationPanel, None, YES)
+                            del pool
+                            return
+                        elif error.reason[0] < 0:
+                            NSLog("Failed to load configuration plist: %@", repr(error.reason))
+                            # Possibly ssl error due to a bad clock, try setting the time.
+                            Utils.setDate()
+                    except AttributeError, IndexError:
+                        pass
 
             if plistData:
                 try:
@@ -493,13 +503,7 @@ class MainController(NSObject):
     @objc.IBAction
     def chooseImagingTarget_(self, sender):
         self.chooseTargetDropDown.removeAllItems()
-        volume_list = []
-        for volume in self.volumes:
-            if volume.mountpoint != '/':
-                if volume.mountpoint.startswith("/Volumes"):
-                    if volume.mountpoint != '/Volumes':
-                        if volume.writable:
-                            volume_list.append(volume.mountpoint)
+        volume_list = self.validTargetVolumes()
          # No writable volumes, this is bad.
         if len(volume_list) == 0:
             alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
@@ -552,7 +556,7 @@ class MainController(NSObject):
             if str(volume.mountpoint) == str(volume_name):
                 self.targetVolume = volume
                 break
-        NSLog("Imaging target is %@", self.targetVolume)
+        NSLog("Imaging target is %@", self.targetVolume.mountpoint)
 
 
     @objc.IBAction
@@ -816,7 +820,7 @@ class MainController(NSObject):
                 self.targetVolume.SetStartupDisk()
             except:
                 for volume in self.volumes:
-                    if str(volume.mountpoint) == str(self.targetVolume):
+                    if str(volume.mountpoint) == str(self.targetVolume.mountpoint):
                         volume.SetStartupDisk()
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
@@ -826,19 +830,7 @@ class MainController(NSObject):
         else:
             if self.should_update_volume_list == True:
                 NSLog("Refreshing volume list.")
-                # again, this needs to be refactored
-                self.volumes = macdisk.MountedVolumes()
-                self.chooseTargetDropDown.removeAllItems()
-                volume_list = []
-                for volume in self.volumes:
-                    if volume.mountpoint != '/':
-                        if volume.mountpoint.startswith("/Volumes"):
-                            if volume.mountpoint != '/Volumes':
-                                if volume.writable:
-                                    volume_list.append(volume.mountpoint)
-                self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
-                self.targetVolume = volume_list[0]
-                self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume)
+                self.reloadVolumes()
             self.openEndWorkflowPanel()
 
     def runComponent(self, item):

@@ -29,6 +29,8 @@ import socket
 import urllib2
 import datetime
 import json
+import macdisk
+import objc
 
 from gurl import Gurl
 
@@ -382,46 +384,62 @@ def getPlistData(data):
     except:
         pass
 
-def set_date():
-    # Try setting system time to time.apple.com via NTP
-    try:
-        subprocess.check_call(['/usr/sbin/ntpdate', '-su', 'time.apple.com'])
+def setDate():
+    # Don't bother if we aren't running as root.
+    if os.getuid() != 0:
         return
-    except OSError:
-        pass # ntpupdate binary not found
-    except subprocess.CalledProcessError: # try NTP pool if time.apple.com fails
+
+    def success():
+        NSLog("Time successfully set to %@", datetime.datetime.now())
+
+    def failure():
+        NSLog("Failed to set time")
+
+    # Try to set time with ntpdate.
+    time_servers = [
+        "time.apple.com",
+        "pool.ntp.org",
+    ]
+    for server in time_servers:
+        NSLog("Trying to set time with ntpdate from %@", server)
         try:
-            subprocess.check_call(['/usr/sbin/ntpdate', '-su', 'pool.ntp.org'])
+            subprocess.check_call(['/usr/sbin/ntpdate', '-su', server])
+            success()
             return
-        except:
-            pass
+        except OSError:
+            # Couldn't execute ntpdate, go to plan B.
+            break
+        except subprocess.CalledProcessError:
+            # Try next server.
+            continue
 
+    # ntpdate failed, so try making a HTTP request and then set the time from
+    # the response header's Date field.
     date_data = None
-    time_api_url = 'https://script.google.com/macros/s/AKfycbyd5AcbAnWi2Yn0xhFRbyzS4qMq1VucMVgVvhul5XqS9HkAyJY/exec?tz=UTC'
+    time_api_url = 'http://www.apple.com'
 
+    NSLog("Trying to set time with http from %@", time_api_url)
     try:
-        date_data = urllib2.urlopen(time_api_url, timeout = 1).read()
+        request = urllib2.Request(time_api_url)
+        request.get_method = lambda : 'HEAD'
+        response = urllib2.urlopen(request, timeout=1)
+        date_data = response.info().getheader('Date')
     except:
         pass
 
     if date_data:
         try:
-            # Timestamp to epoch
-            utc_data = json.loads(date_data)
-            timestamp = datetime.datetime(
-                                        utc_data['year'],
-                                        utc_data['month'],
-                                        utc_data['day'],
-                                        utc_data['hours'],
-                                        utc_data['minutes'],
-                                        utc_data['seconds'],
-                                        0)
+            timestamp = datetime.datetime.strptime(date_data, '%a, %d %b %Y %H:%M:%S GMT')
             # date {month}{day}{hour}{minute}{year}
             formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
 
             _ = subprocess.Popen(['/bin/date', formatted_date], env={'TZ': 'GMT'}).communicate()
+            return
         except:
             pass
+
+    failure()
+
 
 def getServerURL():
     return getPlistData('serverurl')
@@ -498,21 +516,29 @@ def launchApp(app_path):
 
 
 def get_hardware_info():
-    '''Uses system profiler to get hardware info for this machine'''
-    cmd = ['/usr/sbin/system_profiler', 'SPHardwareDataType', '-xml']
-    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
-                            stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, unused_error) = proc.communicate()
-    try:
-        plist = FoundationPlist.readPlistFromString(output)
-        # system_profiler xml is an array
-        sp_dict = plist[0]
-        items = sp_dict['_items']
-        sp_hardware_dict = items[0]
-        return sp_hardware_dict
-    except Exception:
-        return {}
+
+    """
+    system_profiler is not included in a 10.13 NetInstall NBI, therefore a new method of getting serial numer and model identifier is required
+    Thanks to frogor's work on how to access IOKit from python: https://gist.github.com/pudquick/c7dd1262bd81a32663f0
+    """
+
+    IOKit_bundle = NSBundle.bundleWithIdentifier_('com.apple.framework.IOKit')
+
+    functions = [("IOServiceGetMatchingService", b"II@"),
+                 ("IOServiceMatching", b"@*"),
+                 ("IORegistryEntryCreateCFProperty", b"@I@@I"),
+                ]
+
+    objc.loadBundleFunctions(IOKit_bundle, globals(), functions)
+
+    def io_key(keyname):
+        return IORegistryEntryCreateCFProperty(IOServiceGetMatchingService(0, IOServiceMatching("IOPlatformExpertDevice")), keyname, None, 0)
+
+    hardware_info_plist = {}
+    hardware_info_plist['serial_number'] = io_key("IOPlatformSerialNumber")
+    hardware_info_plist['machine_model'] = str(io_key("model")).rstrip('\x00')
+
+    return hardware_info_plist
 
 
 def setup_logging():
@@ -558,7 +584,7 @@ def replacePlaceholders(script, target, computer_name=None,
     if computer_name:
         placeholders['{{computer_name}}'] = computer_name
 
-    if keyboard_layout_id:
+    if isinstance(keyboard_layout_id, int):
         placeholders['{{keyboard_layout_id}}'] = keyboard_layout_id
 
     if keyboard_layout_name:
@@ -738,3 +764,30 @@ def copyFirstBoot(root, network=True, reboot=True):
         # Set the permisisons
         os.chmod(os.path.join(root, firstboot_dir, 'first-boot'), 0755)
         os.chown(os.path.join(root, firstboot_dir, 'first-boot'), 0, 0)
+
+
+def mountedVolumes():
+    """Return an array with information dictionaries for each mounted volume."""
+    volumes = []
+    cmd = ['/usr/sbin/diskutil', 'list', '-plist']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return volumes
+
+    try:
+        plist = plistlib.readPlistFromString(output)
+        volumeNames = plist[u"VolumesFromDisks"]
+        for disk in plist[u"AllDisksAndPartitions"]:
+            if (u"MountPoint" in disk) and (disk.get(u"VolumeName") in volumeNames):
+                volumes.append(macdisk.Disk(disk[u"DeviceIdentifier"]))
+            for part in disk.get(u"Partitions", []):
+                if (u"MountPoint" in part) and (part.get(u"VolumeName") in volumeNames):
+                    volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
+        return volumes
+    except BaseException as e:
+        NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
+        return volumes
