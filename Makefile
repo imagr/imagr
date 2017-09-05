@@ -17,6 +17,7 @@ INDEX="5001"
 VALIDATE=True
 SYSLOG=none
 TMPMOUNT="/private/tmp/imagr-mount"
+STARTTERMINAL=False
 
 -include config.mk
 
@@ -113,7 +114,12 @@ endif
 
 pkg-dir:
 	mkdir -p Packages/Extras
+ifeq ($(STARTTERMINAL),True)
+	printf '%s\n%s' '#!/bin/bash' '/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal' > Packages/Extras/rc.imaging
+	cp -r /Applications/Utilities/Console.app ./Packages
+else
 	printf '%s\n%s' '#!/bin/bash' '/System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr' > Packages/Extras/rc.imaging
+endif
 	cp ./com.grahamgilbert.Imagr.plist Packages/
 ifeq ($(BUILD),Release)
 	$(MAKE) dl
