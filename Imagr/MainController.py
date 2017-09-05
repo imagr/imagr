@@ -159,10 +159,7 @@ class MainController(NSObject):
 
         self.mainWindow.center()
         self.mainWindow.setCanBecomeVisibleWithoutLogin_(True)
-        self.mainWindow.setLevel_(NSScreenSaverWindowLevel - 1)
-        self.mainWindow.orderFrontRegardless()
         # Run app startup - get the images, password, volumes - anything that takes a while
-
         self.progressText.setStringValue_("Application Starting...")
         self.chooseWorkflowDropDown.removeAllItems()
         self.progressIndicator.setIndeterminate_(True)
@@ -328,8 +325,16 @@ class MainController(NSObject):
 
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
+        # self.buildUtilitiesMenu()
+        items = ['Terminal.app', 'Console.app']
+        for item in items:
+            if item.endswith('.app'):
+                item_name = os.path.splitext(item)[0]
+                new_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+                    item_name, self.runUtilityFromMenu_, u'')
+                new_item.setTarget_(self)
+                self.utilities_menu.addItem_(new_item)
         self.volumes = Utils.mountedVolumes()
-        self.buildUtilitiesMenu()
         theURL = Utils.getServerURL()
 
         if theURL:
