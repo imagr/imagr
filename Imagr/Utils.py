@@ -175,7 +175,6 @@ def NSLogWrapper(message):
     '''trigger string substitution'''
     NSLog('%@', message)
 
-
 def get_url(url, destinationpath, message=None, follow_redirects=False,
             progress_method=None, additional_headers=None, username=None,
             password=None):
@@ -442,7 +441,9 @@ def setDate():
 
 
 def getServerURL():
-    return getPlistData('serverurl')
+    data = getPlistData('serverurl')
+    NSLog('Report: %@', data)
+    return data
 
 
 def getReportURL():
@@ -766,6 +767,35 @@ def copyFirstBoot(root, network=True, reboot=True):
         os.chown(os.path.join(root, firstboot_dir, 'first-boot'), 0, 0)
 
 
+def is_apfs(source):
+    """
+    Returns true if source image is AFPS
+    """
+    isApfs = False
+    cmd = ['/usr/bin/hdiutil', 'imageinfo', '-plist', source]
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return isApfs
+    try:
+        plist = plistlib.readPlistFromString(output)
+        if 'partitions' in plist:
+            for partition in plist['partitions'].iteritems():
+
+                if partition[0] == 'partitions':
+                    for item in partition[1]:
+                        hint = item.get('partition-hint', '')
+                        if hint == 'Apple_APFS':
+                            isApfs = True
+
+    except Exception as e:
+        NSLog(u"Failed to get disk image format %@", str(e))
+        return isApfs
+    NSLog(u"Result of isApfs is %@", str(isApfs))
+    return isApfs
 def mountedVolumes():
     """Return an array with information dictionaries for each mounted volume."""
     volumes = []
@@ -787,7 +817,14 @@ def mountedVolumes():
             for part in disk.get(u"Partitions", []):
                 if (u"MountPoint" in part) and (part.get(u"VolumeName") in volumeNames):
                     volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
-        return volumes
+            for part in disk.get(u"APFSVolumes", []):
+                if (u"MountPoint" in part) and (part.get(u"VolumeName") in volumeNames):
+                    volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
+        # print volumes
+        # volumes = [disk for disk in volumes if not disk.mountpoint in APFSVolumesToHide]
+        # print volumes
+
     except BaseException as e:
         NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
-        return volumes
+
+    return volumes

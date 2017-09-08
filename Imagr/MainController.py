@@ -325,15 +325,7 @@ class MainController(NSObject):
 
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
-        # self.buildUtilitiesMenu()
-        items = ['Terminal.app', 'Console.app']
-        for item in items:
-            if item.endswith('.app'):
-                item_name = os.path.splitext(item)[0]
-                new_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
-                    item_name, self.runUtilityFromMenu_, u'')
-                new_item.setTarget_(self)
-                self.utilities_menu.addItem_(new_item)
+        self.buildUtilitiesMenu()
         self.volumes = Utils.mountedVolumes()
         theURL = Utils.getServerURL()
 
@@ -1036,6 +1028,12 @@ class MainController(NSObject):
         else:
             raise macdisk.MacDiskError("target is not a Disk object")
 
+        if Utils.is_apfs(source):
+            NSLog("%@","Source is APFS")
+            # we need to restore to a whole disk here
+            if not self.targetVolume.wholedisk:
+                NSLog("%@","Source is not a whole disk")
+                target_ref = "/dev/%s" % self.targetVolume._attributes['ParentWholeDisk']
         command = ["/usr/sbin/asr", "restore", "--source", str(source),
                    "--target", target_ref, "--noprompt", "--puppetstrings"]
 
