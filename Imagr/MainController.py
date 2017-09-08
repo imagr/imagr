@@ -158,8 +158,8 @@ class MainController(NSObject):
             self.showBackgroundWindow()
 
         self.mainWindow.center()
+        self.mainWindow.setCanBecomeVisibleWithoutLogin_(True)
         # Run app startup - get the images, password, volumes - anything that takes a while
-
         self.progressText.setStringValue_("Application Starting...")
         self.chooseWorkflowDropDown.removeAllItems()
         self.progressIndicator.setIndeterminate_(True)
@@ -325,8 +325,8 @@ class MainController(NSObject):
 
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
-        self.volumes = Utils.mountedVolumes()
         self.buildUtilitiesMenu()
+        self.volumes = Utils.mountedVolumes()
         theURL = Utils.getServerURL()
 
         if theURL:
@@ -838,7 +838,11 @@ class MainController(NSObject):
             # Restore image
             if item.get('type') == 'image' and item.get('url'):
                 Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
-                self.Clone(item.get('url'), self.targetVolume, verify=item.get('verify', True))
+                self.Clone(
+                    item.get('url'),
+                    self.targetVolume,
+                    verify=item.get('verify', True)
+                )
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
@@ -942,7 +946,7 @@ class MainController(NSObject):
                         break
         else:
             included_workflow = item['name']
-       
+
         return included_workflow
 
     def runIncludedWorkflow(self, item):
@@ -1024,6 +1028,12 @@ class MainController(NSObject):
         else:
             raise macdisk.MacDiskError("target is not a Disk object")
 
+        if Utils.is_apfs(source):
+            NSLog("%@","Source is APFS")
+            # we need to restore to a whole disk here
+            if not self.targetVolume.wholedisk:
+                NSLog("%@","Source is not a whole disk")
+                target_ref = "/dev/%s" % self.targetVolume._attributes['ParentWholeDisk']
         command = ["/usr/sbin/asr", "restore", "--source", str(source),
                    "--target", target_ref, "--noprompt", "--puppetstrings"]
 
@@ -1074,7 +1084,7 @@ class MainController(NSObject):
         self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
         # mount the target
         self.targetVolume.EnsureMountedWithRefresh()
-        
+
         package_name = os.path.basename(url)
         self.downloadAndInstallPackage(
             url, self.targetVolume.mountpoint,

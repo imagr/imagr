@@ -175,7 +175,6 @@ def NSLogWrapper(message):
     '''trigger string substitution'''
     NSLog('%@', message)
 
-
 def get_url(url, destinationpath, message=None, follow_redirects=False,
             progress_method=None, additional_headers=None, username=None,
             password=None):
@@ -388,13 +387,13 @@ def setDate():
     # Don't bother if we aren't running as root.
     if os.getuid() != 0:
         return
-    
+
     def success():
         NSLog("Time successfully set to %@", datetime.datetime.now())
-    
+
     def failure():
         NSLog("Failed to set time")
-    
+
     # Try to set time with ntpdate.
     time_servers = [
         "time.apple.com",
@@ -417,7 +416,7 @@ def setDate():
     # the response header's Date field.
     date_data = None
     time_api_url = 'http://www.apple.com'
-    
+
     NSLog("Trying to set time with http from %@", time_api_url)
     try:
         request = urllib2.Request(time_api_url)
@@ -432,18 +431,19 @@ def setDate():
             timestamp = datetime.datetime.strptime(date_data, '%a, %d %b %Y %H:%M:%S GMT')
             # date {month}{day}{hour}{minute}{year}
             formatted_date = datetime.datetime.strftime(timestamp, '%m%d%H%M%y')
-            
-            subprocess.call(['/bin/date', formatted_date])
-            success()
+
+            _ = subprocess.Popen(['/bin/date', formatted_date], env={'TZ': 'GMT'}).communicate()
             return
         except:
             pass
-    
+
     failure()
 
 
 def getServerURL():
-    return getPlistData('serverurl')
+    data = getPlistData('serverurl')
+    NSLog('Report: %@', data)
+    return data
 
 
 def getReportURL():
@@ -517,12 +517,12 @@ def launchApp(app_path):
 
 
 def get_hardware_info():
-    
+
     """
     system_profiler is not included in a 10.13 NetInstall NBI, therefore a new method of getting serial numer and model identifier is required
     Thanks to frogor's work on how to access IOKit from python: https://gist.github.com/pudquick/c7dd1262bd81a32663f0
     """
-    
+
     IOKit_bundle = NSBundle.bundleWithIdentifier_('com.apple.framework.IOKit')
 
     functions = [("IOServiceGetMatchingService", b"II@"),
@@ -534,11 +534,11 @@ def get_hardware_info():
 
     def io_key(keyname):
         return IORegistryEntryCreateCFProperty(IOServiceGetMatchingService(0, IOServiceMatching("IOPlatformExpertDevice")), keyname, None, 0)
-    
+
     hardware_info_plist = {}
     hardware_info_plist['serial_number'] = io_key("IOPlatformSerialNumber")
     hardware_info_plist['machine_model'] = str(io_key("model")).rstrip('\x00')
-        
+
     return hardware_info_plist
 
 
@@ -767,6 +767,35 @@ def copyFirstBoot(root, network=True, reboot=True):
         os.chown(os.path.join(root, firstboot_dir, 'first-boot'), 0, 0)
 
 
+def is_apfs(source):
+    """
+    Returns true if source image is AFPS
+    """
+    isApfs = False
+    cmd = ['/usr/bin/hdiutil', 'imageinfo', '-plist', source]
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return isApfs
+    try:
+        plist = plistlib.readPlistFromString(output)
+        if 'partitions' in plist:
+            for partition in plist['partitions'].iteritems():
+
+                if partition[0] == 'partitions':
+                    for item in partition[1]:
+                        hint = item.get('partition-hint', '')
+                        if hint == 'Apple_APFS':
+                            isApfs = True
+
+    except Exception as e:
+        NSLog(u"Failed to get disk image format %@", str(e))
+        return isApfs
+    NSLog(u"Result of isApfs is %@", str(isApfs))
+    return isApfs
 def mountedVolumes():
     """Return an array with information dictionaries for each mounted volume."""
     volumes = []
@@ -778,7 +807,7 @@ def mountedVolumes():
     if proc.returncode:
         NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
         return volumes
-    
+
     try:
         plist = plistlib.readPlistFromString(output)
         volumeNames = plist[u"VolumesFromDisks"]
@@ -788,7 +817,14 @@ def mountedVolumes():
             for part in disk.get(u"Partitions", []):
                 if (u"MountPoint" in part) and (part.get(u"VolumeName") in volumeNames):
                     volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
-        return volumes
+            for part in disk.get(u"APFSVolumes", []):
+                if (u"MountPoint" in part) and (part.get(u"VolumeName") in volumeNames):
+                    volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
+        # print volumes
+        # volumes = [disk for disk in volumes if not disk.mountpoint in APFSVolumesToHide]
+        # print volumes
+
     except BaseException as e:
         NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
-        return volumes
+
+    return volumes
