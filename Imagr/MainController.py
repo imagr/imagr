@@ -1028,14 +1028,28 @@ class MainController(NSObject):
         else:
             raise macdisk.MacDiskError("target is not a Disk object")
 
+        is_apfs = False
         if Utils.is_apfs(source):
             NSLog("%@","Source is APFS")
+            is_apfs = True
             # we need to restore to a whole disk here
             if not self.targetVolume.wholedisk:
                 NSLog("%@","Source is not a whole disk")
                 target_ref = "/dev/%s" % self.targetVolume._attributes['ParentWholeDisk']
         command = ["/usr/sbin/asr", "restore", "--source", str(source),
                    "--target", target_ref, "--noprompt", "--puppetstrings"]
+
+
+        if self.targetVolume._attributes['FilesystemType'] == 'hfs' and\
+        is_apfs == True:
+            self.errorMessage = "%s is formatted as HFS and you are trying to restore an APFS disk image" % str(self.targetVolume.mountpoint)
+            self.targetVolume.EnsureMountedWithRefresh()
+            return False
+        elif self.targetVolume._attributes['FilesystemType'] == 'apfs' and\
+        is_apfs == False:
+            self.errorMessage = "%s is formatted as APFS and you are trying to restore an HFS disk image" % str(self.targetVolume.mountpoint)
+            self.targetVolume.EnsureMountedWithRefresh()
+            return False
 
         if erase:
             # check we can unmount the target... may as well fail here than later.
