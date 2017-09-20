@@ -1150,7 +1150,7 @@ class MainController(NSObject):
             # Install it
             retcode = self.installPkg(downloaded_file, target, progress_method=progress_method)
             if retcode != 0:
-                self.errorMessage = "Couldn't install %s" % pkg
+                self.errorMessage = "Couldn't install %s" % downloaded_file
                 return False
             # Clean up after ourselves
             shutil.rmtree(temp_dir)
