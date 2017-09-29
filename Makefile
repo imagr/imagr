@@ -4,7 +4,7 @@
 
 URL="http://192.168.178.135/imagr_config.plist"
 REPORTURL=none
-APP="/Applications/Install macOS Sierra.app"
+APP="/Applications/Install macOS High Sierra.app"
 OUTPUT=~/Desktop
 NBI="Imagr"
 DMGPATH=none
