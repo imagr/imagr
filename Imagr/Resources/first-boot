@@ -98,7 +98,7 @@ Imagr First Boot %s
     sleep_time = 20
     if os.listdir(items_dir):
         # We're installing, wait to see the output
-        for item in os.listdir(items_dir):
+        for item in sorted(os.listdir(items_dir)):
             if item.endswith(".pkg") or item.endswith(".mpkg"):
                 log.info(('%%{color=magenta}Installing %s...') % item)
                 package_path = os.path.join(items_dir, item)
