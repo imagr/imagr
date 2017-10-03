@@ -81,7 +81,7 @@ dmg: build
 	cp ./get_locale /tmp/imagr-build/Tools
 	chmod +x /tmp/imagr-build/Tools/validateplist
 	chmod +x /tmp/imagr-build/Tools/get_locale
-	hdiutil create -srcfolder /tmp/imagr-build -volname "Imagr" -format UDZO -o Imagr.dmg
+	hdiutil create -srcfolder /tmp/imagr-build -volname "Imagr" -fs HFS+ -format UDZO -o Imagr.dmg
 	mv Imagr.dmg \
 		"Imagr-$(shell /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "./build/Release/Imagr.app/Contents/Info.plist").dmg"
 	rm -rf /tmp/imagr-build
