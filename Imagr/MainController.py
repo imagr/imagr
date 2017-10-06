@@ -841,7 +841,9 @@ class MainController(NSObject):
                 self.Clone(
                     item.get('url'),
                     self.targetVolume,
-                    verify=item.get('verify', True)
+                    verify=item.get('verify', True),
+                    ramdisk=item.get('ramdisk', True),
+                    ramdiskbytes=item.get('ramdiskbytes')
                 )
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
@@ -1004,11 +1006,12 @@ class MainController(NSObject):
         self.theTabView.selectTabViewItem_(self.mainTab)
         self.workflowOnThreadPrep()
 
-    def Clone(self, source, target, erase=True, verify=True, show_activity=True):
+    def Clone(self, source, target, erase=True, verify=True,
+              show_activity=True, ramdisk=False, ramdiskbytes=None):
         """A wrapper around 'asr' to clone one disk object onto another.
 
-        We run with --puppetstrings so that we get non-buffered output that we can
-        actually read when show_activity=True.
+        We run with --puppetstrings so that we get non-buffered output that we
+        can actually read when show_activity=True.
 
         Args:
             source: A Disk or Image object.
@@ -1027,6 +1030,56 @@ class MainController(NSObject):
             target_ref = "/dev/%s" % self.targetVolume.deviceidentifier
         else:
             raise macdisk.MacDiskError("target is not a Disk object")
+
+        if ramdisk:
+            # Create a 7GB RAM disk, unless overriden. This should be
+            # sufficient for a base AutoDMG.
+            if ramdiskbytes:
+                sectors = int(ramdiskbytes) / 512
+            else:
+                sectors = 7516192768 / 512
+            ramstring = "ram://%s" % str(sectors)
+            NSLog(u"Amount of Sectors for RAM Disk is %@", str(sectors))
+            ramattachcommand = ["/usr/bin/hdiutil", "attach", "-nomount",
+                                ramstring]
+            ramattach = subprocess.Popen(ramattachcommand,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
+            devdisk = ramattach.communicate()
+            # hdiutil returns some really crappy things from stdout
+            # Ex: ('/dev/disk20     \t         \t\n', '')
+            devdiskstr = devdisk[0].split(' ')[0]
+
+            if Utils.is_apfs(source) is True:
+                NSLog(u"Formatting RAM Disk as APFS at %@", devdiskstr)
+                ramformatcommand = ["/sbin/newfs_apfs", "-v", "ramdisk",
+                                    devdiskstr]
+                ramformat = subprocess.Popen(ramformatcommand,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE)
+                NSLog(u"Mounting APFS RAM Disk %@", devdiskstr)
+                rammountcommand = ["/usr/sbin/diskutil", "mount", devdiskstr]
+                rammount = subprocess.Popen(rammountcommand,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
+            else:
+                NSLog(u"Formatting RAM Disk as HFS at %@", devdiskstr)
+                ramformatcommand = ["/sbin/newfs_hfs", "-v", "ramdisk",
+                                    devdiskstr]
+                ramformat = subprocess.Popen(ramformatcommand,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE)
+                NSLog(u"Mounting HFS RAM Disk %@", devdiskstr)
+                rammountcommand = ["/usr/sbin/diskutil", "mount", devdiskstr]
+                rammount = subprocess.Popen(rammountcommand,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
+            targetpath = '/Volumes/ramdisk'
+            NSLog(u"Downloading DMG file from %@", str(source))
+            sourceram = self.downloadDMG(
+                source, targetpath,
+                progress_method=self.updateProgressTitle_Percent_Detail_('Downloading %s' % source, -1, ''))
+            source = sourceram
 
         is_apfs = False
         if Utils.is_apfs(source):
@@ -1154,6 +1207,22 @@ class MainController(NSObject):
                 return False
             # Clean up after ourselves
             shutil.rmtree(temp_dir)
+
+
+    def downloadDMG(self, url, target, counter):
+        if not os.path.basename(url).endswith('.dmg'):
+            self.errorMessage = "%s doesn't end with either '.dmg'" % url
+            return False
+        if os.path.basename(url).endswith('.dmg'):
+            # Download it
+            dmgname = os.path.basename(url)
+            (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(target,
+            dmgname))
+            if error:
+                self.errorMessage = "Couldn't download - %s \n %s" % (url, error)
+                return False
+        return downloaded_file
+
 
     def downloadAndCopyPackage(self, item, counter):
         self.updateProgressTitle_Percent_Detail_(
