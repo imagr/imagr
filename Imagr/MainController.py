@@ -1076,9 +1076,7 @@ class MainController(NSObject):
                                             stderr=subprocess.PIPE)
             targetpath = '/Volumes/ramdisk'
             NSLog(u"Downloading DMG file from %@", str(source))
-            sourceram = self.downloadDMG(
-                source, targetpath,
-                progress_method=self.updateProgressTitle_Percent_Detail_('Downloading %s' % source, -1, ''))
+            sourceram = self.downloadDMG(source, targetpath)
             source = sourceram
 
         is_apfs = False
@@ -1209,19 +1207,20 @@ class MainController(NSObject):
             shutil.rmtree(temp_dir)
 
 
-    def downloadDMG(self, url, target, counter):
+    def downloadDMG(self, url, target):
         if not os.path.basename(url).endswith('.dmg'):
             self.errorMessage = "%s doesn't end with either '.dmg'" % url
             return False
         if os.path.basename(url).endswith('.dmg'):
             # Download it
             dmgname = os.path.basename(url)
-            (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(target,
-            dmgname))
+            (dmg, error) = Utils.downloadChunks(url, os.path.join(target,
+                                                                  dmgname),
+                                                progress_method=self.updateProgressTitle_Percent_Detail_)
             if error:
-                self.errorMessage = "Couldn't download - %s \n %s" % (url, error)
+                self.errorMessage="Couldn't download - %s \n %s" % (url, error)
                 return False
-        return downloaded_file
+        return dmg
 
 
     def downloadAndCopyPackage(self, item, counter):
