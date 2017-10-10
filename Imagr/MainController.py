@@ -15,6 +15,7 @@ from Foundation import *
 from AppKit import *
 from Cocoa import *
 from Quartz.CoreGraphics import *
+import random
 import subprocess
 import sys
 import macdisk
@@ -1031,52 +1032,72 @@ class MainController(NSObject):
             raise macdisk.MacDiskError("target is not a Disk object")
 
         if ramdisk:
-            # Create a 7GB RAM disk, unless overriden. This should be
-            # sufficient for a base AutoDMG.
-            if ramdiskbytes:
-                sectors = int(ramdiskbytes) / 512
+            sysctlcommand = ["/usr/sbin/sysctl", "hw.memsize"]
+            sysctl = subprocess.Popen(sysctlcommand,
+                                      stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE)
+            memsizetuple = sysctl.communicate()
+            # sysctl returns crappy things from stdout.
+            # Ex: ('hw.memsize: 1111111\n', '')
+            memsize = int(
+                memsizetuple[0].split('\n')[0].replace('hw.memsize: ', ''))
+            NSLog(u"Total Memory is %@", str(memsize))
+            # Assume netinstall uses at least 500MB of RAM.
+            availablemem = memsize - 524288000
+            NSLog(u"Available Memory for image is %@", str(availablemem))
+            filesize = Utils.getDMGSize(source)[0]
+            NSLog(u"Required Memory for image is %@", str(filesize))
+            if filesize is False:
+                NSLog(u"Error when calculating image size.")
+                NSLog(u"Using asr instead of gurl...")
+            elif int(filesize) > availablemem:
+                NSLog(u"Available Memory is not sufficient for image size. Using asr instead of gurl...")
             else:
-                sectors = 7516192768 / 512
-            ramstring = "ram://%s" % str(sectors)
-            NSLog(u"Amount of Sectors for RAM Disk is %@", str(sectors))
-            ramattachcommand = ["/usr/bin/hdiutil", "attach", "-nomount",
-                                ramstring]
-            ramattach = subprocess.Popen(ramattachcommand,
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.PIPE)
-            devdisk = ramattach.communicate()
-            # hdiutil returns some really crappy things from stdout
-            # Ex: ('/dev/disk20     \t         \t\n', '')
-            devdiskstr = devdisk[0].split(' ')[0]
+                sectors = filesize / 512
+                ramstring = "ram://%s" % str(sectors)
+                NSLog(u"Amount of Sectors for RAM Disk is %@", str(sectors))
+                ramattachcommand = ["/usr/bin/hdiutil", "attach", "-nomount",
+                                    ramstring]
+                ramattach = subprocess.Popen(ramattachcommand,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE)
+                devdisk = ramattach.communicate()
+                # hdiutil returns some really crappy things from stdout
+                # Ex: ('/dev/disk20     \t         \t\n', '')
+                devdiskstr = devdisk[0].split(' ')[0]
+                randomnum = random.randint(1000000, 10000000)
+                ramdiskvolname = "ramdisk" + str(randomnum)
 
-            if Utils.is_apfs(source) is True:
-                NSLog(u"Formatting RAM Disk as APFS at %@", devdiskstr)
-                ramformatcommand = ["/sbin/newfs_apfs", "-v", "ramdisk",
-                                    devdiskstr]
-                ramformat = subprocess.Popen(ramformatcommand,
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE)
-                NSLog(u"Mounting APFS RAM Disk %@", devdiskstr)
-                rammountcommand = ["/usr/sbin/diskutil", "mount", devdiskstr]
-                rammount = subprocess.Popen(rammountcommand,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
-            else:
-                NSLog(u"Formatting RAM Disk as HFS at %@", devdiskstr)
-                ramformatcommand = ["/sbin/newfs_hfs", "-v", "ramdisk",
-                                    devdiskstr]
-                ramformat = subprocess.Popen(ramformatcommand,
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE)
-                NSLog(u"Mounting HFS RAM Disk %@", devdiskstr)
-                rammountcommand = ["/usr/sbin/diskutil", "mount", devdiskstr]
-                rammount = subprocess.Popen(rammountcommand,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
-            targetpath = '/Volumes/ramdisk'
-            NSLog(u"Downloading DMG file from %@", str(source))
-            sourceram = self.downloadDMG(source, targetpath)
-            source = sourceram
+                if Utils.is_apfs(source) is True:
+                    NSLog(u"Formatting RAM Disk as APFS at %@", devdiskstr)
+                    ramformatcommand = ["/sbin/newfs_apfs", "-v",
+                                        ramdiskvolname, devdiskstr]
+                    ramformat = subprocess.Popen(ramformatcommand,
+                                                 stdout=subprocess.PIPE,
+                                                 stderr=subprocess.PIPE)
+                    NSLog(u"Mounting APFS RAM Disk %@", devdiskstr)
+                    rammountcommand = ["/usr/sbin/diskutil", "mount",
+                                       devdiskstr]
+                    rammount = subprocess.Popen(rammountcommand,
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE)
+                else:
+                    NSLog(u"Formatting RAM Disk as HFS at %@", devdiskstr)
+                    ramformatcommand = ["/sbin/newfs_hfs", "-v",
+                                        ramdiskvolname, devdiskstr]
+                    ramformat = subprocess.Popen(ramformatcommand,
+                                                 stdout=subprocess.PIPE,
+                                                 stderr=subprocess.PIPE)
+                    NSLog(u"Mounting HFS RAM Disk %@", devdiskstr)
+                    rammountcommand = ["/usr/sbin/diskutil", "mount",
+                                       devdiskstr]
+                    rammount = subprocess.Popen(rammountcommand,
+                                                stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE)
+                targetpath = os.path.join('/Volumes', ramdiskvolname)
+                NSLog(u"Downloading DMG file from %@", str(source))
+                sourceram = self.downloadDMG(source, targetpath)
+                source = sourceram
 
         is_apfs = False
         if Utils.is_apfs(source):
