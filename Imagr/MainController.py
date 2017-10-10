@@ -1053,7 +1053,7 @@ class MainController(NSObject):
             elif int(filesize) > availablemem:
                 NSLog(u"Available Memory is not sufficient for image size. Using asr instead of gurl...")
             else:
-                sectors = filesize / 512
+                sectors = int(filesize) / 512
                 ramstring = "ram://%s" % str(sectors)
                 NSLog(u"Amount of Sectors for RAM Disk is %@", str(sectors))
                 ramattachcommand = ["/usr/bin/hdiutil", "attach", "-nomount",
