@@ -842,8 +842,7 @@ class MainController(NSObject):
                     item.get('url'),
                     self.targetVolume,
                     verify=item.get('verify', True),
-                    ramdisk=item.get('ramdisk', True),
-                    ramdiskbytes=item.get('ramdiskbytes')
+                    ramdisk=item.get('ramdisk', False),
                 )
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
