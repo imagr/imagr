@@ -1184,8 +1184,6 @@ class MainController(NSObject):
             self.errorMessage = "Error copying first boot package %s - %s" % (url, error)
             return False
 
-
-
     def downloadPackage(self, url, target, number, progress_method=None, additional_headers=None):
         error = None
         dest_dir = os.path.join(target, 'usr/local/first-boot/items')

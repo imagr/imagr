@@ -23,7 +23,9 @@ Support for using startosinstall to install macOS.
 
 # stdlib imports
 import os
+import shutil
 import subprocess
+from distutils import version
 
 # PyObjC bindings
 from Foundation import NSLog
@@ -70,6 +72,86 @@ def get_os_version(app_path):
         return ''
 
 
+class PkgCachingError(Exception):
+    '''Error to return if we have a problem caching a pkg for startosinstall'''
+    pass
+
+
+def cache_pkg(url, dest_dir, progress_method=None):
+    '''Download and cache a package'''
+    error = None
+    package_name = os.path.basename(url)
+    os.umask(0002)
+    pkgpath = os.path.join(dest_dir, package_name)
+    (_, error) = Utils.downloadChunks(
+        url, pkgpath, progress_method=progress_method)
+    if error:
+        raise PkgCachingError(
+            'Error downloading %s - %s' % (url, error))
+    return pkgpath
+
+
+def cache_pkg_from_dmg(url, dest_dir):
+    '''Download and cache a package wrapped in a dmg'''
+    # We're going to mount the dmg
+    try:
+        dmgmountpoints = Utils.mountdmg(url)
+        dmgmountpoint = dmgmountpoints[0]
+    except:
+        raise PkgCachingError('Couldn\'t mount %s' % url)
+
+    # Cache the first pkg found on the dmg
+    pkg_list = [item for item in os.listdir(dmgmountpoint)
+                if item.endswith(('.pkg', '.mpkg'))]
+    if len(pkg_list) == 0:
+        raise PkgCachingError('No packages found on %s' % url)
+    if len(pkg_list) > 1:
+        raise PkgCachingError('More than one package found on %s' % url)
+
+    pkg = pkg_list[0]
+    source_file = os.path.join(dmgmountpoint, pkg)
+    if not os.path.isfile(source_file):
+        raise PkgCachingError(
+            'Non-flat package %s found on %s' % (pkg, url))
+
+    dest_file = os.path.join(dest_dir, pkg)
+    try:
+        shutil.copy(source_file, dest_file)
+    except Exception, err:
+        raise PkgCachingError('Couldn\'t copy %s: %s' % (pkg, unicode(err)))
+
+    # Unmount it
+    try:
+        Utils.unmountdmg(dmgmountpoint)
+    except:
+        raise PkgCachingError('Couldn\'t unmount %s' % dmgmountpoint)
+
+    return dest_file
+
+
+def download_and_cache_pkgs(pkgurls, target, progress_method=None):
+    '''Given a list of urls to packages, download the pkgs and stash them
+    on the target volume. Return a list of the stashed paths.
+    Raise PkgCaching error if there is a problem'''
+    pkgpaths = []
+    dest_dir = os.path.join(target, 'private/tmp/pkgcache')
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+    for url in pkgurls:
+        if (not os.path.basename(url).endswith('.pkg') and
+                not os.path.basename(url).endswith('.dmg')):
+            error = "%s doesn't end with either '.pkg' or '.dmg'" % url
+            raise PkgCachingError(error)
+        NSLog("Caching pkg from %@", url)
+        if os.path.basename(url).endswith('.dmg'):
+            pkgpath = cache_pkg_from_dmg(url, dest_dir)
+        else:
+            pkgpath = cache_pkg(url, dest_dir, progress_method=progress_method)
+        pkgpaths.append(pkgpath)
+
+    return pkgpaths
+
+
 def run(item, target, progress_method=None):
     '''Run startosinstall from Install macOS app on a disk image'''
     url = item.get('url')
@@ -84,6 +166,18 @@ def run(item, target, progress_method=None):
     app_path = find_install_macos_app(dmgmountpoint)
     startosinstall_path = os.path.join(
         app_path, 'Contents/Resources/startosinstall')
+    installed_os_version = get_os_version(app_path)
+
+    additional_package_paths = []
+    if (version.LooseVersion(
+            installed_os_version) >= version.LooseVersion('10.13') and
+            'additional_package_urls' in item):
+        try:
+            additional_package_paths = download_and_cache_pkgs(
+                item['additional_package_urls'], target,
+                progress_method=progress_method)
+        except PkgCachingError, err:
+            return False, unicode(err)
 
     # we need to wrap our call to startosinstall with a utility
     # that makes startosinstall think it is connected to a tty-like
@@ -109,8 +203,15 @@ def run(item, target, progress_method=None):
                 '--volume', target,
                 '--nointeraction'])
 
+    # add additional startosinstall options if any
     if 'additional_startosinstall_options' in item:
         cmd.extend(item['additional_startosinstall_options'])
+
+    # add additional pkgs to install if any
+    for pkg in additional_package_paths:
+        cmd.extend(['--installpackage', pkg])
+
+    NSLog('startosinstall cmd: %@', cmd)
 
     # more magic to get startosinstall to not buffer its output for
     # percent complete
