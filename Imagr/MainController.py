@@ -26,6 +26,7 @@ import shutil
 import Quartz
 import time
 import powermgr
+import osinstall
 
 class MainController(NSObject):
 
@@ -843,6 +844,10 @@ class MainController(NSObject):
                     self.targetVolume,
                     verify=item.get('verify', True)
                 )
+            # startosinstall
+            elif item.get('type') == 'startosinstall':
+                Utils.sendReport('in_progress', 'starting macOS install: %s' % item.get('url'))
+                self.startOSinstall(item)
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
@@ -1091,6 +1096,15 @@ class MainController(NSObject):
         if task.poll() == 0:
             self.targetVolume.EnsureMountedWithRefresh()
             return True
+
+    def startOSinstall(self, item):
+        self.updateProgressTitle_Percent_Detail_(
+            'Preparing macOS install...', -1, '')
+        success, detail = osinstall.run(
+            item, self.targetVolume.mountpoint,
+            progress_method=self.updateProgressTitle_Percent_Detail_)
+        if not success:
+            self.errorMessage = detail
 
     def downloadAndInstallPackages(self, item):
         url = item.get('url')
