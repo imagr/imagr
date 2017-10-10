@@ -354,6 +354,29 @@ def downloadFile(url, additional_headers=None, username=None, password=None):
     return data, error
 
 
+def getDMGSize(url):
+    url_parse = urlparse.urlparse(url)
+    error = None
+    error = type("err", (object,), dict())
+    if url_parse.scheme in ['http', 'https']:
+        request = urllib2.Request(url)
+        try:
+            dmg = urllib2.urlopen(request)
+            data = dmg.headers['Content-Length']
+        except urllib2.URLError, err:
+            setattr(error, 'reason', err)
+            data = False
+        except urllib2.HTTPError, err:
+            setattr(error, 'reason', err)
+            data = False
+    else:
+        setattr(error, 'reason', 'The following URL is unsupported')
+        data = False
+
+    setattr(error, 'url', url)
+    return data, error
+
+
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
 
