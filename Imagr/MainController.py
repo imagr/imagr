@@ -1006,7 +1006,7 @@ class MainController(NSObject):
         self.workflowOnThreadPrep()
 
     def Clone(self, source, target, erase=True, verify=True,
-              show_activity=True, ramdisk=False, ramdiskbytes=None):
+              show_activity=True, ramdisk=False):
         """A wrapper around 'asr' to clone one disk object onto another.
 
         We run with --puppetstrings so that we get non-buffered output that we
