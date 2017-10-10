@@ -42,19 +42,19 @@ Optional `additional_startosinstall_options`:
 Optional `additional_package_urls`:
 
 ```xml
-		<dict>
-			<key>type</key>
-			<string>startosinstall</string>
-			<key>url</key>
-			<string>http://imagr.fake.com/installers/Install%20macOS%20High%20Sierra-10.13.dmg</string>
-            <key>additional_package_urls</key>
-            <array>
-                <string>http://imagr.fake.com/pkgs/AdminAccount.pkg</string>
-                <string>http://imagr.fake.com/pkgs/SuppressSetupAssistant.pkg</string>
-                <string>http://imagr.fake.com/pkgs/munkitools.pkg</string>
-                <string>http://imagr.fake.com/pkgs/munki_kickstart.pkg</string>
-            </array>
-		</dict>
+	<dict>
+		<key>type</key>
+		<string>startosinstall</string>
+		<key>url</key>
+		<string>http://imagr.fake.com/installers/Install%20macOS%20High%20Sierra-10.13.dmg</string>
+            	<key>additional_package_urls</key>
+           	<array>
+                	<string>http://imagr.fake.com/pkgs/AdminAccount.pkg</string>
+                	<string>http://imagr.fake.com/pkgs/SuppressSetupAssistant.pkg</string>
+                	<string>http://imagr.fake.com/pkgs/munkitools.pkg</string>
+                	<string>http://imagr.fake.com/pkgs/munki_kickstart.pkg</string>
+            	</array>
+	</dict>
 ```
 
 As of 10.13 release, specifying more than one additional package appears to be broken; `startosinstall` doesn't seem to properly stage all the packages.
