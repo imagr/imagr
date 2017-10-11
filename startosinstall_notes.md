@@ -1,4 +1,6 @@
-Workflow component:
+These are notes on the support for installing macOS using the `startosinstall` tool in "Install macOS Sierra.app" and "Install macOS High Sierra.app".
+
+#### Workflow component:
 
 ```xml
     <key>workflows</key>
@@ -56,6 +58,8 @@ Optional `additional_package_urls`:
             </array>
         </dict>
 ```
+
+#### Additional package notes
 
 Additional packages must be flat distribution-style packages. I did not find they needed to be signed.
 
