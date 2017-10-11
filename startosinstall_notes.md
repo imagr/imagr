@@ -74,7 +74,7 @@ If you then restart to a different volume (locally attached or a network boot) y
 ```xml
     <key>Additional Installers</key>
     <array>
-        <string>UnwrappedInstallers/78d4e18c246101ac030409a3b28cf1ba6006055e/DA_adminaccount.pkg</string>
+        <string>UnwrappedInstallers/78d4e18c246101ac030409a3b28cf1ba6006055e/Adminaccount.pkg</string>
         <string>UnwrappedInstallers/56609c54df6cc13597ea94d2ffd30540d7027dc7/SuppressSetupAssistant.pkg</string>
         <string>UnwrappedInstallers/a04a3ba6f46deddca73b98679d09d2e41a95b2fa/munkitools.pkg</string>
         <string>UnwrappedInstallers/6a0b81670c8f340ee2c51c98aa0572f5a8aa055b/munki_kickstart.pkg</string>
