@@ -25,6 +25,8 @@ These are notes on the support for installing macOS using the `startosinstall` t
 
 `url` must point to a disk image containing an Install macOS.app at the root.
 
+This must be the **last** component in a given workflow; `startosinstall` will force a restart when it finishes setting up the macOS install; no subsequent workflow components will be executed.
+
 Optional `additional_startosinstall_options`:
 
 ```xml
