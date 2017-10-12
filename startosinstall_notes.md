@@ -96,6 +96,8 @@ I can manually copy the missing packages to the paths listed in InstallInfo.plis
 
 One other bug: The additional packages are installed after the machine boots into the new OS for the first time. The mechanism that does the install appears to ignore the restart flag if it's set on any of the packages. I included the munkitools.pkg in my additional packages. It was successfully installed, but since there was no reboot after its install, Munki bootstrapping didn't actually work or kick in until after I manually restarted the machine one more time.
 
+Assuming Apple eventually fixes these bugs, this should be a really useful way to deploy. But until then...
+
 
 #### Alternate workflow with additional packages
 
