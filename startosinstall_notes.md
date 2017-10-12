@@ -173,10 +173,13 @@ INDEX="5007" # substitute your index
 NBI="startosinstall_testing_Imagr" # substitute your nbi name
 ```
 
-`make nbi` to build a (NetInstall-style) nbi containing Imagr. Transfer the resulting nbi to your NetBoot server and perform the needed incantations to get your NetBoot server to offer this nbi.
+`make nbi` to build a (NetInstall-style) nbi containing Imagr. Transfer the resulting nbi (which is by default created on your Desktop) to your NetBoot server and perform the needed incantations to get your NetBoot server to offer this nbi.
 
 Since we set `STARTTERMINAL=True` in the Makefile override, when this nbi boots it will open a terminal window instead of starting Imagr. This lets us see logging and debugging info. Launch Imagr like so:
 
 ```
 /System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr
 ```
+
+To test later updates to the code, you don't have to go through the lengthy `make nbi` process again; you can just do `make update` as long as you left a copy of the nbi in its original location (again, Desktop by default).
+
