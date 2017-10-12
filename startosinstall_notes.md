@@ -181,5 +181,5 @@ Since we set `STARTTERMINAL=True` in the Makefile override, when this nbi boots 
 /System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr
 ```
 
-To test later updates to the code, you don't have to go through the lengthy `make nbi` process again; you can just do `make update` as long as you left a copy of the nbi in its original location (again, Desktop by default).
+To test later updates to the code, you don't have to go through the lengthy `make nbi` process again; you can just do `make update` as long as you left a copy of the nbi in its original location (again, Desktop by default). You'd then copy the updated nbi to the NetBoot server and test again.
 
