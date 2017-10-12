@@ -77,14 +77,15 @@ class PkgCachingError(Exception):
     pass
 
 
-def cache_pkg(url, dest_dir, progress_method=None):
+def cache_pkg(url, dest_dir, progress_method=None, additional_headers=None):
     '''Download and cache a package'''
     error = None
     package_name = os.path.basename(url)
     os.umask(0002)
     pkgpath = os.path.join(dest_dir, package_name)
     (_, error) = Utils.downloadChunks(
-        url, pkgpath, progress_method=progress_method)
+        url, pkgpath,
+        progress_method=progress_method, additional_headers=additional_headers)
     if error:
         raise PkgCachingError(
             'Error downloading %s - %s' % (url, error))
@@ -129,7 +130,8 @@ def cache_pkg_from_dmg(url, dest_dir):
     return dest_file
 
 
-def download_and_cache_pkgs(pkgurls, target, progress_method=None):
+def download_and_cache_pkgs(
+        pkgurls, target, progress_method=None, additional_headers=None):
     '''Given a list of urls to packages, download the pkgs and stash them
     on the target volume. Return a list of the stashed paths.
     Raise PkgCaching error if there is a problem'''
@@ -146,7 +148,9 @@ def download_and_cache_pkgs(pkgurls, target, progress_method=None):
         if os.path.basename(url).endswith('.dmg'):
             pkgpath = cache_pkg_from_dmg(url, dest_dir)
         else:
-            pkgpath = cache_pkg(url, dest_dir, progress_method=progress_method)
+            pkgpath = cache_pkg(
+                url, dest_dir, progress_method=progress_method,
+                additional_headers=additional_headers)
         pkgpaths.append(pkgpath)
 
     return pkgpaths
@@ -175,7 +179,8 @@ def run(item, target, progress_method=None):
         try:
             additional_package_paths = download_and_cache_pkgs(
                 item['additional_package_urls'], target,
-                progress_method=progress_method)
+                progress_method=progress_method,
+                additional_headers=item.get('additional_headers'))
         except PkgCachingError, err:
             return False, unicode(err)
 
