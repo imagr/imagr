@@ -777,6 +777,15 @@ class MainController(NSObject):
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.updateProgressWithInfo_, info, objc.NO)
 
+    def setupFirstBootTools(self):
+        # copy bits for first boot script
+        packages_dir = os.path.join(
+            self.targetVolume.mountpoint, 'usr/local/first-boot/')
+        if not os.path.exists(packages_dir):
+            os.makedirs(packages_dir)
+        Utils.copyFirstBoot(self.targetVolume.mountpoint,
+                            self.waitForNetwork, self.firstBootReboot)
+
     def processWorkflowOnThread(self, sender):
         '''Process the selected workflow'''
         pool = NSAutoreleasePool.alloc().init()
@@ -788,14 +797,13 @@ class MainController(NSObject):
             self.should_update_volume_list = False
 
             for item in self.selectedWorkflow['components']:
+                if (item.get('type') == 'startosinstall' and
+                        self.first_boot_items):
+                    # we won't get a chance to do this after this component
+                    self.setupFirstBootTools()
                 self.runComponent(item)
             if self.first_boot_items:
-                # copy bits for first boot script
-                packages_dir = os.path.join(self.targetVolume.mountpoint, 'usr/local/first-boot/')
-                if not os.path.exists(packages_dir):
-                    os.makedirs(packages_dir)
-                Utils.copyFirstBoot(self.targetVolume.mountpoint,
-                                    self.waitForNetwork, self.firstBootReboot)
+                self.setupFirstBootTools()
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.processWorkflowOnThreadComplete, None, YES)
