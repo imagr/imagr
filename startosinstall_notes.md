@@ -158,6 +158,9 @@ After the macOS install is complete and the machine boots to the new OS, it sits
 
 #### Testing notes
 
+Clone this repo locally:  
+`git clone https://github.com/gregneagle/imagr.git gregneagle-imagr`
+
 In the same directory as the cloned repo, make a `config.mk` file. Recommended contents:
 
 ```
