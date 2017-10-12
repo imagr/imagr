@@ -95,3 +95,63 @@ drwxr-xr-x   3 root  wheel  102 Oct 11 10:12 6a0b81670c8f340ee2c51c98aa0572f5a8a
 I can manually copy the missing packages to the paths listed in InstallInfo.plist and then if I restart into the macOS Installer environment, install proceeds successfully and the extra packages are installed, although with some UI bugs.
 
 One other bug: The additional packages are installed after the machine boots into the new OS for the first time. The mechanism that does the install appears to ignore the restart flag if it's set on any of the packages. I included the munkitools.pkg in my additional packages. It was successfully installed, but since there was no reboot after its install, Munki bootstrapping didn't actually work or kick in until after I manually restarted the machine one more time.
+
+
+#### Alternate workflow with additional packages
+
+Since there are serious bugs in 10.13's `startosinstall` with regard to additional packages, and since 10.12's `startosinstall` does not support additional packages at all, I present an alternate workflow:
+
+```xml
+    <dict>
+        <key>components</key>
+        <array>
+            <dict>
+                <key>first_boot</key>
+                <true/>
+                <key>type</key>
+                <string>package</string>
+                <key>url</key>
+                <string>http://imagr.fake.com/pkgs/Adminaccount.pkg</string>
+            </dict>
+            <dict>
+                <key>first_boot</key>
+                <true/>
+                <key>type</key>
+                <string>package</string>
+                <key>url</key>
+                <string>http://imagr.fake.com/pkgs/SuppressSetupAssistant.pkg</string>
+            </dict>
+            <dict>
+                <key>first_boot</key>
+                <true/>
+                <key>type</key>
+                <string>package</string>
+                <key>url</key>
+                <string>http://imagr.fake.com/pkgs/munkitools.pkg</string>
+            </dict>
+            <dict>
+                <key>first_boot</key>
+                <true/>
+                <key>type</key>
+                <string>package</string>
+                <key>url</key>
+                <string>http://imagr.fake.com/pkgs/munki_kickstart.pkg</string>
+            </dict>
+            <dict>
+                <key>type</key>
+                <string>startosinstall</string>
+                <key>url</key>
+                <string>http://imagr.fake.com/installers/Install%20macOS%20High%20Sierra-10.13.dmg</string>
+            </dict>
+        </array>
+        <key>description</key>
+        <string>Installs High Sierra, installing additional packages at first boot.</string>
+        <key>name</key>
+        <string>Install High Sierra 2</string>
+    </dict>
+```
+
+This uses package components that install at first boot. These are cached on the target disk (which might be empty to start) and then a macOS install is kicked off.
+
+Brief testing shows this works (at least for 10.13 installs), but the UI is bad:
+After the macOS install is complete and the machine boots to the new OS, it sits at a black screen while the cached packages are installed: LoginLog.app does not display a UI.
