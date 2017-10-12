@@ -155,3 +155,25 @@ This uses package components that install at first boot. These are cached on the
 
 Brief testing shows this works (at least for 10.13 installs), but the UI is bad:
 After the macOS install is complete and the machine boots to the new OS, it sits at a black screen while the cached packages are installed: LoginLog.app does not display a UI.
+
+#### Testing notes
+
+In the same directory as the cloned repo, make a `config.mk` file. Recommended contents:
+
+```
+BUILD=Testing
+STARTTERMINAL=True
+APP="/Applications/Install macOS Sierra.app" # if you are building on Sierra
+APP="/Applications/Install macOS High Sierra.app" # if you are building on HS
+URL="http://imagr.fake.com/test_workflows.plist" # substitute your URL
+INDEX="5007" # substitute your index
+NBI="startosinstall_testing_Imagr" # substitute your nbi name
+```
+
+`make nbi` to build a (NetInstall-style) nbi containing Imagr. Transfer the resulting nbi to your NetBoot server and perform the needed incantations to get your NetBoot server to offer this nbi.
+
+Since we set `STARTTERMINAL=True` in the Makefile override, when this nbi boots it will open a terminal window instead of starting Imagr. This lets us see logging and debugging info. Launch Imagr like so:
+
+```
+/System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr
+```
