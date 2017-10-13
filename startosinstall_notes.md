@@ -1,4 +1,4 @@
-These are notes on the support for installing macOS using the `startosinstall` tool in "Install macOS Sierra.app" and "Install macOS High Sierra.app".
+These are notes on the support for installing macOS using the `startosinstall` tool in "Install macOS High Sierra.app". All testing and development is being done with the goal of using this component to install 10.13 and later. Early testing of using it to install 10.12.6 High Sierra was unsuccessful.
 
 #### Workflow component:
 
@@ -160,7 +160,7 @@ After the macOS install is complete and the machine boots to the new OS, it sits
 
 #### Testing notes
 
-Clone this repo locally:  
+You may use a machine running either 10.12.6 or 10.13 for testing. Clone this repo locally:  
 `git clone https://github.com/gregneagle/imagr.git gregneagle-imagr`
 
 In the same directory as the cloned repo, make a `config.mk` file. Recommended contents:
