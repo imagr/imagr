@@ -1,4 +1,4 @@
-These are notes on the support for installing macOS using the `startosinstall` tool in "Install macOS High Sierra.app". All testing and development is being done with the goal of using this component to install 10.13 and later. Early testing of using it to install 10.12.6 High Sierra was unsuccessful.
+These are notes on the support for installing macOS using the `startosinstall` tool in "Install macOS High Sierra.app". All testing and development is being done with the goal of using this component to install 10.13 and later. Early testing of using it to install 10.12.6 Sierra was unsuccessful.
 
 #### Workflow component:
 
