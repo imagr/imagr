@@ -1048,13 +1048,17 @@ class MainController(NSObject):
             NSLog(u"Available Memory for image is %@", str(availablemem))
             filesize = Utils.getDMGSize(source)[0]
             NSLog(u"Required Memory for image is %@", str(filesize))
+            # Formatting RAM Disk requires around 5% of the total amount of
+            # bytes. Add 7% to compensate for the padding we will need.
+            paddedfilesize = int(filesize) * 1.07
+            NSLog(u"Padded Memory for image is %@", str(paddedfilesize))
             if filesize is False:
                 NSLog(u"Error when calculating image size.")
                 NSLog(u"Using asr instead of gurl...")
-            elif int(filesize) > availablemem:
+            elif int(paddedfilesize) > availablemem:
                 NSLog(u"Available Memory is not sufficient for image size. Using asr instead of gurl...")
             else:
-                sectors = int(filesize) / 512
+                sectors = int(paddedfilesize) / 512
                 ramstring = "ram://%s" % str(sectors)
                 NSLog(u"Amount of Sectors for RAM Disk is %@", str(sectors))
                 ramattachcommand = ["/usr/bin/hdiutil", "attach", "-nomount",
