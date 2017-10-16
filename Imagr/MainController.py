@@ -1042,8 +1042,9 @@ class MainController(NSObject):
             memsize = int(
                 memsizetuple[0].split('\n')[0].replace('hw.memsize: ', ''))
             NSLog(u"Total Memory is %@", str(memsize))
-            # Assume netinstall uses at least 500MB of RAM.
-            availablemem = memsize - 524288000
+            # Assume netinstall uses at least 1GB of RAM. If we don't require
+            # enough RAM, gurl will timeout, causing Imagr to crash.
+            availablemem = memsize - 1073741824
             NSLog(u"Available Memory for image is %@", str(availablemem))
             filesize = Utils.getDMGSize(source)[0]
             NSLog(u"Required Memory for image is %@", str(filesize))
