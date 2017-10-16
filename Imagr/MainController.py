@@ -1067,7 +1067,7 @@ class MainController(NSObject):
                 devdiskstr = devdisk[0].split(' ')[0]
                 randomnum = random.randint(1000000, 10000000)
                 ramdiskvolname = "ramdisk" + str(randomnum)
-
+                NSLog(u"RAM Disk mountpoint is %@", str(ramdiskvolname))
                 if Utils.is_apfs(source) is True:
                     NSLog(u"Formatting RAM Disk as APFS at %@", devdiskstr)
                     ramformatcommand = ["/sbin/newfs_apfs", "-v",
@@ -1076,8 +1076,8 @@ class MainController(NSObject):
                                                  stdout=subprocess.PIPE,
                                                  stderr=subprocess.PIPE)
                     NSLog(u"Mounting APFS RAM Disk %@", devdiskstr)
-                    rammountcommand = ["/usr/sbin/diskutil", "mount",
-                                       devdiskstr]
+                    rammountcommand = ["/usr/sbin/diskutil", "erasedisk",
+                                       'APFS', ramdiskvolname, devdiskstr]
                     rammount = subprocess.Popen(rammountcommand,
                                                 stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE)
@@ -1089,11 +1089,14 @@ class MainController(NSObject):
                                                  stdout=subprocess.PIPE,
                                                  stderr=subprocess.PIPE)
                     NSLog(u"Mounting HFS RAM Disk %@", devdiskstr)
-                    rammountcommand = ["/usr/sbin/diskutil", "mount",
-                                       devdiskstr]
+                    rammountcommand = ["/usr/sbin/diskutil", "erasedisk",
+                                       'HFS+', ramdiskvolname, devdiskstr]
                     rammount = subprocess.Popen(rammountcommand,
                                                 stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE)
+                # Wait for the disk to completely initialize
+                NSLog(u"Sleeping 2 seconds to allow full disk initialization.")
+                time.sleep(2)
                 targetpath = os.path.join('/Volumes', ramdiskvolname)
                 NSLog(u"Downloading DMG file from %@", str(source))
                 sourceram = self.downloadDMG(source, targetpath)
