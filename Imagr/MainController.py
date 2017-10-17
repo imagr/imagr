@@ -1114,6 +1114,10 @@ class MainController(NSObject):
                 targetpath = os.path.join('/Volumes', ramdiskvolname)
                 NSLog(u"Downloading DMG file from %@", str(source))
                 sourceram = self.downloadDMG(source, targetpath)
+                if sourceram is False:
+                    self.errorMessage = "DMG Failed to download."
+                    self.targetVolume.EnsureMountedWithRefresh()
+                    return False
                 source = sourceram
 
         is_apfs = False
@@ -1260,8 +1264,9 @@ class MainController(NSObject):
                 if error:
                     self.errorMessage="Couldn't download - %s \n %s - retrying..." % (url, error)
                     failsleft -= 1
+                    NSLog(u"DMG failed to download - Retries left: %@", str(failsleft))
                 if failsleft == 0:
-                    self.errorMessage="Too many download failures. Exiting"
+                    NSLog(u"Too many download failures. Exiting...")
                     break
             if failsleft == 0:
                 return False
