@@ -115,10 +115,13 @@ endif
 pkg-dir:
 	mkdir -p Packages/Extras
 ifeq ($(STARTTERMINAL),True)
-	printf '%s\n%s' '#!/bin/bash' '/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal' > Packages/Extras/rc.imaging
+	cp ./rc-imaging/terminal Packages/Extras/rc.imaging
+	cp -r /Applications/Utilities/Console.app ./Packages
+else ifeq ($(STARTTERMINAL),Custom)
+	cp ./rc-imaging/custom Packages/Extras/rc.imaging
 	cp -r /Applications/Utilities/Console.app ./Packages
 else
-	printf '%s\n%s' '#!/bin/bash' '/System/Installation/Packages/Imagr.app/Contents/MacOS/Imagr' > Packages/Extras/rc.imaging
+	cp ./rc-imaging/imagr Packages/Extras/rc.imaging
 endif
 	cp ./com.grahamgilbert.Imagr.plist Packages/
 ifeq ($(BUILD),Release)
