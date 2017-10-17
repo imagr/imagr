@@ -1259,7 +1259,7 @@ class MainController(NSObject):
             dmgpath = os.path.join(target, dmgname)
             NSLog(u"DMG Path %@", str(dmgpath))
             while not os.path.isfile(dmgpath):
-                (dmg, error) = Utils.downloadChunks(url, dmgpath,
+                (dmg, error) = Utils.downloadChunks(url, dmgpath, resume=True,
                                                     progress_method=self.updateProgressTitle_Percent_Detail_)
                 if error:
                     self.errorMessage="Couldn't download - %s \n %s - retrying..." % (url, error)

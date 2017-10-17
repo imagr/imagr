@@ -177,7 +177,7 @@ def NSLogWrapper(message):
 
 def get_url(url, destinationpath, message=None, follow_redirects=False,
             progress_method=None, additional_headers=None, username=None,
-            password=None):
+            password=None, resume=False):
     """Gets an HTTP or HTTPS URL and stores it in
     destination path. Returns a dictionary of headers, which includes
     http_result_code and http_result_description.
@@ -197,6 +197,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                'file': tempdownloadpath,
                'follow_redirects': follow_redirects,
                'additional_headers': header_dict_from_list(additional_headers),
+               'can_resume': resume,
                'username': username,
                'password': password,
                'logging_function': NSLogWrapper}
@@ -679,13 +680,13 @@ def unmountdmg(mountpoint):
         return True
 
 
-def downloadChunks(url, file, progress_method=None, additional_headers=None):
+def downloadChunks(url, file, progress_method=None, additional_headers=None, resume=False):
     message = "Downloading %s" % os.path.basename(url)
     url_parse = urlparse.urlparse(url)
     if url_parse.scheme in ['http', 'https']:
         # Use gurl to download the file
         try:
-            headers = get_url(url, file, message=message,
+            headers = get_url(url, file, message=message, resume=resume,
                               progress_method=progress_method,
                               additional_headers=additional_headers)
             return file, None
