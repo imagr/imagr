@@ -1115,6 +1115,11 @@ class MainController(NSObject):
                 NSLog(u"Downloading DMG file from %@", str(source))
                 sourceram = self.downloadDMG(source, targetpath)
                 if sourceram is False:
+                    NSLog(u"Detaching RAM Disk due to failure.")
+                    detachcommand = ["/usr/bin/hdiutil", "detach", devdiskstr]
+                    detach = subprocess.Popen(detachcommand,
+                                              stdout=subprocess.PIPE,
+                                              stderr=subprocess.PIPE)
                     self.errorMessage = "DMG Failed to download."
                     self.targetVolume.EnsureMountedWithRefresh()
                     return False
