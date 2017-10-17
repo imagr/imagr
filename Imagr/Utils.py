@@ -689,12 +689,12 @@ def downloadChunks(url, file, progress_method=None, additional_headers=None):
                               progress_method=progress_method,
                               additional_headers=additional_headers)
             return file, None
-        except HTTPError, err:
-            NSLog("HTTP Error: %@", err)
-            return False, err
-        except GurlError, err:
-            NSLog("Gurl Error: %@", err)
-            return False, err
+        except HTTPError, error:
+            NSLog("HTTP Error: %@", error)
+            return False, error
+        except GurlError, error:
+            NSLog("Gurl Error: %@", error)
+            return False, error
     elif url_parse.scheme == 'file':
         # File resources should be handled natively. Space characters, %20,
         # need to be removed

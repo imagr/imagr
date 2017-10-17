@@ -1242,11 +1242,19 @@ class MainController(NSObject):
         if os.path.basename(url).endswith('.dmg'):
             # Download it
             dmgname = os.path.basename(url)
-            (dmg, error) = Utils.downloadChunks(url, os.path.join(target,
-                                                                  dmgname),
-                                                progress_method=self.updateProgressTitle_Percent_Detail_)
-            if error:
-                self.errorMessage="Couldn't download - %s \n %s" % (url, error)
+            failsleft = 3
+            dmgpath = os.path.join(target, dmgname)
+            NSLog(u"DMG Path %@", str(dmgpath))
+            while not os.path.isfile(dmgpath):
+                (dmg, error) = Utils.downloadChunks(url, dmgpath,
+                                                    progress_method=self.updateProgressTitle_Percent_Detail_)
+                if error:
+                    self.errorMessage="Couldn't download - %s \n %s - retrying..." % (url, error)
+                    failsleft -= 1
+                if failsleft == 0:
+                    self.errorMessage="Too many download failures. Exiting"
+                    break
+            if failsleft == 0:
                 return False
         return dmg
 
