@@ -1032,6 +1032,15 @@ class MainController(NSObject):
             raise macdisk.MacDiskError("target is not a Disk object")
 
         if ramdisk:
+            apfs_image = Utils.is_apfs(source)
+            if self.targetVolume._attributes['FilesystemType'] == 'hfs' and apfs_image is True:
+                self.errorMessage = "%s is formatted as HFS and you are trying to restore an APFS disk image" % str(self.targetVolume.mountpoint)
+                self.targetVolume.EnsureMountedWithRefresh()
+                return False
+            elif self.targetVolume._attributes['FilesystemType'] == 'apfs' and apfs_image is False:
+                self.errorMessage = "%s is formatted as APFS and you are trying to restore an HFS disk image" % str(self.targetVolume.mountpoint)
+                self.targetVolume.EnsureMountedWithRefresh()
+                return False
             sysctlcommand = ["/usr/sbin/sysctl", "hw.memsize"]
             sysctl = subprocess.Popen(sysctlcommand,
                                       stdout=subprocess.PIPE,
@@ -1073,7 +1082,7 @@ class MainController(NSObject):
                 randomnum = random.randint(1000000, 10000000)
                 ramdiskvolname = "ramdisk" + str(randomnum)
                 NSLog(u"RAM Disk mountpoint is %@", str(ramdiskvolname))
-                if Utils.is_apfs(source) is True:
+                if apfs_image is True:
                     NSLog(u"Formatting RAM Disk as APFS at %@", devdiskstr)
                     ramformatcommand = ["/sbin/newfs_apfs", "-v",
                                         ramdiskvolname, devdiskstr]
