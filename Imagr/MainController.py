@@ -969,15 +969,13 @@ class MainController(NSObject):
         if included_workflow:
             for workflow in self.workflows:
                 if included_workflow.strip() == workflow['name'].strip():
-                    target_workflow = workflow
-                    break
-        # run the workflow
-        if target_workflow:
-            for component in target_workflow['components']:
-                self.runComponent(component)
-        else:
-            Utils.sendReport('error', 'Could not find included workflow %s' % included_workflow)
-            self.errorMessage = 'Could not find included workflow %s' % included_workflow
+                    # run the workflow
+                    for component in workflow['components']:
+                        self.runComponent(component)
+                    return
+            else:
+                Utils.sendReport('error', 'Could not find included workflow %s' % included_workflow)
+                self.errorMessage = 'Could not find included workflow %s' % included_workflow
 
     def getComputerName_(self, component):
         auto_run = component.get('auto', False)
