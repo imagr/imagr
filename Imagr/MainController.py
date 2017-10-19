@@ -1267,7 +1267,6 @@ class MainController(NSObject):
                 (dmg, error) = Utils.downloadChunks(url, dmgpath, resume=True,
                                                     progress_method=self.updateProgressTitle_Percent_Detail_)
                 if error:
-                    self.errorMessage="Couldn't download - %s \n %s - retrying..." % (url, error)
                     failsleft -= 1
                     NSLog(u"DMG failed to download - Retries left: %@", str(failsleft))
                 if failsleft == 0:
