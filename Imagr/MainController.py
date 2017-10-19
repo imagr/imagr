@@ -1051,15 +1051,15 @@ class MainController(NSObject):
             memsize = int(
                 memsizetuple[0].split('\n')[0].replace('hw.memsize: ', ''))
             NSLog(u"Total Memory is %@", str(memsize))
-            # Assume netinstall uses at least 1GB of RAM. If we don't require
-            # enough RAM, gurl will timeout, causing Imagr to crash.
-            availablemem = memsize - 1073741824
+            # Assume netinstall uses at least 650MB of RAM. If we don't require
+            # enough RAM, gurl will timeout or cause RecoveryOS to crash.
+            availablemem = memsize - 681574400
             NSLog(u"Available Memory for image is %@", str(availablemem))
             filesize = Utils.getDMGSize(source)[0]
             NSLog(u"Required Memory for image is %@", str(filesize))
             # Formatting RAM Disk requires around 5% of the total amount of
-            # bytes. Add 7% to compensate for the padding we will need.
-            paddedfilesize = int(filesize) * 1.07
+            # bytes. Add 6% to compensate for the padding we will need.
+            paddedfilesize = int(filesize) * 1.06
             NSLog(u"Padded Memory for image is %@", str(paddedfilesize))
             if filesize is False:
                 NSLog(u"Error when calculating image size.")
