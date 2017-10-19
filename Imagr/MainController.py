@@ -1065,7 +1065,11 @@ class MainController(NSObject):
                 NSLog(u"Error when calculating image size.")
                 NSLog(u"Using asr instead of gurl...")
             elif int(paddedfilesize) > availablemem:
-                NSLog(u"Available Memory is not sufficient for image size. Using asr instead of gurl...")
+                NSLog(u"Available Memory is not sufficient for image size. "
+                      "Using asr instead of gurl...")
+            elif 9000000000 > memsize:
+                NSLog(u"Machine has 8GB of RAM or less. Using asr instead of "
+                      "gurl...")
             else:
                 sectors = int(paddedfilesize) / 512
                 ramstring = "ram://%s" % str(sectors)
