@@ -11,6 +11,8 @@
 		100FA3EC1D51DC6C000F1C1C /* powermgr.py in Resources */ = {isa = PBXBuildFile; fileRef = 100FA3EB1D51DC6C000F1C1C /* powermgr.py */; };
 		10DA31C31D92963A00969112 /* se.gu.it.LoginLog.login.plist in Resources */ = {isa = PBXBuildFile; fileRef = 10DA31C21D92963A00969112 /* se.gu.it.LoginLog.login.plist */; };
 		C06979C21AE83F3500914535 /* gurl.py in Resources */ = {isa = PBXBuildFile; fileRef = C06979C11AE83F3500914535 /* gurl.py */; };
+		C0D0AB191F8C36FC001B1CF3 /* osinstall.py in Resources */ = {isa = PBXBuildFile; fileRef = C0D0AB181F8C36FC001B1CF3 /* osinstall.py */; };
+		C0D0AB1D1F8C3D03001B1CF3 /* ptyexec in Resources */ = {isa = PBXBuildFile; fileRef = C0D0AB1C1F8C3D03001B1CF3 /* ptyexec */; };
 		FC21F1741C6235DA0039D923 /* localize.sh in Resources */ = {isa = PBXBuildFile; fileRef = FC21F1731C6235DA0039D923 /* localize.sh */; };
 		FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */; };
 		FC98DA241AD6B2DC00F90405 /* first-boot in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA201AD6B2DC00F90405 /* first-boot */; };
@@ -67,6 +69,8 @@
 		100FA3EB1D51DC6C000F1C1C /* powermgr.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = powermgr.py; sourceTree = "<group>"; };
 		10DA31C21D92963A00969112 /* se.gu.it.LoginLog.login.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = se.gu.it.LoginLog.login.plist; sourceTree = "<group>"; };
 		C06979C11AE83F3500914535 /* gurl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gurl.py; sourceTree = "<group>"; };
+		C0D0AB181F8C36FC001B1CF3 /* osinstall.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = osinstall.py; sourceTree = "<group>"; };
+		C0D0AB1C1F8C3D03001B1CF3 /* ptyexec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ptyexec; sourceTree = "<group>"; };
 		FC21F1731C6235DA0039D923 /* localize.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = localize.sh; sourceTree = "<group>"; };
 		FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "com.grahamgilbert.imagr-first-boot-pkg.plist"; sourceTree = "<group>"; };
 		FC98DA201AD6B2DC00F90405 /* first-boot */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "first-boot"; sourceTree = "<group>"; };
@@ -138,6 +142,7 @@
 		FC98DA1E1AD6B2DC00F90405 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				C0D0AB1C1F8C3D03001B1CF3 /* ptyexec */,
 				FC21F1731C6235DA0039D923 /* localize.sh */,
 				FCED84641B0201B20072AC1C /* set_computer_name.sh */,
 				FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */,
@@ -217,6 +222,7 @@
 				FCEA80B61AD0101100DBA039 /* Info.plist */,
 				FCEA80B71AD0101100DBA039 /* main.m */,
 				FCEA80B91AD0101100DBA039 /* Credits.rtf */,
+				C0D0AB181F8C36FC001B1CF3 /* osinstall.py */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -350,6 +356,7 @@
 				FCEDFD961AF289E900743302 /* imagr_icon.png in Resources */,
 				FCEA80F61AD018E500DBA039 /* cocoadialog.py in Resources */,
 				FCEA81041AD018E500DBA039 /* systemconfig.py in Resources */,
+				C0D0AB191F8C36FC001B1CF3 /* osinstall.py in Resources */,
 				FCEA80C01AD0101100DBA039 /* main.py in Resources */,
 				FCEA81001AD018E500DBA039 /* macdisk.py in Resources */,
 				FCF6B30F1AD1D73E00311D3A /* Installer.icns in Resources */,
@@ -365,6 +372,7 @@
 				FCEA80C51AD0101100DBA039 /* MainMenu.xib in Resources */,
 				FCEA810B1AD02C9A00DBA039 /* Utils.py in Resources */,
 				FCEA80F71AD018E500DBA039 /* defaults.py in Resources */,
+				C0D0AB1D1F8C3D03001B1CF3 /* ptyexec in Resources */,
 				FCEA80F91AD018E500DBA039 /* ds_test.py in Resources */,
 				100FA3EC1D51DC6C000F1C1C /* powermgr.py in Resources */,
 				FCEA80FC1AD018E500DBA039 /* getauth.py in Resources */,

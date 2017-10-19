@@ -26,6 +26,7 @@ import shutil
 import Quartz
 import time
 import powermgr
+import osinstall
 
 class MainController(NSObject):
 
@@ -776,6 +777,15 @@ class MainController(NSObject):
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.updateProgressWithInfo_, info, objc.NO)
 
+    def setupFirstBootTools(self):
+        # copy bits for first boot script
+        packages_dir = os.path.join(
+            self.targetVolume.mountpoint, 'usr/local/first-boot/')
+        if not os.path.exists(packages_dir):
+            os.makedirs(packages_dir)
+        Utils.copyFirstBoot(self.targetVolume.mountpoint,
+                            self.waitForNetwork, self.firstBootReboot)
+
     def processWorkflowOnThread(self, sender):
         '''Process the selected workflow'''
         pool = NSAutoreleasePool.alloc().init()
@@ -787,14 +797,13 @@ class MainController(NSObject):
             self.should_update_volume_list = False
 
             for item in self.selectedWorkflow['components']:
+                if (item.get('type') == 'startosinstall' and
+                        self.first_boot_items):
+                    # we won't get a chance to do this after this component
+                    self.setupFirstBootTools()
                 self.runComponent(item)
             if self.first_boot_items:
-                # copy bits for first boot script
-                packages_dir = os.path.join(self.targetVolume.mountpoint, 'usr/local/first-boot/')
-                if not os.path.exists(packages_dir):
-                    os.makedirs(packages_dir)
-                Utils.copyFirstBoot(self.targetVolume.mountpoint,
-                                    self.waitForNetwork, self.firstBootReboot)
+                self.setupFirstBootTools()
 
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.processWorkflowOnThreadComplete, None, YES)
@@ -843,6 +852,10 @@ class MainController(NSObject):
                     self.targetVolume,
                     verify=item.get('verify', True)
                 )
+            # startosinstall
+            elif item.get('type') == 'startosinstall':
+                Utils.sendReport('in_progress', 'starting macOS install: %s' % item.get('url'))
+                self.startOSinstall(item)
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
@@ -1092,6 +1105,15 @@ class MainController(NSObject):
             self.targetVolume.EnsureMountedWithRefresh()
             return True
 
+    def startOSinstall(self, item):
+        self.updateProgressTitle_Percent_Detail_(
+            'Preparing macOS install...', -1, '')
+        success, detail = osinstall.run(
+            item, self.targetVolume.mountpoint,
+            progress_method=self.updateProgressTitle_Percent_Detail_)
+        if not success:
+            self.errorMessage = detail
+
     def downloadAndInstallPackages(self, item):
         url = item.get('url')
         custom_headers = item.get('additional_headers')
@@ -1169,8 +1191,6 @@ class MainController(NSObject):
         if error:
             self.errorMessage = "Error copying first boot package %s - %s" % (url, error)
             return False
-
-
 
     def downloadPackage(self, url, target, number, progress_method=None, additional_headers=None):
         error = None
