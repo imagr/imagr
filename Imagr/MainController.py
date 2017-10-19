@@ -1187,6 +1187,12 @@ class MainController(NSObject):
             return False
         if task.poll() == 0:
             self.targetVolume.EnsureMountedWithRefresh()
+            if 'ramdisk' in source:
+                NSLog(u"Detaching RAM Disk post imaging.")
+                detachcommand = ["/usr/bin/hdiutil", "detach", devdiskstr]
+                detach = subprocess.Popen(detachcommand,
+                                          stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE)
             return True
 
     def downloadAndInstallPackages(self, item):
