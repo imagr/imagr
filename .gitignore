@@ -11,5 +11,6 @@ Imagr.xcodeproj/project.xcworkspace/xcuserdata/*
 config.mk
 rc.netboot
 *.pyc
+rc-imaging/custom
 
 Imagr/post_test.py

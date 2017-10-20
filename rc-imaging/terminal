@@ -1,0 +1,7 @@
+#!/bin/bash
+OS=`/usr/bin/sw_vers -productVersion`
+if [[ "$OS" == *10.13* ]]
+  then
+    defaults write /var/root/Library/Preferences/com.apple.DiskUtility.plist SidebarShowAllDevices -bool TRUE
+fi
+/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal
