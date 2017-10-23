@@ -364,10 +364,7 @@ def getDMGSize(url):
         try:
             dmg = urllib2.urlopen(request)
             data = dmg.headers['Content-Length']
-        except urllib2.URLError, err:
-            setattr(error, 'reason', err)
-            data = False
-        except urllib2.HTTPError, err:
+        except (urllib2.URLError, urllib2.HTTPError), err:
             setattr(error, 'reason', err)
             data = False
     else:
