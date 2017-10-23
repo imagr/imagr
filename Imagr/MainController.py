@@ -1248,9 +1248,10 @@ class MainController(NSObject):
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE)
             # Wait for the disk to completely initialize
-            NSLog(u"Sleeping 2 seconds to allow full disk initialization.")
-            time.sleep(2)
             targetpath = os.path.join('/Volumes', ramdiskvolname)
+            while not os.path.isdir(targetpath):
+                NSLog(u"Sleeping 1 second to allow full disk initialization.")
+                time.sleep(1)
             if imaging is True:
                 dmgsource = source
             else:
