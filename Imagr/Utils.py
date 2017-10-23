@@ -98,7 +98,7 @@ def post_url(url, post_data, message=None, follow_redirects=False,
             if message and connection.status and connection.status != 304:
                 # log always, display if verbose is 1 or more
                 # also display in progress field
-                NSLog(message)
+                NSLog('%@', message)
                 if progress_method:
                     progress_method(None, None, message)
                 # now clear message so we don't display it again
@@ -215,7 +215,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
             if message and connection.status and connection.status != 304:
                 # log always, display if verbose is 1 or more
                 # also display in progress field
-                NSLog(message)
+                NSLog('%@', message)
                 if progress_method:
                     progress_method(None, None, message)
                 # now clear message so we don't display it again
