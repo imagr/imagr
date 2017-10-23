@@ -1047,102 +1047,16 @@ class MainController(NSObject):
             raise macdisk.MacDiskError("target is not a Disk object")
 
         if ramdisk:
-            apfs_image = Utils.is_apfs(source)
-            if self.targetVolume._attributes['FilesystemType'] == 'hfs' and apfs_image is True:
-                self.errorMessage = "%s is formatted as HFS and you are trying to restore an APFS disk image" % str(self.targetVolume.mountpoint)
-                self.targetVolume.EnsureMountedWithRefresh()
-                return False
-            elif self.targetVolume._attributes['FilesystemType'] == 'apfs' and apfs_image is False:
-                self.errorMessage = "%s is formatted as APFS and you are trying to restore an HFS disk image" % str(self.targetVolume.mountpoint)
-                self.targetVolume.EnsureMountedWithRefresh()
-                return False
-            sysctlcommand = ["/usr/sbin/sysctl", "hw.memsize"]
-            sysctl = subprocess.Popen(sysctlcommand,
-                                      stdout=subprocess.PIPE,
-                                      stderr=subprocess.PIPE)
-            memsizetuple = sysctl.communicate()
-            # sysctl returns crappy things from stdout.
-            # Ex: ('hw.memsize: 1111111\n', '')
-            memsize = int(
-                memsizetuple[0].split('\n')[0].replace('hw.memsize: ', ''))
-            NSLog(u"Total Memory is %@", str(memsize))
-            # Assume netinstall uses at least 650MB of RAM. If we don't require
-            # enough RAM, gurl will timeout or cause RecoveryOS to crash.
-            availablemem = memsize - 681574400
-            NSLog(u"Available Memory for image is %@", str(availablemem))
-            filesize = Utils.getDMGSize(source)[0]
-            NSLog(u"Required Memory for image is %@", str(filesize))
-            # Formatting RAM Disk requires around 5% of the total amount of
-            # bytes. Add 6% to compensate for the padding we will need.
-            paddedfilesize = int(filesize) * 1.06
-            NSLog(u"Padded Memory for image is %@", str(paddedfilesize))
-            if filesize is False:
-                NSLog(u"Error when calculating image size.")
-                NSLog(u"Using asr instead of gurl...")
-            elif int(paddedfilesize) > availablemem:
-                NSLog(u"Available Memory is not sufficient for image size. "
-                      "Using asr instead of gurl...")
-            elif 9000000000 > memsize:
-                NSLog(u"Machine has 8GB of RAM or less. Using asr instead of "
-                      "gurl...")
+            ramdisksource = self.RAMDisk(source, imaging=True)
+            if ramdisksource[0]:
+                source = ramdisksource[0]
             else:
-                sectors = int(paddedfilesize) / 512
-                ramstring = "ram://%s" % str(sectors)
-                NSLog(u"Amount of Sectors for RAM Disk is %@", str(sectors))
-                ramattachcommand = ["/usr/bin/hdiutil", "attach", "-nomount",
-                                    ramstring]
-                ramattach = subprocess.Popen(ramattachcommand,
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE)
-                devdisk = ramattach.communicate()
-                # hdiutil returns some really crappy things from stdout
-                # Ex: ('/dev/disk20     \t         \t\n', '')
-                devdiskstr = devdisk[0].split(' ')[0]
-                randomnum = random.randint(1000000, 10000000)
-                ramdiskvolname = "ramdisk" + str(randomnum)
-                NSLog(u"RAM Disk mountpoint is %@", str(ramdiskvolname))
-                if apfs_image is True:
-                    NSLog(u"Formatting RAM Disk as APFS at %@", devdiskstr)
-                    ramformatcommand = ["/sbin/newfs_apfs", "-v",
-                                        ramdiskvolname, devdiskstr]
-                    ramformat = subprocess.Popen(ramformatcommand,
-                                                 stdout=subprocess.PIPE,
-                                                 stderr=subprocess.PIPE)
-                    NSLog(u"Mounting APFS RAM Disk %@", devdiskstr)
-                    rammountcommand = ["/usr/sbin/diskutil", "erasedisk",
-                                       'APFS', ramdiskvolname, devdiskstr]
-                    rammount = subprocess.Popen(rammountcommand,
-                                                stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE)
+                if ramdisksource[1] is True:
+                    pass
                 else:
-                    NSLog(u"Formatting RAM Disk as HFS at %@", devdiskstr)
-                    ramformatcommand = ["/sbin/newfs_hfs", "-v",
-                                        ramdiskvolname, devdiskstr]
-                    ramformat = subprocess.Popen(ramformatcommand,
-                                                 stdout=subprocess.PIPE,
-                                                 stderr=subprocess.PIPE)
-                    NSLog(u"Mounting HFS RAM Disk %@", devdiskstr)
-                    rammountcommand = ["/usr/sbin/diskutil", "erasedisk",
-                                       'HFS+', ramdiskvolname, devdiskstr]
-                    rammount = subprocess.Popen(rammountcommand,
-                                                stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE)
-                # Wait for the disk to completely initialize
-                NSLog(u"Sleeping 2 seconds to allow full disk initialization.")
-                time.sleep(2)
-                targetpath = os.path.join('/Volumes', ramdiskvolname)
-                NSLog(u"Downloading DMG file from %@", str(source))
-                sourceram = self.downloadDMG(source, targetpath)
-                if sourceram is False:
-                    NSLog(u"Detaching RAM Disk due to failure.")
-                    detachcommand = ["/usr/bin/hdiutil", "detach", devdiskstr]
-                    detach = subprocess.Popen(detachcommand,
-                                              stdout=subprocess.PIPE,
-                                              stderr=subprocess.PIPE)
-                    self.errorMessage = "DMG Failed to download."
+                    self.errorMessage = ramdisksource[2]
                     self.targetVolume.EnsureMountedWithRefresh()
                     return False
-                source = sourceram
 
         is_apfs = False
         if Utils.is_apfs(source):
@@ -1208,7 +1122,8 @@ class MainController(NSObject):
             self.targetVolume.EnsureMountedWithRefresh()
             if 'ramdisk' in source:
                 NSLog(u"Detaching RAM Disk post imaging.")
-                detachcommand = ["/usr/bin/hdiutil", "detach", devdiskstr]
+                detachcommand = ["/usr/bin/hdiutil", "detach",
+                                 ramdisksource[1]]
                 detach = subprocess.Popen(detachcommand,
                                           stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE)
@@ -1222,6 +1137,108 @@ class MainController(NSObject):
             progress_method=self.updateProgressTitle_Percent_Detail_)
         if not success:
             self.errorMessage = detail
+
+    def RAMDisk(self, source, imaging=False):
+        apfs_image = Utils.is_apfs(source)
+        if self.targetVolume._attributes['FilesystemType'] == 'hfs' and apfs_image is True:
+            error = "%s is formatted as HFS and you are trying to restore an APFS disk image" % str(self.targetVolume.mountpoint)
+            return False, False, error
+        elif self.targetVolume._attributes['FilesystemType'] == 'apfs' and apfs_image is False:
+            error = "%s is formatted as APFS and you are trying to restore an HFS disk image" % str(self.targetVolume.mountpoint)
+            return False, False, error
+        sysctlcommand = ["/usr/sbin/sysctl", "hw.memsize"]
+        sysctl = subprocess.Popen(sysctlcommand,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+        memsizetuple = sysctl.communicate()
+        # sysctl returns crappy things from stdout.
+        # Ex: ('hw.memsize: 1111111\n', '')
+        memsize = int(
+            memsizetuple[0].split('\n')[0].replace('hw.memsize: ', ''))
+        NSLog(u"Total Memory is %@", str(memsize))
+        # Assume netinstall uses at least 650MB of RAM. If we don't require
+        # enough RAM, gurl will timeout or cause RecoveryOS to crash.
+        availablemem = memsize - 681574400
+        NSLog(u"Available Memory for image is %@", str(availablemem))
+        filesize = Utils.getDMGSize(source)[0]
+        NSLog(u"Required Memory for image is %@", str(filesize))
+        # Formatting RAM Disk requires around 5% of the total amount of
+        # bytes. Add 6% to compensate for the padding we will need.
+        paddedfilesize = int(filesize) * 1.06
+        NSLog(u"Padded Memory for image is %@", str(paddedfilesize))
+        if filesize is False:
+            NSLog(u"Error when calculating source size. Using original method "
+                  "instead of gurl...")
+            return False, True
+        elif imaging is True and 9000000000 > memsize:
+            NSLog(u"Feature requires more than 9GB of RAM. Using asr "
+                  "instead of gurl...")
+            return False, True
+        elif int(paddedfilesize) > availablemem:
+            NSLog(u"Available Memory is not sufficient for source size. "
+                  "Using original method instead of gurl...")
+            return False, True
+        elif 8000000000 > memsize:
+            NSLog(u"Feature requires at least 8GB of RAM. Using original "
+                  "method instead of gurl...")
+            return False, True
+        else:
+            sectors = int(paddedfilesize) / 512
+            ramstring = "ram://%s" % str(sectors)
+            NSLog(u"Amount of Sectors for RAM Disk is %@", str(sectors))
+            ramattachcommand = ["/usr/bin/hdiutil", "attach", "-nomount",
+                                ramstring]
+            ramattach = subprocess.Popen(ramattachcommand,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
+            devdisk = ramattach.communicate()
+            # hdiutil returns some really crappy things from stdout
+            # Ex: ('/dev/disk20     \t         \t\n', '')
+            devdiskstr = devdisk[0].split(' ')[0]
+            randomnum = random.randint(1000000, 10000000)
+            ramdiskvolname = "ramdisk" + str(randomnum)
+            NSLog(u"RAM Disk mountpoint is %@", str(ramdiskvolname))
+            if apfs_image is True:
+                NSLog(u"Formatting RAM Disk as APFS at %@", devdiskstr)
+                ramformatcommand = ["/sbin/newfs_apfs", "-v",
+                                    ramdiskvolname, devdiskstr]
+                ramformat = subprocess.Popen(ramformatcommand,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE)
+                NSLog(u"Mounting APFS RAM Disk %@", devdiskstr)
+                rammountcommand = ["/usr/sbin/diskutil", "erasedisk",
+                                   'APFS', ramdiskvolname, devdiskstr]
+                rammount = subprocess.Popen(rammountcommand,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
+            else:
+                NSLog(u"Formatting RAM Disk as HFS at %@", devdiskstr)
+                ramformatcommand = ["/sbin/newfs_hfs", "-v",
+                                    ramdiskvolname, devdiskstr]
+                ramformat = subprocess.Popen(ramformatcommand,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE)
+                NSLog(u"Mounting HFS RAM Disk %@", devdiskstr)
+                rammountcommand = ["/usr/sbin/diskutil", "erasedisk",
+                                   'HFS+', ramdiskvolname, devdiskstr]
+                rammount = subprocess.Popen(rammountcommand,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
+            # Wait for the disk to completely initialize
+            NSLog(u"Sleeping 2 seconds to allow full disk initialization.")
+            time.sleep(2)
+            targetpath = os.path.join('/Volumes', ramdiskvolname)
+            NSLog(u"Downloading DMG file from %@", str(source))
+            sourceram = self.downloadDMG(source, targetpath)
+            if sourceram is False:
+                NSLog(u"Detaching RAM Disk due to failure.")
+                detachcommand = ["/usr/bin/hdiutil", "detach", devdiskstr]
+                detach = subprocess.Popen(detachcommand,
+                                          stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE)
+                error = "DMG Failed to download via RAMDisk."
+                return False, False, error
+            return sourceram, devdiskstr
 
     def downloadAndInstallPackages(self, item):
         url = item.get('url')
