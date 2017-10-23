@@ -1332,9 +1332,6 @@ class MainController(NSObject):
 
 
     def downloadDMG(self, url, target):
-        if not os.path.basename(url).endswith('.dmg'):
-            self.errorMessage = "%s doesn't end with either '.dmg'" % url
-            return False
         if os.path.basename(url).endswith('.dmg'):
             # Download it
             dmgname = os.path.basename(url)
@@ -1352,6 +1349,9 @@ class MainController(NSObject):
                     break
             if failsleft == 0:
                 return False
+        else:
+            self.errorMessage = "%s doesn't end with either '.dmg'" % url
+            return False
         return dmg
 
 
