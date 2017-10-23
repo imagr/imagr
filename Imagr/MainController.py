@@ -1219,34 +1219,18 @@ class MainController(NSObject):
             randomnum = random.randint(1000000, 10000000)
             ramdiskvolname = "ramdisk" + str(randomnum)
             NSLog(u"RAM Disk mountpoint is %@", str(ramdiskvolname))
-            # Only check for apfs_image status if imaging, startosinstall
-            # should just use apfs since it's meant for 10.13 and higher.
-            if (imaging is True and apfs_image is True) or imaging is False:
-                NSLog(u"Formatting RAM Disk as APFS at %@", devdiskstr)
-                ramformatcommand = ["/sbin/newfs_apfs", "-v",
-                                    ramdiskvolname, devdiskstr]
-                ramformat = subprocess.Popen(ramformatcommand,
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE)
-                NSLog(u"Mounting APFS RAM Disk %@", devdiskstr)
-                rammountcommand = ["/usr/sbin/diskutil", "erasedisk",
-                                   'APFS', ramdiskvolname, devdiskstr]
-                rammount = subprocess.Popen(rammountcommand,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
-            else:
-                NSLog(u"Formatting RAM Disk as HFS at %@", devdiskstr)
-                ramformatcommand = ["/sbin/newfs_hfs", "-v",
-                                    ramdiskvolname, devdiskstr]
-                ramformat = subprocess.Popen(ramformatcommand,
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE)
-                NSLog(u"Mounting HFS RAM Disk %@", devdiskstr)
-                rammountcommand = ["/usr/sbin/diskutil", "erasedisk",
-                                   'HFS+', ramdiskvolname, devdiskstr]
-                rammount = subprocess.Popen(rammountcommand,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
+            NSLog(u"Formatting RAM Disk as HFS at %@", devdiskstr)
+            ramformatcommand = ["/sbin/newfs_hfs", "-v",
+                                ramdiskvolname, devdiskstr]
+            ramformat = subprocess.Popen(ramformatcommand,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
+            NSLog(u"Mounting HFS RAM Disk %@", devdiskstr)
+            rammountcommand = ["/usr/sbin/diskutil", "erasedisk",
+                               'HFS+', ramdiskvolname, devdiskstr]
+            rammount = subprocess.Popen(rammountcommand,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
             # Wait for the disk to completely initialize
             targetpath = os.path.join('/Volumes', ramdiskvolname)
             while not os.path.isdir(targetpath):
