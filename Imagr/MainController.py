@@ -857,7 +857,7 @@ class MainController(NSObject):
             # startosinstall
             elif item.get('type') == 'startosinstall':
                 Utils.sendReport('in_progress', 'starting macOS install: %s' % item.get('url'))
-                self.startOSinstall(item)
+                self.startOSinstall(item, ramdisk=item.get('ramdisk', False))
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
@@ -1129,23 +1129,41 @@ class MainController(NSObject):
                                           stderr=subprocess.PIPE)
             return True
 
-    def startOSinstall(self, item):
+    def startOSinstall(self, item, ramdisk):
+        if ramdisk:
+            ramdisksource = self.RAMDisk(item, imaging=False)
+            if ramdisksource[0]:
+                ositem = {
+                    'ramdisk': True,
+                    'type': 'startosinstall',
+                    'url': ramdisksource[0]
+                    }
+            else:
+                if ramdisksource[1] is True:
+                    ositem = item
+                else:
+                    self.errorMessage = ramdisksource[2]
+                    self.targetVolume.EnsureMountedWithRefresh()
+                    return False
+        else:
+            ositem = item
         self.updateProgressTitle_Percent_Detail_(
             'Preparing macOS install...', -1, '')
         success, detail = osinstall.run(
-            item, self.targetVolume.mountpoint,
+            ositem, self.targetVolume.mountpoint,
             progress_method=self.updateProgressTitle_Percent_Detail_)
         if not success:
             self.errorMessage = detail
 
     def RAMDisk(self, source, imaging=False):
-        apfs_image = Utils.is_apfs(source)
-        if self.targetVolume._attributes['FilesystemType'] == 'hfs' and apfs_image is True:
-            error = "%s is formatted as HFS and you are trying to restore an APFS disk image" % str(self.targetVolume.mountpoint)
-            return False, False, error
-        elif self.targetVolume._attributes['FilesystemType'] == 'apfs' and apfs_image is False:
-            error = "%s is formatted as APFS and you are trying to restore an HFS disk image" % str(self.targetVolume.mountpoint)
-            return False, False, error
+        if imaging is True:
+            apfs_image = Utils.is_apfs(source)
+            if self.targetVolume._attributes['FilesystemType'] == 'hfs' and apfs_image is True:
+                error = "%s is formatted as HFS and you are trying to restore an APFS disk image" % str(self.targetVolume.mountpoint)
+                return False, False, error
+            elif self.targetVolume._attributes['FilesystemType'] == 'apfs' and apfs_image is False:
+                error = "%s is formatted as APFS and you are trying to restore an HFS disk image" % str(self.targetVolume.mountpoint)
+                return False, False, error
         sysctlcommand = ["/usr/sbin/sysctl", "hw.memsize"]
         sysctl = subprocess.Popen(sysctlcommand,
                                   stdout=subprocess.PIPE,
@@ -1159,13 +1177,16 @@ class MainController(NSObject):
         # Assume netinstall uses at least 650MB of RAM. If we don't require
         # enough RAM, gurl will timeout or cause RecoveryOS to crash.
         availablemem = memsize - 681574400
-        NSLog(u"Available Memory for image is %@", str(availablemem))
-        filesize = Utils.getDMGSize(source)[0]
-        NSLog(u"Required Memory for image is %@", str(filesize))
+        NSLog(u"Available Memory for DMG is %@", str(availablemem))
+        if imaging is True:
+            filesize = Utils.getDMGSize(source)[0]
+        else:
+            filesize = Utils.getDMGSize(source.get('url'))[0]
+        NSLog(u"Required Memory for DMG is %@", str(filesize))
         # Formatting RAM Disk requires around 5% of the total amount of
         # bytes. Add 6% to compensate for the padding we will need.
         paddedfilesize = int(filesize) * 1.06
-        NSLog(u"Padded Memory for image is %@", str(paddedfilesize))
+        NSLog(u"Padded Memory for DMG is %@", str(paddedfilesize))
         if filesize is False:
             NSLog(u"Error when calculating source size. Using original method "
                   "instead of gurl...")
@@ -1198,7 +1219,9 @@ class MainController(NSObject):
             randomnum = random.randint(1000000, 10000000)
             ramdiskvolname = "ramdisk" + str(randomnum)
             NSLog(u"RAM Disk mountpoint is %@", str(ramdiskvolname))
-            if apfs_image is True:
+            # Only check for apfs_image status if imaging, startosinstall
+            # should just use apfs since it's meant for 10.13 and higher.
+            if (imaging is True and apfs_image is True) or imaging is False:
                 NSLog(u"Formatting RAM Disk as APFS at %@", devdiskstr)
                 ramformatcommand = ["/sbin/newfs_apfs", "-v",
                                     ramdiskvolname, devdiskstr]
@@ -1228,8 +1251,12 @@ class MainController(NSObject):
             NSLog(u"Sleeping 2 seconds to allow full disk initialization.")
             time.sleep(2)
             targetpath = os.path.join('/Volumes', ramdiskvolname)
-            NSLog(u"Downloading DMG file from %@", str(source))
-            sourceram = self.downloadDMG(source, targetpath)
+            if imaging is True:
+                dmgsource = source
+            else:
+                dmgsource = source.get('url')
+            NSLog(u"Downloading DMG file from %@", str(dmgsource))
+            sourceram = self.downloadDMG(dmgsource, targetpath)
             if sourceram is False:
                 NSLog(u"Detaching RAM Disk due to failure.")
                 detachcommand = ["/usr/bin/hdiutil", "detach", devdiskstr]
