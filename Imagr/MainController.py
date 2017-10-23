@@ -1350,7 +1350,7 @@ class MainController(NSObject):
             if failsleft == 0:
                 return False
         else:
-            self.errorMessage = "%s doesn't end with either '.dmg'" % url
+            self.errorMessage = "%s doesn't end with '.dmg'" % url
             return False
         return dmg
 
