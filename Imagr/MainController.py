@@ -1184,8 +1184,8 @@ class MainController(NSObject):
             filesize = Utils.getDMGSize(source.get('url'))[0]
         NSLog(u"Required Memory for DMG is %@", str(filesize))
         # Formatting RAM Disk requires around 5% of the total amount of
-        # bytes. Add 7% to compensate for the padding we will need.
-        paddedfilesize = int(filesize) * 1.07
+        # bytes. Add 10% to compensate for the padding we will need.
+        paddedfilesize = int(filesize) * 1.10
         NSLog(u"Padded Memory for DMG is %@", str(paddedfilesize))
         if filesize is False:
             NSLog(u"Error when calculating source size. Using original method "
