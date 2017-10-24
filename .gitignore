@@ -8,7 +8,7 @@ Packages/
 AutoNBI.py
 FoundationPlist*
 Imagr.xcodeproj/project.xcworkspace/xcuserdata/*
-config.mk
+*.mk
 rc.netboot
 *.pyc
 rc-imaging/custom
