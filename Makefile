@@ -79,6 +79,7 @@ dmg: build
 	cp -R ./build/Release/Imagr.app /tmp/imagr-build
 	cp ./validateplist /tmp/imagr-build/Tools
 	cp ./get_locale /tmp/imagr-build/Tools
+	cp -R ./rc-imaging /tmp/imagr-build/Tools
 	chmod +x /tmp/imagr-build/Tools/validateplist
 	chmod +x /tmp/imagr-build/Tools/get_locale
 	hdiutil create -srcfolder /tmp/imagr-build -volname "Imagr" -fs HFS+ -format UDZO -o Imagr.dmg
