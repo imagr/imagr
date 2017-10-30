@@ -98,7 +98,7 @@ def post_url(url, post_data, message=None, follow_redirects=False,
             if message and connection.status and connection.status != 304:
                 # log always, display if verbose is 1 or more
                 # also display in progress field
-                NSLog(message)
+                NSLog('%@', message)
                 if progress_method:
                     progress_method(None, None, message)
                 # now clear message so we don't display it again
@@ -177,7 +177,7 @@ def NSLogWrapper(message):
 
 def get_url(url, destinationpath, message=None, follow_redirects=False,
             progress_method=None, additional_headers=None, username=None,
-            password=None):
+            password=None, resume=False):
     """Gets an HTTP or HTTPS URL and stores it in
     destination path. Returns a dictionary of headers, which includes
     http_result_code and http_result_description.
@@ -197,6 +197,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                'file': tempdownloadpath,
                'follow_redirects': follow_redirects,
                'additional_headers': header_dict_from_list(additional_headers),
+               'can_resume': resume,
                'username': username,
                'password': password,
                'logging_function': NSLogWrapper}
@@ -214,7 +215,7 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
             if message and connection.status and connection.status != 304:
                 # log always, display if verbose is 1 or more
                 # also display in progress field
-                NSLog(message)
+                NSLog('%@', message)
                 if progress_method:
                     progress_method(None, None, message)
                 # now clear message so we don't display it again
@@ -351,6 +352,26 @@ def downloadFile(url, additional_headers=None, username=None, password=None):
     # https://docs.python.org/2/glossary.html#term-universal-newlines
     # if data is not False:
     #     data = '\n'.join(data.splitlines())
+    return data, error
+
+
+def getDMGSize(url):
+    url_parse = urlparse.urlparse(url)
+    error = None
+    error = type("err", (object,), dict())
+    if url_parse.scheme in ['http', 'https']:
+        request = urllib2.Request(url)
+        try:
+            dmg = urllib2.urlopen(request)
+            data = dmg.headers['Content-Length']
+        except (urllib2.URLError, urllib2.HTTPError), err:
+            setattr(error, 'reason', err)
+            data = False
+    else:
+        setattr(error, 'reason', 'The following URL is unsupported')
+        data = False
+
+    setattr(error, 'url', url)
     return data, error
 
 
@@ -656,22 +677,22 @@ def unmountdmg(mountpoint):
         return True
 
 
-def downloadChunks(url, file, progress_method=None, additional_headers=None):
+def downloadChunks(url, file, progress_method=None, additional_headers=None, resume=False):
     message = "Downloading %s" % os.path.basename(url)
     url_parse = urlparse.urlparse(url)
     if url_parse.scheme in ['http', 'https']:
         # Use gurl to download the file
         try:
-            headers = get_url(url, file, message=message,
+            headers = get_url(url, file, message=message, resume=resume,
                               progress_method=progress_method,
                               additional_headers=additional_headers)
             return file, None
-        except HTTPError, err:
-            NSLog("HTTP Error: %@", err)
-            return False, err
-        except GurlError, err:
-            NSLog("Gurl Error: %@", err)
-            return False, err
+        except HTTPError, error:
+            NSLog("HTTP Error: %@", error)
+            return False, error
+        except GurlError, error:
+            NSLog("Gurl Error: %@", error)
+            return False, error
     elif url_parse.scheme == 'file':
         # File resources should be handled natively. Space characters, %20,
         # need to be removed

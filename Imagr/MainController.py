@@ -15,6 +15,7 @@ from Foundation import *
 from AppKit import *
 from Cocoa import *
 from Quartz.CoreGraphics import *
+import random
 import subprocess
 import sys
 import macdisk
@@ -850,12 +851,13 @@ class MainController(NSObject):
                 self.Clone(
                     item.get('url'),
                     self.targetVolume,
-                    verify=item.get('verify', True)
+                    verify=item.get('verify', True),
+                    ramdisk=item.get('ramdisk', False),
                 )
             # startosinstall
             elif item.get('type') == 'startosinstall':
                 Utils.sendReport('in_progress', 'starting macOS install: %s' % item.get('url'))
-                self.startOSinstall(item)
+                self.startOSinstall(item, ramdisk=item.get('ramdisk', False))
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
@@ -1019,11 +1021,12 @@ class MainController(NSObject):
         self.theTabView.selectTabViewItem_(self.mainTab)
         self.workflowOnThreadPrep()
 
-    def Clone(self, source, target, erase=True, verify=True, show_activity=True):
+    def Clone(self, source, target, erase=True, verify=True,
+              show_activity=True, ramdisk=False):
         """A wrapper around 'asr' to clone one disk object onto another.
 
-        We run with --puppetstrings so that we get non-buffered output that we can
-        actually read when show_activity=True.
+        We run with --puppetstrings so that we get non-buffered output that we
+        can actually read when show_activity=True.
 
         Args:
             source: A Disk or Image object.
@@ -1042,6 +1045,18 @@ class MainController(NSObject):
             target_ref = "/dev/%s" % self.targetVolume.deviceidentifier
         else:
             raise macdisk.MacDiskError("target is not a Disk object")
+
+        if ramdisk:
+            ramdisksource = self.RAMDisk(source, imaging=True)
+            if ramdisksource[0]:
+                source = ramdisksource[0]
+            else:
+                if ramdisksource[1] is True:
+                    pass
+                else:
+                    self.errorMessage = ramdisksource[2]
+                    self.targetVolume.EnsureMountedWithRefresh()
+                    return False
 
         is_apfs = False
         if Utils.is_apfs(source):
@@ -1105,16 +1120,137 @@ class MainController(NSObject):
             return False
         if task.poll() == 0:
             self.targetVolume.EnsureMountedWithRefresh()
+            if 'ramdisk' in source:
+                NSLog(u"Detaching RAM Disk post imaging.")
+                detachcommand = ["/usr/bin/hdiutil", "detach",
+                                 ramdisksource[1]]
+                detach = subprocess.Popen(detachcommand,
+                                          stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE)
             return True
 
-    def startOSinstall(self, item):
+    def startOSinstall(self, item, ramdisk):
+        if ramdisk:
+            ramdisksource = self.RAMDisk(item, imaging=False)
+            if ramdisksource[0]:
+                ositem = {
+                    'ramdisk': True,
+                    'type': 'startosinstall',
+                    'url': ramdisksource[0]
+                    }
+            else:
+                if ramdisksource[1] is True:
+                    ositem = item
+                else:
+                    self.errorMessage = ramdisksource[2]
+                    self.targetVolume.EnsureMountedWithRefresh()
+                    return False
+        else:
+            ositem = item
         self.updateProgressTitle_Percent_Detail_(
             'Preparing macOS install...', -1, '')
         success, detail = osinstall.run(
-            item, self.targetVolume.mountpoint,
+            ositem, self.targetVolume.mountpoint,
             progress_method=self.updateProgressTitle_Percent_Detail_)
         if not success:
             self.errorMessage = detail
+
+    def RAMDisk(self, source, imaging=False):
+        if imaging is True:
+            apfs_image = Utils.is_apfs(source)
+            if self.targetVolume._attributes['FilesystemType'] == 'hfs' and apfs_image is True:
+                error = "%s is formatted as HFS and you are trying to restore an APFS disk image" % str(self.targetVolume.mountpoint)
+                return False, False, error
+            elif self.targetVolume._attributes['FilesystemType'] == 'apfs' and apfs_image is False:
+                error = "%s is formatted as APFS and you are trying to restore an HFS disk image" % str(self.targetVolume.mountpoint)
+                return False, False, error
+        sysctlcommand = ["/usr/sbin/sysctl", "hw.memsize"]
+        sysctl = subprocess.Popen(sysctlcommand,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+        memsizetuple = sysctl.communicate()
+        # sysctl returns crappy things from stdout.
+        # Ex: ('hw.memsize: 1111111\n', '')
+        memsize = int(
+            memsizetuple[0].split('\n')[0].replace('hw.memsize: ', ''))
+        NSLog(u"Total Memory is %@", str(memsize))
+        # Assume netinstall uses at least 650MB of RAM. If we don't require
+        # enough RAM, gurl will timeout or cause RecoveryOS to crash.
+        availablemem = memsize - 681574400
+        NSLog(u"Available Memory for DMG is %@", str(availablemem))
+        if imaging is True:
+            filesize = Utils.getDMGSize(source)[0]
+        else:
+            filesize = Utils.getDMGSize(source.get('url'))[0]
+        NSLog(u"Required Memory for DMG is %@", str(filesize))
+        # Formatting RAM Disk requires around 5% of the total amount of
+        # bytes. Add 10% to compensate for the padding we will need.
+        paddedfilesize = int(filesize) * 1.10
+        NSLog(u"Padded Memory for DMG is %@", str(paddedfilesize))
+        if filesize is False:
+            NSLog(u"Error when calculating source size. Using original method "
+                  "instead of gurl...")
+            return False, True
+        elif imaging is True and 9000000000 > memsize:
+            NSLog(u"Feature requires more than 9GB of RAM. Using asr "
+                  "instead of gurl...")
+            return False, True
+        elif int(paddedfilesize) > availablemem:
+            NSLog(u"Available Memory is not sufficient for source size. "
+                  "Using original method instead of gurl...")
+            return False, True
+        elif 8000000000 > memsize:
+            NSLog(u"Feature requires at least 8GB of RAM. Using original "
+                  "method instead of gurl...")
+            return False, True
+        else:
+            sectors = int(paddedfilesize) / 512
+            ramstring = "ram://%s" % str(sectors)
+            NSLog(u"Amount of Sectors for RAM Disk is %@", str(sectors))
+            ramattachcommand = ["/usr/bin/hdiutil", "attach", "-nomount",
+                                ramstring]
+            ramattach = subprocess.Popen(ramattachcommand,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
+            devdisk = ramattach.communicate()
+            # hdiutil returns some really crappy things from stdout
+            # Ex: ('/dev/disk20     \t         \t\n', '')
+            devdiskstr = devdisk[0].split(' ')[0]
+            randomnum = random.randint(1000000, 10000000)
+            ramdiskvolname = "ramdisk" + str(randomnum)
+            NSLog(u"RAM Disk mountpoint is %@", str(ramdiskvolname))
+            NSLog(u"Formatting RAM Disk as HFS at %@", devdiskstr)
+            ramformatcommand = ["/sbin/newfs_hfs", "-v",
+                                ramdiskvolname, devdiskstr]
+            ramformat = subprocess.Popen(ramformatcommand,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
+            NSLog(u"Mounting HFS RAM Disk %@", devdiskstr)
+            rammountcommand = ["/usr/sbin/diskutil", "erasedisk",
+                               'HFS+', ramdiskvolname, devdiskstr]
+            rammount = subprocess.Popen(rammountcommand,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+            # Wait for the disk to completely initialize
+            targetpath = os.path.join('/Volumes', ramdiskvolname)
+            while not os.path.isdir(targetpath):
+                NSLog(u"Sleeping 1 second to allow full disk initialization.")
+                time.sleep(1)
+            if imaging is True:
+                dmgsource = source
+            else:
+                dmgsource = source.get('url')
+            NSLog(u"Downloading DMG file from %@", str(dmgsource))
+            sourceram = self.downloadDMG(dmgsource, targetpath)
+            if sourceram is False:
+                NSLog(u"Detaching RAM Disk due to failure.")
+                detachcommand = ["/usr/bin/hdiutil", "detach", devdiskstr]
+                detach = subprocess.Popen(detachcommand,
+                                          stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE)
+                error = "DMG Failed to download via RAMDisk."
+                return False, False, error
+            return sourceram, devdiskstr
 
     def downloadAndInstallPackages(self, item):
         url = item.get('url')
@@ -1178,6 +1314,31 @@ class MainController(NSObject):
                 return False
             # Clean up after ourselves
             shutil.rmtree(temp_dir)
+
+
+    def downloadDMG(self, url, target):
+        if os.path.basename(url).endswith('.dmg'):
+            # Download it
+            dmgname = os.path.basename(url)
+            failsleft = 3
+            dmgpath = os.path.join(target, dmgname)
+            NSLog(u"DMG Path %@", str(dmgpath))
+            while not os.path.isfile(dmgpath):
+                (dmg, error) = Utils.downloadChunks(url, dmgpath, resume=True,
+                                                    progress_method=self.updateProgressTitle_Percent_Detail_)
+                if error:
+                    failsleft -= 1
+                    NSLog(u"DMG failed to download - Retries left: %@", str(failsleft))
+                if failsleft == 0:
+                    NSLog(u"Too many download failures. Exiting...")
+                    break
+            if failsleft == 0:
+                return False
+        else:
+            self.errorMessage = "%s doesn't end with '.dmg'" % url
+            return False
+        return dmg
+
 
     def downloadAndCopyPackage(self, item, counter):
         self.updateProgressTitle_Percent_Detail_(
