@@ -946,32 +946,31 @@ class MainController(NSObject):
             script_file.write(script)
             script_file.close()
             os.chmod(script_file.name, 0700)
-
-            proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
             while proc.poll() is None:
                 output = proc.stdout.readline().strip().decode('UTF-8')
                 output_list.append(output)
-                if proc.stderr.readline():
-                    stderr = proc.stderr.readline().strip.decode('UTF-8')
-                    if stderr != '':
-                        output_list.append(stderr)
                 if progress_method:
                     progress_method(None, None, output)
             os.remove(script_file.name)
-
             if proc.returncode != 0:
                 error_output = '\n'.join(output_list)
                 Utils.sendReport('error', 'Could not run included workflow script: %s' % error_output)
                 self.errorMessage = 'Could not run included workflow script: %s' % error_output
                 return
             else:
+
                 for line in output_list:
                     if line.startswith("ImagrIncludedWorkflow: ") or line.startswith("ImagrIncludedWorkflow:"):
                         included_workflow = line.replace("ImagrIncludedWorkflow: ", "").replace("ImagrIncludedWorkflow:", "").strip()
                         break
         else:
             included_workflow = item['name']
-
+        NSLog("Log: %@", str(included_workflow))
+        if included_workflow == None:
+            Utils.sendReport('error', 'No included workflow was returned.')
+            self.errorMessage = 'No included workflow was returned.'
+            return
         return included_workflow
 
     def runIncludedWorkflow(self, item):
@@ -1468,14 +1467,10 @@ class MainController(NSObject):
         os.chmod(script_file.name, 0700)
         if progress_method:
             progress_method("Running script...", -1, '')
-        proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         while proc.poll() is None:
             output = proc.stdout.readline().strip().decode('UTF-8')
             output_list.append(output)
-            if proc.stderr.readline():
-                stderr = proc.stderr.readline().strip().decode('UTF-8')
-                if stderr != '':
-                    output_list.append(stderr)
             if progress_method:
                 progress_method(None, None, output)
         os.remove(script_file.name)
