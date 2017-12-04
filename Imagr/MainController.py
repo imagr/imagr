@@ -938,6 +938,7 @@ class MainController(NSObject):
         target_workflow = None
 
         if 'script' in item:
+            output_list = []
             if progress_method:
                 progress_method("Running script to determine included workflow...", -1, '')
             script = Utils.replacePlaceholders(item.get('script'), self.targetVolume.mountpoint)
@@ -945,17 +946,26 @@ class MainController(NSObject):
             script_file.write(script)
             script_file.close()
             os.chmod(script_file.name, 0700)
-            proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
-            (out, err) = proc.communicate()
+            proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            while proc.poll() is None:
+                output = proc.stdout.readline().strip().decode('UTF-8')
+                output_list.append(output)
+                if proc.stderr.readline():
+                    stderr = proc.stderr.readline().strip.decode('UTF-8')
+                    if stderr != '':
+                        output_list.append(stderr)
+                if progress_method:
+                    progress_method(None, None, output)
+            os.remove(script_file.name)
+
             if proc.returncode != 0:
-                if err == None:
-                    err = 'Unknown'
-                Utils.sendReport('error', 'Could not run included workflow script: %s' % err)
-                self.errorMessage = 'Could not run included workflow script: %s' % err
+                error_output = '\n'.join(output_list)
+                Utils.sendReport('error', 'Could not run included workflow script: %s' % error_output)
+                self.errorMessage = 'Could not run included workflow script: %s' % error_output
                 return
             else:
-                for line in out.splitlines():
+                for line in output_list:
                     if line.startswith("ImagrIncludedWorkflow: ") or line.startswith("ImagrIncludedWorkflow:"):
                         included_workflow = line.replace("ImagrIncludedWorkflow: ", "").replace("ImagrIncludedWorkflow:", "").strip()
                         break
@@ -1241,6 +1251,9 @@ class MainController(NSObject):
             else:
                 dmgsource = source.get('url')
             NSLog(u"Downloading DMG file from %@", str(dmgsource))
+            download_string = 'Downloading {}...'.format(str(dmgsource))
+            self.updateProgressTitle_Percent_Detail_(
+            download_string, -1, '')
             sourceram = self.downloadDMG(dmgsource, targetpath)
             if sourceram is False:
                 NSLog(u"Detaching RAM Disk due to failure.")
@@ -1459,6 +1472,10 @@ class MainController(NSObject):
         while proc.poll() is None:
             output = proc.stdout.readline().strip().decode('UTF-8')
             output_list.append(output)
+            if proc.stderr.readline():
+                stderr = proc.stderr.readline().strip().decode('UTF-8')
+                if stderr != '':
+                    output_list.append(stderr)
             if progress_method:
                 progress_method(None, None, output)
         os.remove(script_file.name)

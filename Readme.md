@@ -15,6 +15,7 @@ The best place to get started with Imagr is the [Getting Started](https://github
 ## Features
 
 * Restore ASR Images (such as those created with AutoDMG)
+* Install macOS via `startosinstall`
 * Install packages during Imagr run and at first boot
 * Run scripts during Imagr run and at first boot
 * Include other workflows in your workflow, specified statically or using a script
