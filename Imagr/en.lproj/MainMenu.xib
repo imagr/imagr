@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17A358a" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16G1036" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -131,8 +131,8 @@
                 <outlet property="startupDiskRestartButton" destination="455" id="694"/>
                 <outlet property="theTabView" destination="829" id="841"/>
                 <outlet property="utilities_menu" destination="899" id="908"/>
-                <outlet property="workflowDescription" destination="762" id="773"/>
-                <outlet property="workflowDescriptionView" destination="761" id="772"/>
+                <outlet property="workflowDescription" destination="sP7-yj-hDN" id="Y04-JB-76Q"/>
+                <outlet property="workflowDescriptionView" destination="IoL-ek-btQ" id="rNn-OZ-TI7"/>
             </connections>
         </customObject>
         <window title="Imagr" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" showsToolbarButton="NO" animationBehavior="default" id="450">
@@ -292,33 +292,6 @@ Gw
                                                 <action selector="chooseWorkflowDropDownDidChange:" target="664" id="771"/>
                                             </connections>
                                         </popUpButton>
-                                        <scrollView focusRingType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="761" userLabel="Workflow Description">
-                                            <rect key="frame" x="118" y="61" width="444" height="233"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                            <clipView key="contentView" copiesOnScroll="NO" id="ZQu-RR-yaA">
-                                                <rect key="frame" x="1" y="1" width="442" height="231"/>
-                                                <autoresizingMask key="autoresizingMask"/>
-                                                <subviews>
-                                                    <textView editable="NO" selectable="NO" drawsBackground="NO" importsGraphics="NO" verticallyResizable="NO" usesFontPanel="YES" findStyle="panel" usesRuler="YES" allowsNonContiguousLayout="YES" spellingCorrection="YES" id="762">
-                                                        <rect key="frame" x="0.0" y="0.0" width="442" height="231"/>
-                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                                        <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
-                                                        <size key="minSize" width="442" height="231"/>
-                                                        <size key="maxSize" width="546" height="10000000"/>
-                                                        <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                                    </textView>
-                                                </subviews>
-                                                <color key="backgroundColor" white="1" alpha="0.0" colorSpace="calibratedWhite"/>
-                                            </clipView>
-                                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="763">
-                                                <rect key="frame" x="-100" y="-100" width="87" height="18"/>
-                                                <autoresizingMask key="autoresizingMask"/>
-                                            </scroller>
-                                            <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="764">
-                                                <rect key="frame" x="427" y="1" width="16" height="231"/>
-                                                <autoresizingMask key="autoresizingMask"/>
-                                            </scroller>
-                                        </scrollView>
                                         <button verticalHuggingPriority="750" id="909">
                                             <rect key="frame" x="417" y="296" width="151" height="32"/>
                                             <autoresizingMask key="autoresizingMask"/>
@@ -351,6 +324,33 @@ Gw
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
+                                        <scrollView misplaced="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="IoL-ek-btQ">
+                                            <rect key="frame" x="118" y="61" width="444" height="233"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <clipView key="contentView" id="r0x-ny-BhE">
+                                                <rect key="frame" x="1" y="1" width="442" height="231"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textView importsGraphics="NO" usesFontPanel="YES" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" spellingCorrection="YES" smartInsertDelete="YES" id="sP7-yj-hDN">
+                                                        <rect key="frame" x="0.0" y="0.0" width="442" height="231"/>
+                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                        <size key="minSize" width="442" height="231"/>
+                                                        <size key="maxSize" width="463" height="10000000"/>
+                                                        <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                    </textView>
+                                                </subviews>
+                                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                            </clipView>
+                                            <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="eXx-WH-pd9">
+                                                <rect key="frame" x="-100" y="-100" width="87" height="18"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                            </scroller>
+                                            <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="GYD-81-k8D">
+                                                <rect key="frame" x="427" y="1" width="16" height="231"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                            </scroller>
+                                        </scrollView>
                                     </subviews>
                                 </view>
                             </tabViewItem>
@@ -401,7 +401,7 @@ Gw
                     </tabView>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-184" y="-211"/>
+            <point key="canvasLocation" x="-184.5" y="-211.5"/>
         </window>
         <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" hidesOnDeactivate="YES" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="452" userLabel="Restart" customClass="NSPanel">
             <windowStyleMask key="styleMask" utility="YES"/>
