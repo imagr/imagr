@@ -1676,7 +1676,7 @@ class MainController(NSObject):
         Erases the target volume.
         'name' can be used to rename the volume on reformat.
         'format' can be used to specify a format type.
-            'format' type of 'auto_hfs_or_apfs' will check for HFS+ or APFS
+        'format' type of 'auto_hfs_or_apfs' will check for HFS+ or APFS
         If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
         """
         NSLog("Format is: %@", format)
