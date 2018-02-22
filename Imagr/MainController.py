@@ -1078,7 +1078,11 @@ class MainController(NSObject):
         command = ["/usr/sbin/asr", "restore", "--source", str(source),
                    "--target", target_ref, "--noprompt", "--puppetstrings"]
 
-
+        self.targetVolume.EnsureMountedWithRefresh()
+        if 'FilesystemType' not in self.targetVolume._attributes:
+            NSLog("Key `FilesystemType` not found in target volume: %@", str(self.targetVolume._attributes))
+            raise TypeError(self.targetVolume._attributes)
+        
         if self.targetVolume._attributes['FilesystemType'] == 'hfs' and\
         is_apfs == True:
             self.errorMessage = "%s is formatted as HFS and you are trying to restore an APFS disk image" % str(self.targetVolume.mountpoint)
@@ -1167,6 +1171,11 @@ class MainController(NSObject):
     def RAMDisk(self, source, imaging=False):
         if imaging is True:
             apfs_image = Utils.is_apfs(source)
+            
+            if 'FilesystemType' not in self.targetVolume._attributes:
+                NSLog("Key `FilesystemType` not found in target volume: %@", str(self.targetVolume._attributes))
+                raise TypeError(self.targetVolume._attributes)
+                    
             if self.targetVolume._attributes['FilesystemType'] == 'hfs' and apfs_image is True:
                 error = "%s is formatted as HFS and you are trying to restore an APFS disk image" % str(self.targetVolume.mountpoint)
                 return False, False, error
@@ -1442,6 +1451,19 @@ class MainController(NSObject):
         if not self.targetVolume.Mounted():
             self.targetVolume.Mount()
 
+        NSLog("IORegistryEntryName of selected volume: %@", self.targetVolume._attributes['IORegistryEntryName'])
+
+        # if the script wipes out the partition, we keep a record of the parent disk.
+        if not self.targetVolume.Info()['WholeDisk']:
+            parent_disk = macdisk.Disk(self.targetVolume.Info()['ParentWholeDisk'])
+            is_apfs_target = parent_disk._attributes['IORegistryEntryName'] == "AppleAPFSMedia"
+            NSLog("Target is child of an APFS container: %@", is_apfs_target)
+        else:
+            NSLog("Not a child of APFS")
+
+        is_efi_target = self.targetVolume._attributes['IORegistryEntryName'] == "EFI System Partition"
+        NSLog("Target is an EFI partition: %@", is_efi_target)
+
         retcode, error_output = self.runScript(
             script, self.targetVolume.mountpoint,
             progress_method=self.updateProgressTitle_Percent_Detail_)
@@ -1451,6 +1473,26 @@ class MainController(NSObject):
                 self.errorMessage = error_output
             else:
                 self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
+        else:
+            if is_apfs_target:
+                # If it was formatted back to HFS+ as part of a script execution, then we have to scan all available
+                # devices to discover the physical container.
+
+                # It is possible that a script has modified the partition/volume name.
+                # If the user initially selected a partition on an APFS container disk, the physical disk won't have the
+                # same name, nor will it be the parent disk of the container, so we need to refresh all disks.
+                # eg. apfs deleteContainer (disk1s1)
+                # -> now we have a partition on disk0s1 because APFS container disk1 disappeared.
+                # To solve this problem, any time you run deleteContainer from a script, the volume name should be "Imagr_APFS_Deleted"
+                self.should_update_volume_list = True
+
+                volumes = macdisk.MountedVolumes()
+                for volume in volumes:
+                    if volume.Info()['VolumeName'] == "Imagr_APFS_Deleted":
+                        self.targetVolume = volume
+                        break
+
+                NSLog("New target volume mountpoint is %@", self.targetVolume.mountpoint)
 
     def runScript(self, script, target, progress_method=None):
         """
