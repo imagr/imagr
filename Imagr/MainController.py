@@ -1688,8 +1688,22 @@ class MainController(NSObject):
         Erases the target volume.
         'name' can be used to rename the volume on reformat.
         'format' can be used to specify a format type.
+        'format' type of 'auto_hfs_or_apfs' will check for HFS+ or APFS
         If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
         """
+        NSLog("Format is: %@", format)
+        
+        if format == 'auto_hfs_or_apfs':
+            if self.targetVolume._attributes['FilesystemType'] == 'hfs':
+                format='Journaled HFS+'
+                NSLog("Detected HFS+ - erasing target")
+            elif self.targetVolume._attributes['FilesystemType'] == 'apfs':
+                format='APFS'
+                NSLog("Detected APFS - erasing target")
+            else:
+                NSLog("Volume not HFS+ or APFS, system returned: %@", self.targetVolume._attributes['FilesystemType'])
+                self.errorMessage = "Not HFS+ or APFS - specify volume format and reload workflows."
+        
         cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
         NSLog("%@", cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
