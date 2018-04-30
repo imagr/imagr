@@ -46,7 +46,7 @@ class Disk(object):
             "BusProtocol", "Ejectable", "MediaType", "RAIDSlice",
             "FilesystemName", "RAIDMaster", "WholeDisk", "FreeSpace",
             "TotalSize", "GlobalPermissionsEnabled", "SMARTStatus",
-            "Writable", "ParentWholeDisk", "MediaName"]
+            "Writable", "ParentWholeDisk", "MediaName", "IORegistryEntryName"]
 
     for key in keys:
       try:
