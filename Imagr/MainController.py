@@ -1451,7 +1451,6 @@ class MainController(NSObject):
         if not self.targetVolume.Mounted():
             self.targetVolume.Mount()
 
-        NSLog("IORegistryEntryName of selected volume: %@", self.targetVolume._attributes['IORegistryEntryName'])
 
         # if the script wipes out the partition, we keep a record of the parent disk.
         if not self.targetVolume.Info()['WholeDisk'] and 'IORegistryEntryName' in self.targetVolume._attributes:
