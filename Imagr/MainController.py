@@ -1460,6 +1460,7 @@ class MainController(NSObject):
             is_apfs_target = parent_disk._attributes['IORegistryEntryName'] == "AppleAPFSMedia"
             NSLog("Target is child of an APFS container: %@", is_apfs_target)
         else:
+            is_apfs_target = False
             NSLog("Not a child of APFS")
 
         if 'IORegistryEntryName' in self.targetVolume._attributes:
@@ -1476,6 +1477,12 @@ class MainController(NSObject):
             else:
                 self.errorMessage = "Script %s returned a non-0 exit code" % str(int(counter))
         else:
+            
+            try:
+                is_apfs_target
+            except NameError:
+                is_apfs_target = False
+
             if is_apfs_target:
                 # If it was formatted back to HFS+ as part of a script execution, then we have to scan all available
                 # devices to discover the physical container.
