@@ -1459,6 +1459,7 @@ class MainController(NSObject):
             is_apfs_target = parent_disk._attributes['IORegistryEntryName'] == "AppleAPFSMedia"
             NSLog("Target is child of an APFS container: %@", is_apfs_target)
         else:
+            is_apfs_target = None
             NSLog("Not a child of APFS")
 
         is_efi_target = self.targetVolume._attributes['IORegistryEntryName'] == "EFI System Partition"
