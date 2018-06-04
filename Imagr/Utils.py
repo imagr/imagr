@@ -723,7 +723,7 @@ def copyFirstBoot(root, network=True, reboot=True):
     config_plist['Network'] = network
     config_plist['RetryCount'] = retry_count
     config_plist['Reboot'] = reboot
-    firstboot_dir = 'usr/local/first-boot'
+    firstboot_dir = 'Library/Imagr-first-boot'
     if not os.path.exists(os.path.join(root, firstboot_dir)):
         os.makedirs(os.path.join(root, firstboot_dir))
     plistlib.writePlist(config_plist, os.path.join(root, firstboot_dir,

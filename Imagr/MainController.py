@@ -781,7 +781,7 @@ class MainController(NSObject):
     def setupFirstBootTools(self):
         # copy bits for first boot script
         packages_dir = os.path.join(
-            self.targetVolume.mountpoint, 'usr/local/first-boot/')
+            self.targetVolume.mountpoint, 'Library/Imagr-first-boot/')
         if not os.path.exists(packages_dir):
             os.makedirs(packages_dir)
         Utils.copyFirstBoot(self.targetVolume.mountpoint,
@@ -1378,7 +1378,7 @@ class MainController(NSObject):
 
     def downloadPackage(self, url, target, number, progress_method=None, additional_headers=None):
         error = None
-        dest_dir = os.path.join(target, 'usr/local/first-boot/items')
+        dest_dir = os.path.join(target, 'Library/Imagr-first-boot/items')
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
         if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.dmg'):
@@ -1533,7 +1533,7 @@ class MainController(NSObject):
         Copies a
          script to a specific volume
         """
-        dest_dir = os.path.join(target, 'usr/local/first-boot/items')
+        dest_dir = os.path.join(target, 'Library/Imagr-first-boot/items')
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
         dest_file = os.path.join(dest_dir, "%03d" % number)
