@@ -778,12 +778,23 @@ class MainController(NSObject):
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
             self.updateProgressWithInfo_, info, objc.NO)
 
+    def setupFirstBootDir(self):
+        library_dir = os.path.join(self.targetVolume.mountpoint, 'Library/')
+        if not os.path.exists(library_dir):
+            os.makedirs(library_dir, 0755)
+            os.chown(library_dir, 0, 0)
+
+        first_boot_items_dir = os.path.join(library_dir, 
+            'Imagr-first-boot/items/')
+        if not os.path.exists(first_boot_items_dir):
+            os.makedirs(first_boot_items_dir, 0755)
+
     def setupFirstBootTools(self):
         # copy bits for first boot script
         packages_dir = os.path.join(
-            self.targetVolume.mountpoint, 'usr/local/first-boot/')
+            self.targetVolume.mountpoint, 'Library/Imagr-first-boot/')
         if not os.path.exists(packages_dir):
-            os.makedirs(packages_dir)
+            self.setupFirstBootDir()
         Utils.copyFirstBoot(self.targetVolume.mountpoint,
                             self.waitForNetwork, self.firstBootReboot)
 
@@ -1378,9 +1389,9 @@ class MainController(NSObject):
 
     def downloadPackage(self, url, target, number, progress_method=None, additional_headers=None):
         error = None
-        dest_dir = os.path.join(target, 'usr/local/first-boot/items')
+        dest_dir = os.path.join(target, 'Library/Imagr-first-boot/items')
         if not os.path.exists(dest_dir):
-            os.makedirs(dest_dir)
+            self.setupFirstBootDir()
         if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.dmg'):
             error = "%s doesn't end with either '.pkg' or '.dmg'" % url
             return False, error
@@ -1533,9 +1544,9 @@ class MainController(NSObject):
         Copies a
          script to a specific volume
         """
-        dest_dir = os.path.join(target, 'usr/local/first-boot/items')
+        dest_dir = os.path.join(target, 'Library/Imagr-first-boot/items')
         if not os.path.exists(dest_dir):
-            os.makedirs(dest_dir)
+            self.setupFirstBootDir()
         dest_file = os.path.join(dest_dir, "%03d" % number)
         if progress_method:
             progress_method("Copying script to %s" % dest_file, 0, '')
