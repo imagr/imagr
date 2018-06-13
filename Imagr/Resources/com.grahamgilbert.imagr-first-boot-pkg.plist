@@ -6,7 +6,7 @@
 	<string>com.grahamgilbert.imagr-first-boot-pkg</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/Library/Imagr-first-boot/first-boot</string>
+		<string>/.imagr/first-boot/first-boot</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>
