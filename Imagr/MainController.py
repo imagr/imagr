@@ -779,13 +779,7 @@ class MainController(NSObject):
             self.updateProgressWithInfo_, info, objc.NO)
 
     def setupFirstBootDir(self):
-        library_dir = os.path.join(self.targetVolume.mountpoint, 'Library/')
-        if not os.path.exists(library_dir):
-            os.makedirs(library_dir, 0755)
-            os.chown(library_dir, 0, 0)
-
-        first_boot_items_dir = os.path.join(library_dir,
-            'Imagr-first-boot/items/')
+        first_boot_items_dir = os.path.join(self.targetVolume.mountpoint, '.imagr/first-boot/items/')
         if not os.path.exists(first_boot_items_dir):
             os.makedirs(first_boot_items_dir, 0755)
 
