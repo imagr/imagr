@@ -768,7 +768,7 @@ def copyFirstBoot(root, network=True, reboot=True):
 
     helperTools_dir = os.path.join(root, 'Library', 'PrivilegedHelperTools')
     if not os.path.exists(helperTools_dir):
-        os.makedirs(helperTools_dir, 01755)
+        os.makedirs(helperTools_dir, 0755)
         os.chown(helperTools_dir, 0, 0)
 
     if not os.path.exists(os.path.join(helperTools_dir, 'LoginLog.app')):
