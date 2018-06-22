@@ -723,7 +723,7 @@ def copyFirstBoot(root, network=True, reboot=True):
     config_plist['Network'] = network
     config_plist['RetryCount'] = retry_count
     config_plist['Reboot'] = reboot
-    firstboot_dir = 'usr/local/first-boot'
+    firstboot_dir = '.imagr/first-boot'
     if not os.path.exists(os.path.join(root, firstboot_dir)):
         os.makedirs(os.path.join(root, firstboot_dir))
     plistlib.writePlist(config_plist, os.path.join(root, firstboot_dir,
@@ -733,7 +733,8 @@ def copyFirstBoot(root, network=True, reboot=True):
     script_dir = os.path.dirname(os.path.realpath(__file__))
     launchDaemon_dir = os.path.join(root, 'Library', 'LaunchDaemons')
     if not os.path.exists(launchDaemon_dir):
-        os.makedirs(launchDaemon_dir)
+        os.makedirs(launchDaemon_dir, 0755)
+        os.chown(launchDaemon_dir, 0, 0)
 
     if not os.path.exists(os.path.join(launchDaemon_dir,
     'com.grahamgilbert.imagr-first-boot-pkg.plist')):
@@ -748,7 +749,8 @@ def copyFirstBoot(root, network=True, reboot=True):
 
     launchAgent_dir = os.path.join(root, 'Library', 'LaunchAgents')
     if not os.path.exists(launchAgent_dir):
-        os.makedirs(launchAgent_dir)
+        os.makedirs(launchAgent_dir, 0755)
+        os.chown(launchAgent_dir, 0, 0)
 
     if not os.path.exists(os.path.join(launchAgent_dir, 'se.gu.it.LoginLog.plist')):
         shutil.copy(os.path.join(script_dir, 'se.gu.it.LoginLog.plist'),
@@ -766,7 +768,8 @@ def copyFirstBoot(root, network=True, reboot=True):
 
     helperTools_dir = os.path.join(root, 'Library', 'PrivilegedHelperTools')
     if not os.path.exists(helperTools_dir):
-        os.makedirs(helperTools_dir)
+        os.makedirs(helperTools_dir, 0755)
+        os.chown(helperTools_dir, 0, 0)
 
     if not os.path.exists(os.path.join(helperTools_dir, 'LoginLog.app')):
         shutil.copytree(os.path.join(script_dir, 'LoginLog.app'),
