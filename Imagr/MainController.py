@@ -988,6 +988,9 @@ class MainController(NSObject):
                     NSLog(u"Included Workflow: %@", str(included_workflow))
                     # run the workflow
                     for component in workflow['components']:
+                        if (component.get('type') == 'startosinstall' and
+                            self.first_boot_items):
+                            self.setupFirstBootTools()
                         self.runComponent(component)
                     return
             else:
