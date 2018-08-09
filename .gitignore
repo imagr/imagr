@@ -8,6 +8,7 @@ Packages/
 AutoNBI.py
 FoundationPlist*
 Imagr.xcodeproj/project.xcworkspace/xcuserdata/*
+Imagr.xcodeproj/project.xcworkspace/xcshareddata/*
 *.mk
 rc.netboot
 *.pyc
@@ -16,3 +17,5 @@ rc-imaging/custom
 Imagr/post_test.py
 Python.framework
 
+Imagr_for_Recovery/imagr/Imagr.app
+Imagr_for_Recovery/imagr.dmg

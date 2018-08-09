@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# dirname and basename not available in Recovery boot
+# so we get to use Bash pattern matching
+BASENAME=${0##*/}
+THISDIR=${0%$BASENAME}
+IMAGR="${THISDIR}Imagr.app/Contents/MacOS/Imagr"
+
+"${IMAGR}"
+
+
+
