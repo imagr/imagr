@@ -23,7 +23,11 @@ int main(int argc, const char * argv[]) {
             [NSException raise: NSInternalInconsistencyException format: @"%s:%d main() Failed to find the Main.{py,pyc,pyo} file in the application wrapper's Resources directory.", __FILE__, __LINE__];
         }
         
-        Py_SetProgramName("/usr/bin/python");
+        //Py_SetProgramName("/usr/bin/python");
+        NSString *frameworksPath = [mainBundle privateFrameworksPath];
+        NSString *pythonBinPath = [frameworksPath stringByAppendingPathComponent:@"Python.framework/Versions/2.7/bin/python"];
+        char *pythonBinPathCString = (char *)[pythonBinPath cStringUsingEncoding: NSUTF8StringEncoding];
+        Py_SetProgramName(pythonBinPathCString);
         Py_Initialize();
         PySys_SetArgv(argc, (char **)argv);
         

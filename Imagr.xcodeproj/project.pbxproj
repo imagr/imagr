@@ -13,6 +13,8 @@
 		C06979C21AE83F3500914535 /* gurl.py in Resources */ = {isa = PBXBuildFile; fileRef = C06979C11AE83F3500914535 /* gurl.py */; };
 		C0D0AB191F8C36FC001B1CF3 /* osinstall.py in Resources */ = {isa = PBXBuildFile; fileRef = C0D0AB181F8C36FC001B1CF3 /* osinstall.py */; };
 		C0D0AB1D1F8C3D03001B1CF3 /* ptyexec in Resources */ = {isa = PBXBuildFile; fileRef = C0D0AB1C1F8C3D03001B1CF3 /* ptyexec */; };
+		C0D521AB2111184F00DB296F /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D521AA2111184F00DB296F /* Python.framework */; };
+		C0D521AD2111198100DB296F /* Python.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0D521AA2111184F00DB296F /* Python.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FC21F1741C6235DA0039D923 /* localize.sh in Resources */ = {isa = PBXBuildFile; fileRef = FC21F1731C6235DA0039D923 /* localize.sh */; };
 		FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */; };
 		FC98DA241AD6B2DC00F90405 /* first-boot in Resources */ = {isa = PBXBuildFile; fileRef = FC98DA201AD6B2DC00F90405 /* first-boot */; };
@@ -21,7 +23,6 @@
 		FCEA80AF1AD0101100DBA039 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FCEA80AE1AD0101100DBA039 /* Cocoa.framework */; };
 		FCEA80B81AD0101100DBA039 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FCEA80B71AD0101100DBA039 /* main.m */; };
 		FCEA80BB1AD0101100DBA039 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80B91AD0101100DBA039 /* Credits.rtf */; };
-		FCEA80BE1AD0101100DBA039 /* libpython2.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FCEA80BD1AD0101100DBA039 /* libpython2.7.dylib */; };
 		FCEA80C01AD0101100DBA039 /* main.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80BF1AD0101100DBA039 /* main.py */; };
 		FCEA80C21AD0101100DBA039 /* AppDelegate.py in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80C11AD0101100DBA039 /* AppDelegate.py */; };
 		FCEA80C51AD0101100DBA039 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FCEA80C31AD0101100DBA039 /* MainMenu.xib */; };
@@ -63,6 +64,19 @@
 		FCF6B3101AD1D73E00311D3A /* package.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCF6B30E1AD1D73E00311D3A /* package.icns */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		C0D521AC2111196A00DB296F /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				C0D521AD2111198100DB296F /* Python.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		050D9F811CE5FF1000250591 /* LLBorderlessWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LLBorderlessWindow.h; sourceTree = "<group>"; };
 		050D9F821CE5FF1000250591 /* LLBorderlessWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LLBorderlessWindow.m; sourceTree = "<group>"; };
@@ -71,6 +85,7 @@
 		C06979C11AE83F3500914535 /* gurl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gurl.py; sourceTree = "<group>"; };
 		C0D0AB181F8C36FC001B1CF3 /* osinstall.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = osinstall.py; sourceTree = "<group>"; };
 		C0D0AB1C1F8C3D03001B1CF3 /* ptyexec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ptyexec; sourceTree = "<group>"; };
+		C0D521AA2111184F00DB296F /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Python.framework; sourceTree = "<group>"; };
 		FC21F1731C6235DA0039D923 /* localize.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = localize.sh; sourceTree = "<group>"; };
 		FC98DA1F1AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "com.grahamgilbert.imagr-first-boot-pkg.plist"; sourceTree = "<group>"; };
 		FC98DA201AD6B2DC00F90405 /* first-boot */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "first-boot"; sourceTree = "<group>"; };
@@ -84,7 +99,6 @@
 		FCEA80B61AD0101100DBA039 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FCEA80B71AD0101100DBA039 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		FCEA80BA1AD0101100DBA039 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
-		FCEA80BD1AD0101100DBA039 /* libpython2.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpython2.7.dylib; path = /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config/libpython2.7.dylib; sourceTree = "<absolute>"; };
 		FCEA80BF1AD0101100DBA039 /* main.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = main.py; sourceTree = "<group>"; };
 		FCEA80C11AD0101100DBA039 /* AppDelegate.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = AppDelegate.py; sourceTree = "<group>"; };
 		FCEA80C41AD0101100DBA039 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -131,8 +145,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FCEA80BE1AD0101100DBA039 /* libpython2.7.dylib in Frameworks */,
 				FCEA80AF1AD0101100DBA039 /* Cocoa.framework in Frameworks */,
+				C0D521AB2111184F00DB296F /* Python.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -142,6 +156,7 @@
 		FC98DA1E1AD6B2DC00F90405 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				C0D521AA2111184F00DB296F /* Python.framework */,
 				C0D0AB1C1F8C3D03001B1CF3 /* ptyexec */,
 				FC21F1731C6235DA0039D923 /* localize.sh */,
 				FCED84641B0201B20072AC1C /* set_computer_name.sh */,
@@ -200,7 +215,6 @@
 				FCEA810A1AD02C9A00DBA039 /* Utils.py */,
 				100FA3EB1D51DC6C000F1C1C /* powermgr.py */,
 				FCEA80C61AD0101100DBA039 /* Images.xcassets */,
-				FCEA80BC1AD0101100DBA039 /* SharedLibraries */,
 				FCEA80B51AD0101100DBA039 /* Supporting Files */,
 			);
 			path = Imagr;
@@ -225,14 +239,6 @@
 				C0D0AB181F8C36FC001B1CF3 /* osinstall.py */,
 			);
 			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		FCEA80BC1AD0101100DBA039 /* SharedLibraries */ = {
-			isa = PBXGroup;
-			children = (
-				FCEA80BD1AD0101100DBA039 /* libpython2.7.dylib */,
-			);
-			name = SharedLibraries;
 			sourceTree = "<group>";
 		};
 		FCEA80D31AD018E500DBA039 /* gmacpyutil */ = {
@@ -280,6 +286,7 @@
 				FCEA80A81AD0101100DBA039 /* Frameworks */,
 				FCEA80A91AD0101100DBA039 /* Resources */,
 				E665E9221AE887C5001C07F4 /* ShellScript */,
+				C0D521AC2111196A00DB296F /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -535,6 +542,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Imagr/Resources",
+				);
 				INFOPLIST_FILE = Imagr/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = (
@@ -553,6 +564,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Imagr/Resources",
+				);
 				INFOPLIST_FILE = Imagr/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = (

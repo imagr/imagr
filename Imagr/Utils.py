@@ -404,6 +404,15 @@ def getPlistData(data):
     except:
         pass
 
+    # last chance; look for a file next to the app
+    appPath = NSBundle.mainBundle().bundlePath()
+    appDirPath = os.path.dirname(appPath)
+    try:
+        plist = FoundationPlist.readPlist(os.path.join(appDirPath, "com.grahamgilbert.Imagr.plist"))
+        return plist[data]
+    except:
+        pass
+
 def setDate():
     # Don't bother if we aren't running as root.
     if os.getuid() != 0:
