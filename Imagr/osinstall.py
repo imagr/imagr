@@ -28,7 +28,7 @@ import subprocess
 from distutils import version
 
 # PyObjC bindings
-from Foundation import NSLog
+from Foundation import NSBundle, NSLog
 
 # our imports
 import FoundationPlist
@@ -197,18 +197,27 @@ def run(item, target, progress_method=None):
     # device so its output is unbuffered so we can get progress info
     # otherwise we get nothing until the process exits.
     #
+    # Get path to python interpreter
+    python_interpreter = "/usr/bin/python"
+    if not os.path.exists(python_interpreter):
+        python_interpreter = os.path.join(
+            NSBundle.mainBundle().privateFrameworksPath(), "Python.framework/Versions/2.7/bin/python")
     # Try to find our ptyexec tool
     # first look in the this file's enclosing directory
     # (../)
     this_dir = os.path.dirname(os.path.abspath(__file__))
     ptyexec_path = os.path.join(this_dir, 'ptyexec')
-    if os.path.exists(ptyexec_path):
-        cmd = [ptyexec_path]
-    else:
+    if os.path.exists(python_interpreter) and os.path.exists(ptyexec_path):
+        cmd = [python_interpreter, ptyexec_path]
+    elif os.path.exists('/usr/bin/script'):
         # fall back to /usr/bin/script
         # this is not preferred because it uses way too much CPU
         # checking stdin for input that will never come...
         cmd = ['/usr/bin/script', '-q', '-t', '1', '/dev/null']
+    else:
+        # don't wrap it in a tty-like environment at all. Progress info will
+        # be poor to non-existent.
+        cmd = []
 
     cmd.extend([startosinstall_path,
                 '--agreetolicense',
