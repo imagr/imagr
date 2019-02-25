@@ -33,7 +33,8 @@ from Foundation import NSBundle, NSLog
 # our imports
 import FoundationPlist
 import Utils
-
+import urllib2
+import urlparse
 
 def find_install_macos_app(dir_path):
     '''Returns the path to the first Install macOS.app found the top level of
@@ -155,6 +156,8 @@ def download_and_cache_pkgs(
         NSLog("Caching pkg from %@", url)
         if os.path.basename(url).endswith('.dmg'):
             pkgpath = cache_pkg_from_dmg(url, dest_dir)
+        elif url.startswith("file://"):
+            pkgpath=urlparse.urlparse(url).path.replace("%20"," ")
         else:
             pkgpath = cache_pkg(
                 url, dest_dir, progress_method=progress_method,
