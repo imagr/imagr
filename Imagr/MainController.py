@@ -28,6 +28,7 @@ import Quartz
 import time
 import powermgr
 import osinstall
+from urlparse import urlparse
 
 class MainController(NSObject):
 
@@ -872,6 +873,19 @@ class MainController(NSObject):
                 Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
                 self.downloadAndCopyPackage(item, self.counter)
                 self.first_boot_items = True
+            # Expand package folder and pass contents to runComponent_
+            elif item.get('type') == 'package_folder':
+                url = item.get('url')
+                url_path = urlparse(urllib2.unquote(url)).path
+                if os.path.isdir(url_path):
+                    for f in os.listdir(url_path):
+                        if os.path.basename(f).endswith('.pkg'):
+                            new_url = "%s%s" %(url, f)
+                            item['url'] = new_url
+                            item['type'] = 'package'
+                            self.runComponent_(item)
+                else:
+                    raise TypeError("package_folder expected a folder path: %s" %(url))
             # Copy first boot script
             elif item.get('type') == 'script' and item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
