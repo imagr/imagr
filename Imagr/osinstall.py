@@ -26,7 +26,6 @@ import os
 import shutil
 import subprocess
 from distutils import version
-from urlparse import urlparse
 
 # PyObjC bindings
 from Foundation import NSBundle, NSLog
@@ -161,7 +160,7 @@ def download_and_cache_pkgs(
         if os.path.basename(url).endswith('.dmg'):
             pkgpath = cache_pkg_from_dmg(url, dest_dir)
         elif url.startswith("file://"):
-            pkgpath=urlparse.urlparse(url).path.replace("%20"," ")
+            pkgpath = urlparse.urlparse(urllib2.unquote(url)).path
         else:
             pkgpath = cache_pkg(
                 url, dest_dir, progress_method=progress_method,
@@ -173,7 +172,7 @@ def download_and_cache_pkgs(
 def filter_and_expand_paths(paths_array, file_extension):
     new_paths = []
     for url in paths_array:
-        url_path = urlparse(url).path
+        url_path = urlparse.urlparse(urllib2.unquote(url)).path
         if os.path.isdir(url_path):
             for f in os.listdir(url_path):
                 if os.path.basename(f).endswith(file_extension):

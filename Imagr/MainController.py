@@ -29,7 +29,6 @@ import time
 import urlparse
 import powermgr
 import osinstall
-from urlparse import urlparse
 
 class MainController(NSObject):
 
@@ -877,7 +876,7 @@ class MainController(NSObject):
             # Expand package folder and pass contents to runComponent_
             elif item.get('type') == 'package_folder':
                 url = item.get('url')
-                url_path = urlparse(urllib2.unquote(url)).path
+                url_path = urlparse.urlparse(urllib2.unquote(url)).path
                 if os.path.isdir(url_path):
                     for f in os.listdir(url_path):
                         if os.path.basename(f).endswith('.pkg'):
