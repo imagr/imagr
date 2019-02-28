@@ -26,6 +26,7 @@ import tempfile
 import shutil
 import Quartz
 import time
+import urlparse
 import powermgr
 import osinstall
 
@@ -1525,6 +1526,9 @@ class MainController(NSObject):
         """
         # replace the placeholders in the script
         script = Utils.replacePlaceholders(script, target)
+        if self.computerName:
+            script = Utils.replacePlaceholders(script, target,self.computerName)
+
         error_output = None
         output_list = []
         # Copy script content to a temporary location and make executable
@@ -1534,7 +1538,10 @@ class MainController(NSObject):
         os.chmod(script_file.name, 0700)
         if progress_method:
             progress_method("Running script...", -1, '')
-        proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        my_env = os.environ.copy()
+        url_parse = urlparse.urlparse(Utils.getServerURL())
+        my_env["server_path"]=url_parse.path
+        proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True,env=my_env)
         while proc.poll() is None:
             output = proc.stdout.readline().strip().decode('UTF-8')
             output_list.append(output)
