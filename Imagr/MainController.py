@@ -630,12 +630,34 @@ class MainController(NSObject):
 
     @objc.IBAction
     def runWorkflow_(self, sender):
-        '''Set up the selected workflow to run on secondary thread'''
-        self.workflow_is_running = True
         selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
 
         if self.autorunWorkflow:
             selected_workflow = self.autorunWorkflow
+            runWorkflowNow()
+
+        self.selectedWorkflow = None
+        for workflow in self.workflows:
+            if selected_workflow == workflow['name']:
+                self.selectedWorkflow = workflow
+                break
+
+        label_string = "Are you sure you want to run workflow %s?" % self.selectedWorkflow['name']
+
+        alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
+                                                                                                                  NSLocalizedString(label_string, None),
+                                                                                                                  NSLocalizedString(u"Run", None),
+                                                                                                                  NSLocalizedString(u"Cancel", None),
+                                                                                                                  NSLocalizedString(u"", None),
+                                                                                                                  NSLocalizedString(u"", None),)
+
+        alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                                                                                                                                                                                           self.mainWindow, self, self.startWorkflowAlertDidEnd_returnCode_contextInfo_, objc.nil)
+    def runWorkflowNow(self):
+        '''Set up the selected workflow to run on secondary thread'''
+        self.workflow_is_running = True
+        selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
+
 
         # let's get the workflow
         self.selectedWorkflow = None
@@ -677,6 +699,18 @@ class MainController(NSObject):
                             return True
 
         return False
+
+
+    @PyObjCTools.AppHelper.endSheetMethod
+    def startWorkflowAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
+
+        # 0 = Cancel
+        # 1 = Run
+
+        if returncode == 1:
+            self.runWorkflowNow()
+        elif returncode == 0:
+            NSLog("Here")
 
     def workflowOnThreadPrep(self):
         self.disableWorkflowViewControls()

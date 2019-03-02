@@ -10,6 +10,7 @@
 		050D9F831CE5FF1000250591 /* LLBorderlessWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 050D9F821CE5FF1000250591 /* LLBorderlessWindow.m */; };
 		100FA3EC1D51DC6C000F1C1C /* powermgr.py in Resources */ = {isa = PBXBuildFile; fileRef = 100FA3EB1D51DC6C000F1C1C /* powermgr.py */; };
 		10DA31C31D92963A00969112 /* se.gu.it.LoginLog.login.plist in Resources */ = {isa = PBXBuildFile; fileRef = 10DA31C21D92963A00969112 /* se.gu.it.LoginLog.login.plist */; };
+		76FB045D2229F73D00923881 /* reload.png in Resources */ = {isa = PBXBuildFile; fileRef = 76FB045C2229F73D00923881 /* reload.png */; };
 		C06979C21AE83F3500914535 /* gurl.py in Resources */ = {isa = PBXBuildFile; fileRef = C06979C11AE83F3500914535 /* gurl.py */; };
 		C0D0AB191F8C36FC001B1CF3 /* osinstall.py in Resources */ = {isa = PBXBuildFile; fileRef = C0D0AB181F8C36FC001B1CF3 /* osinstall.py */; };
 		C0D0AB1D1F8C3D03001B1CF3 /* ptyexec in Resources */ = {isa = PBXBuildFile; fileRef = C0D0AB1C1F8C3D03001B1CF3 /* ptyexec */; };
@@ -82,6 +83,7 @@
 		050D9F821CE5FF1000250591 /* LLBorderlessWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LLBorderlessWindow.m; sourceTree = "<group>"; };
 		100FA3EB1D51DC6C000F1C1C /* powermgr.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = powermgr.py; sourceTree = "<group>"; };
 		10DA31C21D92963A00969112 /* se.gu.it.LoginLog.login.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = se.gu.it.LoginLog.login.plist; sourceTree = "<group>"; };
+		76FB045C2229F73D00923881 /* reload.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = reload.png; sourceTree = "<group>"; };
 		C06979C11AE83F3500914535 /* gurl.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = gurl.py; sourceTree = "<group>"; };
 		C0D0AB181F8C36FC001B1CF3 /* osinstall.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = osinstall.py; sourceTree = "<group>"; };
 		C0D0AB1C1F8C3D03001B1CF3 /* ptyexec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = ptyexec; sourceTree = "<group>"; };
@@ -208,6 +210,7 @@
 		FCEA80B41AD0101100DBA039 /* Imagr */ = {
 			isa = PBXGroup;
 			children = (
+				76FB045C2229F73D00923881 /* reload.png */,
 				FCEA80BF1AD0101100DBA039 /* main.py */,
 				FCEA80C31AD0101100DBA039 /* MainMenu.xib */,
 				FCEA80C11AD0101100DBA039 /* AppDelegate.py */,
@@ -350,6 +353,7 @@
 				FCEA81091AD018E500DBA039 /* wifi_network_order_test.py in Resources */,
 				FCEA80C71AD0101100DBA039 /* Images.xcassets in Resources */,
 				FC98DA231AD6B2DC00F90405 /* com.grahamgilbert.imagr-first-boot-pkg.plist in Resources */,
+				76FB045D2229F73D00923881 /* reload.png in Resources */,
 				FCEA80F31AD018E500DBA039 /* applescript_test.py in Resources */,
 				FCEA80FB1AD018E500DBA039 /* experiments_test.py in Resources */,
 				FCEA81051AD018E500DBA039 /* systemconfig_test.py in Resources */,

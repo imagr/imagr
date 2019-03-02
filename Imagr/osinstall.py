@@ -224,9 +224,13 @@ def run(item, target, progress_method=None):
 
     cmd.extend([startosinstall_path,
                 '--agreetolicense',
-                '--applicationpath', app_path,
                 '--volume', target,
                 '--nointeraction'])
+
+    if (version.LooseVersion(installed_os_version) < version.LooseVersion('10.14')):
+        cmd.extend(['--applicationpath', app_path])
+
+
 
     # add additional startosinstall options if any
     if 'additional_startosinstall_options' in item:
