@@ -148,7 +148,10 @@ def download_and_cache_pkgs(
     dest_dir = os.path.join(target, 'private/tmp/pkgcache')
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
-    for url in pkgurls:
+
+    expanded_pkgurls = filter_and_expand_paths(pkgurls, '.pkg')
+
+    for url in expanded_pkgurls:
         if (not os.path.basename(url).endswith('.pkg') and
                 not os.path.basename(url).endswith('.dmg')):
             error = "%s doesn't end with either '.pkg' or '.dmg'" % url
@@ -157,7 +160,7 @@ def download_and_cache_pkgs(
         if os.path.basename(url).endswith('.dmg'):
             pkgpath = cache_pkg_from_dmg(url, dest_dir)
         elif url.startswith("file://"):
-            pkgpath=urlparse.urlparse(url).path.replace("%20"," ")
+            pkgpath = urlparse.urlparse(urllib2.unquote(url)).path
         else:
             pkgpath = cache_pkg(
                 url, dest_dir, progress_method=progress_method,
@@ -166,6 +169,17 @@ def download_and_cache_pkgs(
 
     return pkgpaths
 
+def filter_and_expand_paths(paths_array, file_extension):
+    new_paths = []
+    for url in paths_array:
+        url_path = urlparse.urlparse(urllib2.unquote(url)).path
+        if os.path.isdir(url_path):
+            for f in os.listdir(url_path):
+                if os.path.basename(f).endswith(file_extension):
+                    new_paths.append("%s%s" %(url, f))
+        else:
+            new_paths.append(url)
+    return new_paths
 
 def run(item, target, progress_method=None):
     '''Run startosinstall from Install macOS app on a disk image'''
