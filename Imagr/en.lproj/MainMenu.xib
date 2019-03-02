@@ -145,7 +145,7 @@
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" alphaValue="0.5" id="471">
-                        <rect key="frame" x="0.0" y="-57" width="380" height="330"/>
+                        <rect key="frame" x="0.0" y="0.0" width="510" height="273"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" id="484"/>
                     </imageView>
@@ -351,20 +351,6 @@ DQ
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <button verticalHuggingPriority="750" id="909">
-                                            <rect key="frame" x="458" y="186" width="32" height="27"/>
-                                            <autoresizingMask key="autoresizingMask"/>
-                                            <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="reload" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="910">
-                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="system"/>
-                                                <string key="keyEquivalent" base64-UTF8="YES">
-Gw
-</string>
-                                            </buttonCell>
-                                            <connections>
-                                                <action selector="reloadWorkflows:" target="664" id="913"/>
-                                            </connections>
-                                        </button>
                                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="Yes-ds-s2E">
                                             <rect key="frame" x="35" y="25" width="83" height="11"/>
                                             <autoresizingMask key="autoresizingMask"/>
@@ -379,6 +365,20 @@ Gw
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="NSApplicationIcon" id="grz-ge-uQ9"/>
                                         </imageView>
+                                        <button verticalHuggingPriority="750" id="909">
+                                            <rect key="frame" x="451" y="186" width="32" height="27"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="reload" imagePosition="overlaps" alignment="center" imageScaling="proportionallyDown" inset="2" id="910">
+                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                                <string key="keyEquivalent" base64-UTF8="YES">
+Gw
+</string>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="reloadWorkflows:" target="664" id="913"/>
+                                            </connections>
+                                        </button>
                                     </subviews>
                                 </view>
                             </tabViewItem>
