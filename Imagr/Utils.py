@@ -853,11 +853,97 @@ def mountedVolumes():
             for part in disk.get(u"APFSVolumes", []):
                 if (u"MountPoint" in part) and (part.get(u"VolumeName") in volumeNames):
                     volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
-        # print volumes
-        # volumes = [disk for disk in volumes if not disk.mountpoint in APFSVolumesToHide]
-        # print volumes
+
+#         volumes = [disk for disk in volumes if not disk.mountpoint in APFSVolumesToHide]
+#         print volumes
+
 
     except BaseException as e:
         NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
 
+    
     return volumes
+
+def available_volumes():
+    volumes = mountedVolumes()
+    volumes.extend(apfs_filevault_volumes())
+    volumes.extend(cs_filevault_volumes())
+    return volumes
+
+def apfs_filevault_volumes():
+
+    volumes = []
+    cmd = ['/usr/sbin/diskutil', 'apfs', 'list','-plist']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return volumes
+
+    try:
+        plist = plistlib.readPlistFromString(output)
+    except BaseException as e:
+        NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
+
+    for container in plist[u"Containers"]:
+        for volume in container[u"Volumes"]:
+            if (u"FileVault" in volume) and (volume["FileVault"]==True):
+                newDisk=macdisk.Disk(volume[u"DeviceIdentifier"])
+                newDisk.filevault=True
+                newDisk.Refresh()
+                volumes.append(newDisk)
+    NSLog("added volumes: %@",volumes)
+    return volumes
+
+def cs_filevault_volumes():
+
+    volumes = []
+    cmd = ['/usr/sbin/diskutil', 'cs', 'list','-plist']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return volumes
+    try:
+        plist = plistlib.readPlistFromString(output)
+    except BaseException as e:
+        NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
+
+    if "CoreStorageLogicalVolumeGroups" in plist:
+        for logicalVolumeGroup in plist[u"CoreStorageLogicalVolumeGroups"]:
+            for logicalVolumeFamily in logicalVolumeGroup[u"CoreStorageLogicalVolumeFamilies"]:
+                for logicalVolume in logicalVolumeFamily[u"CoreStorageLogicalVolumes"]:
+                    coreStorageUUID=logicalVolume["CoreStorageUUID"]
+                    logicalVolumeInfo=cs_volume_info(coreStorageUUID)
+                    if (logicalVolumeInfo["CoreStorageLogicalVolumeStatus"]=='Locked'):
+                        newDisk=macdisk.Disk(logicalVolumeInfo[u"DesignatedCoreStoragePhysicalVolumeDeviceIdentifier"])
+                        newDisk.filevault=True
+                        newDisk.Refresh()
+                        volumes.append(newDisk)
+                    else:
+                        NSLog("Not locked")
+
+    NSLog("added volumes: %@",volumes)
+    return volumes
+
+def cs_volume_info(cs_disk_id):
+
+    cmd = ['/usr/sbin/diskutil', 'cs', 'info','-plist',cs_disk_id]
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return volumes
+
+    try:
+        plist = plistlib.readPlistFromString(output)
+    except BaseException as e:
+        NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
+
+    return plist

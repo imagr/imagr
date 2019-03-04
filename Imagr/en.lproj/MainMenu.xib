@@ -336,7 +336,6 @@ Gw
                                                 <string key="keyEquivalent" base64-UTF8="YES">
 DQ
 </string>
-                                                <modifierMask key="keyEquivalentModifierMask" shift="YES"/>
                                             </buttonCell>
                                             <connections>
                                                 <action selector="runWorkflow:" target="664" id="778"/>
@@ -548,7 +547,7 @@ Gw
                     <textField verticalHuggingPriority="750" id="794" userLabel="Imaging Progress Label">
                         <rect key="frame" x="89" y="87" width="359" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Imaging progress label" id="795">
+                        <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Imaging progress label" id="795">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>

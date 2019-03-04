@@ -10,6 +10,7 @@ import subprocess
 import xml.parsers.expat
 #from . import gmacpyutil
 import gmacpyutil
+from Foundation import NSBundle, NSLog
 
 
 class MacDiskError(Exception):
@@ -24,11 +25,12 @@ class Disk(object):
   really are just 'disks'. Mostly. Can take device ids of the form "disk1" or
   of the form "/dev/disk1".
   """
-
+  filevault = False
   def __init__(self, deviceid):
     if deviceid.startswith("/dev/"):
       deviceid = deviceid.replace("/dev/", "", 1)
     self.deviceid = deviceid
+    NSLog("ID : %@",deviceid)
     self.Refresh()
 
   def Refresh(self):
@@ -60,6 +62,9 @@ class Disk(object):
       self.diskimage = True
     else:
       self.diskimage = False
+
+    if self.filevault==True :
+        self.mountpoint="/dev/"+self.deviceid
 
   def Mounted(self):
     """Is it mounted."""

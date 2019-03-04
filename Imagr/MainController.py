@@ -261,13 +261,14 @@ class MainController(NSObject):
         volume_list = []
         for volume in self.volumes:
             if volume.mountpoint != '/':
-                if volume.mountpoint.startswith("/Volumes/"):
+                if volume.mountpoint.startswith("/Volumes/") or volume.filevault :
                     if volume.writable:
                         volume_list.append(volume.mountpoint)
         return volume_list
 
     def reloadVolumes(self):
-        self.volumes = Utils.mountedVolumes()
+        self.volumes = Utils.available_volumes()
+
         self.chooseTargetDropDown.removeAllItems()
         volume_list = self.validTargetVolumes()
         self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
@@ -329,7 +330,10 @@ class MainController(NSObject):
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
         self.buildUtilitiesMenu()
-        self.volumes = Utils.mountedVolumes()
+        self.volumes = Utils.available_volumes()
+
+
+#        self.volumes = Utils.mountedVolumes()
         theURL = Utils.getServerURL()
 
         if theURL:
@@ -427,6 +431,7 @@ class MainController(NSObject):
                 self.chooseImagingTarget_(None)
 
                 self.isAutorun()
+
             else:
                 self.theTabView.selectTabViewItem_(self.loginTab)
                 self.mainWindow.makeFirstResponder_(self.password)
@@ -772,7 +777,7 @@ class MainController(NSObject):
 
         # Make sure the user still wants to autorun the default workflow (i.e. hasn't clicked cancel).
         if self.autorunWorkflow:
-            self.runWorkflow_(None)
+            self.runWorkflowNow()
 
     @objc.IBAction
     def cancelCountdown_(self, sender):
@@ -969,7 +974,7 @@ class MainController(NSObject):
                     with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
                         script=script.read()
                     self.copyFirstBootScript(script, self.counter)
-                    self.first_boot_items = True
+#                    self.first_boot_items = True
             elif item.get('type') == 'localize':
                 Utils.sendReport('in_progress', 'Localizing Mac')
                 self.copyLocalize_(item)
@@ -1818,6 +1823,13 @@ class MainController(NSObject):
         NSLog("Format is: %@", format)
         
         if format == 'auto_hfs_or_apfs':
+            if self.targetVolume.filevault and self.targetVolume._attributes['Content'] == 'Apple_CoreStorage' and self.targetVolume._attributes['CoreStorageLVGUUID'] :
+                NSLog("Deleting Corestorage and converting to HFS+")
+                delete_corestorage(self.targetVolume.mountpoint)
+                self.targetVolume.filevault=False
+                self.should_update_volume_list = True
+                self.targetVolume.EnsureMountedWithRefresh()
+
             if self.targetVolume._attributes['FilesystemType'] == 'hfs':
                 format='Journaled HFS+'
                 NSLog("Detected HFS+ - erasing target")
@@ -1829,17 +1841,29 @@ class MainController(NSObject):
                 self.errorMessage = "Not HFS+ or APFS - specify volume format and reload workflows."
         
         cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
-        NSLog("%@", cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (eraseOut, eraseErr) = proc.communicate()
         if eraseErr:
             NSLog("Error occured when erasing volume: %@", eraseErr)
             self.errorMessage = eraseErr
         NSLog("%@", eraseOut)
-        # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
-        if name != 'Macintosh HD':
-            # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
+        if self.targetVolume.filevault:
+            self.targetVolume.filevault=False
             self.should_update_volume_list = True
+            self.targetVolume.EnsureMountedWithRefresh()
+        # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
+#        elif name != 'Macintosh HD':
+            # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
+        self.should_update_volume_list = True
+    def delete_corestorage(mountpoint):
+        cmd = ['/usr/sbin/diskutil', 'cs', 'delete', self.targetVolume._attributes['CoreStorageLVGUUID'] ]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (eraseOut, eraseErr) = proc.communicate()
+        if eraseErr:
+            NSLog("Error occured when removing from core storage: %@", eraseErr)
+            self.errorMessage = eraseErr
+
+
 
     def copyLocalize_(self, item):
         if 'keyboard_layout_name' in item:
@@ -1882,3 +1906,5 @@ class MainController(NSObject):
     @objc.IBAction
     def showHelp_(self, sender):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://github.com/grahamgilbert/imagr/wiki"))
+
+    
