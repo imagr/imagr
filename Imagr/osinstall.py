@@ -176,7 +176,7 @@ def filter_and_expand_paths(paths_array, file_extension):
         if os.path.isdir(url_path):
             for f in os.listdir(url_path):
                 if os.path.basename(f).endswith(file_extension):
-                    new_paths.append("%s%s" %(url, f))
+                    new_paths.append(os.path.join(url, f))
         else:
             new_paths.append(url)
     return new_paths
