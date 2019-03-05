@@ -1825,7 +1825,7 @@ class MainController(NSObject):
         if format == 'auto_hfs_or_apfs':
             if self.targetVolume.filevault and self.targetVolume._attributes['Content'] == 'Apple_CoreStorage' and self.targetVolume._attributes['CoreStorageLVGUUID'] :
                 NSLog("Deleting Corestorage and converting to HFS+")
-                delete_corestorage(self.targetVolume.mountpoint)
+                self.deletecorestorage_(self.targetVolume.mountpoint)
                 self.targetVolume.filevault=False
                 self.should_update_volume_list = True
                 self.targetVolume.EnsureMountedWithRefresh()
@@ -1855,7 +1855,8 @@ class MainController(NSObject):
 #        elif name != 'Macintosh HD':
             # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
         self.should_update_volume_list = True
-    def delete_corestorage(mountpoint):
+
+    def deletecorestorage_(self,mountpoint):
         cmd = ['/usr/sbin/diskutil', 'cs', 'delete', self.targetVolume._attributes['CoreStorageLVGUUID'] ]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (eraseOut, eraseErr) = proc.communicate()

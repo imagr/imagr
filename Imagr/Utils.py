@@ -845,13 +845,13 @@ def mountedVolumes():
         plist = plistlib.readPlistFromString(output)
         volumeNames = plist[u"VolumesFromDisks"]
         for disk in plist[u"AllDisksAndPartitions"]:
-            if (u"MountPoint" in disk) and (disk.get(u"VolumeName") in volumeNames):
+            if (u"MountPoint" in disk) and (not disk[u"MountPoint"].startswith("/private/var")) and (disk.get(u"VolumeName") in volumeNames):
                 volumes.append(macdisk.Disk(disk[u"DeviceIdentifier"]))
             for part in disk.get(u"Partitions", []):
-                if (u"MountPoint" in part) and (part.get(u"VolumeName") in volumeNames):
+                if (u"MountPoint" in part) and (not part[u"MountPoint"].startswith("/private/var")) and (part.get(u"VolumeName") in volumeNames):
                     volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
             for part in disk.get(u"APFSVolumes", []):
-                if (u"MountPoint" in part) and (part.get(u"VolumeName") in volumeNames):
+                if (u"MountPoint" in part) and (not part[u"MountPoint"].startswith("/private/var")) and (part.get(u"VolumeName") in volumeNames):
                     volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
 
 #         volumes = [disk for disk in volumes if not disk.mountpoint in APFSVolumesToHide]
@@ -865,9 +865,10 @@ def mountedVolumes():
     return volumes
 
 def available_volumes():
-    volumes = mountedVolumes()
-    volumes.extend(apfs_filevault_volumes())
+    volumes=apfs_filevault_volumes()
     volumes.extend(cs_filevault_volumes())
+    volumes.extend(mountedVolumes())
+
     return volumes
 
 def apfs_filevault_volumes():

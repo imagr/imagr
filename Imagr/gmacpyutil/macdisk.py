@@ -30,7 +30,6 @@ class Disk(object):
     if deviceid.startswith("/dev/"):
       deviceid = deviceid.replace("/dev/", "", 1)
     self.deviceid = deviceid
-    NSLog("ID : %@",deviceid)
     self.Refresh()
 
   def Refresh(self):
@@ -64,8 +63,7 @@ class Disk(object):
       self.diskimage = False
 
     if self.filevault==True :
-        self.mountpoint="/dev/"+self.deviceid
-
+        self.mountpoint="/dev/"+self.deviceid+" (FileVault encrypted)"
   def Mounted(self):
     """Is it mounted."""
     try:
