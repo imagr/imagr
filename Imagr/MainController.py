@@ -919,7 +919,7 @@ class MainController(NSObject):
                 if os.path.isdir(url_path):
                     for f in os.listdir(url_path):
                         if os.path.basename(f).endswith('.pkg'):
-                            new_url = "%s%s" %(url, f)
+                            new_url = "%s/%s" %(url, f)
                             item['url'] = new_url
                             item['type'] = 'package'
                             self.runComponent_(item)
