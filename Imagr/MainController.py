@@ -1849,11 +1849,9 @@ class MainController(NSObject):
         if eraseErr:
             NSLog("Error occured when erasing volume: %@", eraseErr)
             self.errorMessage = eraseErr
-        NSLog("%@", eraseOut)
         if self.targetVolume.filevault:
             self.targetVolume.filevault=False
-            self.should_update_volume_list = True
-            self.targetVolume.EnsureMountedWithRefresh()
+        self.targetVolume.EnsureMountedWithRefresh()
         # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
 #        elif name != 'Macintosh HD':
             # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list

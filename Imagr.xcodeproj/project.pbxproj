@@ -285,6 +285,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = FCEA80CA1AD0101100DBA039 /* Build configuration list for PBXNativeTarget "Imagr" */;
 			buildPhases = (
+				769CB472222F00EF00CB1D48 /* Update Build Number */,
 				FCEA80A71AD0101100DBA039 /* Sources */,
 				FCEA80A81AD0101100DBA039 /* Frameworks */,
 				FCEA80A91AD0101100DBA039 /* Resources */,
@@ -394,6 +395,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		769CB472222F00EF00CB1D48 /* Update Build Number */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Update Build Number";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "buildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PRODUCT_SETTINGS_PATH}\")\nbuildNumber=$(($buildNumber + 1))\necho $buildNumber\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PRODUCT_SETTINGS_PATH}\"\n";
+		};
 		E665E9221AE887C5001C07F4 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
