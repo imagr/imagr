@@ -146,8 +146,6 @@ def download_and_cache_pkgs(
         os.chown(private_tmp_dir, 0, 0)
         os.chmod(private_tmp_dir, 01777)
     dest_dir = os.path.join(target, 'private/tmp/pkgcache')
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir)
 
     expanded_pkgurls = filter_and_expand_paths(pkgurls, '.pkg')
 
@@ -157,14 +155,17 @@ def download_and_cache_pkgs(
             error = "%s doesn't end with either '.pkg' or '.dmg'" % url
             raise PkgCachingError(error)
         NSLog("Caching pkg from %@", url)
-        if os.path.basename(url).endswith('.dmg'):
-            pkgpath = cache_pkg_from_dmg(url, dest_dir)
-        elif url.startswith("file://"):
+        if url.startswith("file://"):
             pkgpath = urlparse.urlparse(urllib2.unquote(url)).path
         else:
-            pkgpath = cache_pkg(
-                url, dest_dir, progress_method=progress_method,
-                additional_headers=additional_headers)
+            if not os.path.exists(dest_dir):
+                os.makedirs(dest_dir)
+            if os.path.basename(url).endswith('.dmg'):
+                pkgpath = cache_pkg_from_dmg(url, dest_dir)
+            else:
+                pkgpath = cache_pkg(
+                    url, dest_dir, progress_method=progress_method,
+                    additional_headers=additional_headers)
         pkgpaths.append(pkgpath)
 
     return pkgpaths

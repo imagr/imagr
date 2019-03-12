@@ -895,7 +895,6 @@ def apfs_filevault_volumes():
                 newDisk.filevault=True
                 newDisk.Refresh()
                 volumes.append(newDisk)
-    NSLog("added volumes: %@",volumes)
     return volumes
 
 def cs_filevault_volumes():
@@ -928,7 +927,6 @@ def cs_filevault_volumes():
                     else:
                         NSLog("Not locked")
 
-    NSLog("added volumes: %@",volumes)
     return volumes
 
 def cs_volume_info(cs_disk_id):
