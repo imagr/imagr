@@ -184,15 +184,19 @@ def filter_and_expand_paths(paths_array, file_extension):
 def run(item, target, progress_method=None):
     '''Run startosinstall from Install macOS app on a disk image'''
     url = item.get('url')
-    # url better point to a disk image containing the Install macOS app
-    try:
-        dmgmountpoints = Utils.mountdmg(url)
-        dmgmountpoint = dmgmountpoints[0]
-    except:
-        error_message = "Couldn't mount disk image from %s" % url
-        return False, error_message
+    if (url.endswith('.app')):
+        # Support receiving direct file path to macOS installer
+        app_path = url
+    else:
+        # url better point to a disk image containing the Install macOS app
+        try:
+            dmgmountpoints = Utils.mountdmg(url)
+            dmgmountpoint = dmgmountpoints[0]
+        except:
+            error_message = "Couldn't mount disk image from %s" % url
+            return False, error_message
+        app_path = find_install_macos_app(dmgmountpoint)
 
-    app_path = find_install_macos_app(dmgmountpoint)
     startosinstall_path = os.path.join(
         app_path, 'Contents/Resources/startosinstall')
     installed_os_version = get_os_version(app_path)
