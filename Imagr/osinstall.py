@@ -185,13 +185,10 @@ def filter_and_expand_paths(paths_array, file_extension):
 def run(item, target, progress_method=None):
     '''Run startosinstall from Install macOS app on a disk image'''
     url = item.get('url')
-    if (url.endswith('.app') or url.endswith('.app/')):
-        if url.endswith('/'):
-            url = url[:-1]
+    if (url.rstrip('/').endswith('.app')):
         # Support receiving direct file path to macOS installer
         app_path = urlparse.urlparse(urllib2.unquote(url)).path
     else:
-
         # url better point to a disk image containing the Install macOS app
         try:
             dmgmountpoints = Utils.mountdmg(url)
