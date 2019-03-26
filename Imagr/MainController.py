@@ -972,13 +972,13 @@ class MainController(NSObject):
                 Utils.sendReport('in_progress', 'Erasing volume with name %s' % item.get('name', 'Macintosh HD'))
                 self.eraseTargetVolume(item.get('name', 'Macintosh HD'), item.get('format', 'Journaled HFS+'))
             elif item.get('type') == 'computer_name':
-                if self.computerName:
+                if not item.get('nvram',False):
                     Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
                     script_dir = os.path.dirname(os.path.realpath(__file__))
                     with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
                         script=script.read()
                     self.copyFirstBootScript(script, self.counter)
-#                    self.first_boot_items = True
+        #                    self.first_boot_items = True
             elif item.get('type') == 'localize':
                 Utils.sendReport('in_progress', 'Localizing Mac')
                 self.copyLocalize_(item)
@@ -1392,11 +1392,15 @@ class MainController(NSObject):
             temp_dir = tempfile.mkdtemp(dir=target)
             # Download it
             packagename = os.path.basename(url)
-            (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(temp_dir,
-            packagename), additional_headers=additional_headers)
-            if error:
-                self.errorMessage = "Couldn't download - %s \n %s" % (url, error)
-                return False
+            if url.startswith("file://"):
+                url_parse = urlparse.urlparse(url)
+                downloaded_file=url_parse.path.replace("%20", " ")
+            else:
+                (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(temp_dir,
+                packagename), additional_headers=additional_headers)
+                if error:
+                    self.errorMessage = "Couldn't download - %s \n %s" % (url, error)
+                    return False
             # Install it
             retcode = self.installPkg(downloaded_file, target, progress_method=progress_method)
             if retcode != 0:
@@ -1723,13 +1727,13 @@ class MainController(NSObject):
                 if msg.startswith("PHASE:"):
                     phase = msg[6:]
                     if phase:
-                        NSLog(phase)
+                        NSLog("%@",phase)
                         if progress_method:
                             progress_method(None, None, phase)
                 elif msg.startswith("STATUS:"):
                     status = msg[7:]
                     if status:
-                        NSLog(status)
+                        NSLog("%@",status)
                         if progress_method:
                             progress_method(None, None, status)
                 elif msg.startswith("%"):
@@ -1738,15 +1742,15 @@ class MainController(NSObject):
                     if progress_method:
                         progress_method(None, percent, None)
                 elif msg.startswith(" Error"):
-                    NSLog(msg)
+                    NSLog("%@",msg)
                     if progress_method:
                         progress_method(None, None, msg)
                 elif msg.startswith(" Cannot install"):
-                    NSLog(msg)
+                    NSLog("%@",msg)
                     if progress_method:
                         progress_method(None, None, msg)
                 else:
-                    NSLog(msg)
+                    NSLog("%@",msg)
                     if progress_method:
                         progress_method(None, None, msg)
 
@@ -1839,14 +1843,30 @@ class MainController(NSObject):
                 NSLog("Detected HFS+ - erasing target")
             elif self.targetVolume._attributes['FilesystemType'] == 'apfs':
                 format='APFS'
-                NSLog("Detected APFS - erasing target")
+                NSLog("Detected APFS - removing APFS container")
+                cmd = ['/usr/sbin/diskutil', 'deleteContainer', self.targetVolume.deviceidentifier ]
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                (eraseOut, eraseErr) = proc.communicate()
+                if eraseErr:
+                    NSLog("Error occured when erasing volume: %@", eraseErr)
+                    self.errorMessage = eraseErr
+                cmd = ['/usr/sbin/diskutil', 'erase', self.targetVolume.deviceidentifier ]
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                (eraseOut, eraseErr) = proc.communicate()
+                if eraseErr:
+                    NSLog("Error occured when erasing volume: %@", eraseErr)
+                    self.errorMessage = eraseErr
+
+
             else:
                 NSLog("Volume not HFS+ or APFS, system returned: %@", self.targetVolume._attributes['FilesystemType'])
                 self.errorMessage = "Not HFS+ or APFS - specify volume format and reload workflows."
 
-        if self.targetVolume.filevault:
+        if self.targetVolume.filevault or format=="APFS":
+            NSLog("erasing with identifier since we had filevault or APFS")
             cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.deviceidentifier ]
         else:
+                NSLog("erasing volume")
                 cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (eraseOut, eraseErr) = proc.communicate()
