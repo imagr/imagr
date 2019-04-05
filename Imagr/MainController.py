@@ -977,7 +977,7 @@ class MainController(NSObject):
                     self.runPreFirstBootScript(item.get('content'), self.counter)
             # Partition a disk
             elif item.get('type') == 'partition':
-                Utils.sendReport('in_progress', 'Running partiton task.')
+                Utils.sendReport('in_progress', 'Running partition task.')
                 self.partitionTargetDisk(item.get('partitions'), item.get('map'))
                 if self.future_target == False:
                     # If a partition task is done without a new target specified, no other tasks can be parsed.
