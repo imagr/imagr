@@ -29,6 +29,7 @@ import time
 import urlparse
 import powermgr
 import osinstall
+import signal
 
 class MainController(NSObject):
 
@@ -53,6 +54,10 @@ class MainController(NSObject):
 
     progressIndicator = objc.IBOutlet()
     progressText = objc.IBOutlet()
+
+    variablePanel = objc.IBOutlet()
+    variablePanelLabel = objc.IBOutlet()
+    variablePanelValue = objc.IBOutlet()
 
     authenticationPanel = objc.IBOutlet()
     authenticationPanelUsernameField = objc.IBOutlet()
@@ -116,6 +121,8 @@ class MainController(NSObject):
     cancelledAutorun = False
     authenticatedUsername = None
     authenticatedPassword = None
+    variablesArray = []
+    environmentVariableArray = []
 
     # For localize script
     keyboard_layout_name = None
@@ -154,9 +161,18 @@ class MainController(NSObject):
         else:
             self.setStartupDisk_(self)
 
+
+    @objc.python_method
+    def receiveSignal(self,signalNumber, frame):
+        NSLog("startosinstall prepare phase complete")
+        Utils.sendReport('in_progress', 'startosinstall prepare phase complete')
+        return
+
     def runStartupTasks(self):
         NSLog(u"background_window is set to %@", repr(self.backgroundWindowSetting()))
+        signal.signal(signal.SIGUSR1, self.receiveSignal)
 
+        NSLog("process is %i",os.getpid())
         if self.backgroundWindowSetting() == u"always":
             self.showBackgroundWindow()
 
@@ -304,6 +320,29 @@ class MainController(NSObject):
         self.imagingProgress.setFrameSize_(NSSize(426, 20))
         self.imagingProgressDetail.setFrameOrigin_(NSPoint(18, 20))
         self.imagingProgressDetail.setFrameSize_(NSSize(431, 17))
+
+
+    @objc.IBAction
+    def endVariablePanel_(self, sender):
+        '''Called when user clicks 'OK' in the variable panel'''
+        # store the username and password
+        NSApp.endSheet_(self.variablePanel)
+
+        self.environmentVariableArray.append({self.variablesArray[0].keys()[0]:self.variablePanelValue.stringValue()})
+
+
+        self.variablePanel.orderOut_(self)
+        self.variablesArray.pop(0)
+
+        if (self.variablesArray):
+            self.variablePanelLabel.setStringValue_(self.variablesArray[0].values()[0])
+            self.variablePanelValue.setStringValue_("")
+            NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                                                                                      self.variablePanel, self.mainWindow, self, None, None)
+        else:
+            NSLog("%@",self.environmentVariableArray)
+            self.workflowOnThreadPrep()
+
 
     def showAuthenticationPanel(self):
         '''Show the authentication panel'''
@@ -637,6 +676,7 @@ class MainController(NSObject):
     def runWorkflow_(self, sender):
         selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
 
+
         if self.autorunWorkflow:
             NSLog("running autorun workflow")
             runWorkflowNow()
@@ -662,7 +702,6 @@ class MainController(NSObject):
         '''Set up the selected workflow to run on secondary thread'''
         self.workflow_is_running = True
 
-
         # let's get the workflow
         if self.autorunWorkflow:
             selected_workflow = self.autorunWorkflow
@@ -687,13 +726,26 @@ class MainController(NSObject):
             # Show the computer name tab if needed. I hate waiting to put in the
             # name in DS.
             settingName = False
+            settingVariables = False
+            variablesArray = []
+            self.environmentVariableArray = []
+            for item in self.selectedWorkflow['components']:
+                if self.checkForVariablesNameComponent_(item):
+                    self.variablesArray = item.get('variableLabels', [])
+                    settingVariables=True
+                    break
+
             for item in self.selectedWorkflow['components']:
                 if self.checkForNameComponent_(item):
                     self.getComputerName_(item)
                     settingName = True
                     break
 
-            if not settingName:
+
+            if not settingName and settingVariables:
+                self.getVariables()
+
+            if not settingName and not settingVariables:
                 self.workflowOnThreadPrep()
 
     def checkForNameComponent_(self, item):
@@ -709,6 +761,18 @@ class MainController(NSObject):
 
         return False
 
+    def checkForVariablesNameComponent_(self, item):
+        if item.get('type') == 'variables':
+            return True
+        if item.get('type') == 'included_workflow':
+            included_workflow = self.getIncludedWorkflow_(item)
+            for workflow in self.workflows:
+                if workflow['name'] == included_workflow:
+                    for new_item in workflow['components']:
+                        if self.checkForNameComponent_(new_item):
+                            return True
+
+        return False
 
     @PyObjCTools.AppHelper.endSheetMethod
     def startWorkflowAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
@@ -747,7 +811,7 @@ class MainController(NSObject):
             self.imagingProgressPanel, self.mainWindow, self, None, None)
         # initialize the progress bar
         self.imagingProgress.setMinValue_(0.0)
-        self.imagingProgress.setMaxValue_(30.0)
+        self.imagingProgress.setMaxValue_(self.autoRunTime)
         self.imagingProgress.setIndeterminate_(True)
         self.imagingProgress.setUsesThreadedAnimation_(True)
         self.imagingProgress.startAnimation_(self)
@@ -978,7 +1042,6 @@ class MainController(NSObject):
                     with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
                         script=script.read()
                     self.copyFirstBootScript(script, self.counter)
-        #                    self.first_boot_items = True
             elif item.get('type') == 'localize':
                 Utils.sendReport('in_progress', 'Localizing Mac')
                 self.copyLocalize_(item)
@@ -988,6 +1051,9 @@ class MainController(NSObject):
             elif item.get('type') == 'restart_action':
                 Utils.sendReport('in_progress', 'Setting restart_action to %s' % item.get('action'))
                 self.restartAction = item.get('action')
+            elif item.get('type') == 'variables':
+                self.writeToNVRAM_(self.environmentVariableArray)
+
             else:
                 Utils.sendReport('error', 'Found an unknown workflow item.')
                 self.errorMessage = "Found an unknown workflow item."
@@ -1057,9 +1123,28 @@ class MainController(NSObject):
             Utils.sendReport('error', 'No included workflow passed %s' % included_workflow)
             self.errorMessage = 'No included workflow passed %s' % included_workflow
 
+    def getVariables(self):
+        self.variablePanelLabel.setStringValue_(self.variablesArray[0].values()[0])
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+        self.variablePanel, self.mainWindow, self, None, None)
+
+    def writeToNVRAM_(self,writeArray):
+
+        for currVar in writeArray:
+
+            cmd = ['/usr/sbin/nvram', currVar.keys()[0]+"=\'"+currVar.values()[0]+"\'" ]
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            (eraseOut, eraseErr) = proc.communicate()
+            if eraseErr:
+                NSLog("Error occurred when setting variable to nvram: %@", eraseErr)
+                self.errorMessage = eraseErr
+
+
     def getComputerName_(self, component):
         auto_run = component.get('auto', False)
         hardware_info = Utils.get_hardware_info()
+
+
 
         # Try to get existing HostName
         try:
@@ -1093,7 +1178,10 @@ class MainController(NSObject):
     def setComputerName_(self, sender):
         self.computerName = self.computerNameInput.stringValue()
         self.theTabView.selectTabViewItem_(self.mainTab)
-        self.workflowOnThreadPrep()
+        if self.variablesArray:
+            self.getVariables()
+        else:
+            self.workflowOnThreadPrep()
 
     @objc.python_method
     def Clone(self, source, target, erase=True, verify=True,
@@ -1829,8 +1917,9 @@ class MainController(NSObject):
         If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
         """
         NSLog("Format is: %@", format)
-        
+
         if format == 'auto_hfs_or_apfs':
+
             if self.targetVolume.filevault and self.targetVolume._attributes['Content'] == 'Apple_CoreStorage' and self.targetVolume._attributes['CoreStorageLVGUUID'] :
                 NSLog("Deleting Corestorage and converting to HFS+")
                 self.deletecorestorage_(self.targetVolume.mountpoint)
@@ -1843,6 +1932,16 @@ class MainController(NSObject):
                 NSLog("Detected HFS+ - erasing target")
             elif self.targetVolume._attributes['FilesystemType'] == 'apfs':
                 format='APFS'
+                NSLog("Detected APFS - unmount and mounting all partitions to make sure nothing is holding on to them prior to erasing")
+                parent_disk = self.targetVolume.Info()['ParentWholeDisk']
+                if not macdisk.Disk(parent_disk).Mount():
+                    self.errorMessage = "Error Mounting all volumes on disk"
+                    return
+                if not macdisk.Disk(parent_disk).Unmount():
+                    self.errorMessage = "Error unmounting volumes on target prior to erase. Restart and try again."
+                    macdisk.Disk(parent_disk).Mount()
+                    return
+
                 NSLog("Detected APFS - removing APFS container")
                 cmd = ['/usr/sbin/diskutil', 'deleteContainer', self.targetVolume.deviceidentifier ]
                 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
