@@ -201,11 +201,12 @@ def run(item, target, progress_method=None):
     startosinstall_path = os.path.join(
         app_path, 'Contents/Resources/startosinstall')
     installed_os_version = get_os_version(app_path)
-
+    NSLog("app path is %@ and startosinstall_path is %@",app_path,startosinstall_path)
     additional_package_paths = []
-    if (version.LooseVersion(
-            installed_os_version) >= version.LooseVersion('10.13') and
-            'additional_package_urls' in item):
+#    if (version.LooseVersion(
+#            installed_os_version) >= version.LooseVersion('10.13') and
+#            'additional_package_urls' in item):
+    if ('additional_package_urls' in item):
         try:
             additional_package_paths = download_and_cache_pkgs(
                 item['additional_package_urls'], target,
@@ -214,6 +215,7 @@ def run(item, target, progress_method=None):
         except PkgCachingError, err:
             return False, unicode(err)
 
+    NSLog("additional packages complete")
     # we need to wrap our call to startosinstall with a utility
     # that makes startosinstall think it is connected to a tty-like
     # device so its output is unbuffered so we can get progress info
@@ -243,11 +245,13 @@ def run(item, target, progress_method=None):
 
     cmd.extend([startosinstall_path,
                 '--agreetolicense',
+                '--rebootdelay','5',
+                '--pidtosignal',str(os.getpid()),
                 '--volume', target,
                 '--nointeraction'])
 
-    if (version.LooseVersion(installed_os_version) < version.LooseVersion('10.14')):
-        cmd.extend(['--applicationpath', app_path])
+#    if (version.LooseVersion(installed_os_version) < version.LooseVersion('10.14')):
+#        cmd.extend(['--applicationpath', app_path])
 
 
 

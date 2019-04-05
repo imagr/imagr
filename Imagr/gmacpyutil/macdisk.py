@@ -91,10 +91,13 @@ class Disk(object):
 
   def Mount(self):
     """Mounts single volumes for partitions, all volumes for whole disks."""
+
     if self.Mounted():
       raise MacDiskError("%s is already mounted" % self.deviceid)
     else:
       command = ["diskutil", "mount", self.deviceid]
+      if self.wholedisk:  # pylint: disable=no-member
+        command[1] = "mountDisk"
       rc = gmacpyutil.RunProcess(command)[2]
       if rc == 0:
         try:
@@ -132,7 +135,7 @@ class Disk(object):
 
   def Unmount(self, force=False):
     """Unounts single volumes for partitions, all volumes for whole disks."""
-    if not self.Mounted():
+    if not self.Mounted() and not self.wholedisk:
       raise MacDiskError("%s is not mounted" % self.deviceid)
     else:
       command = ["diskutil", "unmount", self.deviceid]
