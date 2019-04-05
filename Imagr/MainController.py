@@ -116,6 +116,7 @@ class MainController(NSObject):
     cancelledAutorun = False
     authenticatedUsername = None
     authenticatedPassword = None
+    target_volume_name = None
 
     # For localize script
     keyboard_layout_name = None
@@ -277,7 +278,10 @@ class MainController(NSObject):
             self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume.mountpoint)
             selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
         else:
-            selected_volume = volume_list[0]
+            if self.target_volume_name:
+                selected_volume = self.target_volume_name
+            else:
+                selected_volume = volume_list[0]
             self.chooseTargetDropDown.selectItemWithTitle_(selected_volume)
         for volume in self.volumes:
             if str(volume.mountpoint) == str(selected_volume):
@@ -409,6 +413,13 @@ class MainController(NSObject):
                         self.autorunWorkflow = None
                 except:
                     pass
+
+                try:
+                    self.target_volume_name = urllib2.unquote(
+                        converted_plist['target_volume_name'])
+                    NSLog("Set target volume name as: %@", self.target_volume_name)
+                except:
+                    pass
             else:
                 self.errorMessage = "Couldn't get configuration plist. \n %s. \n '%s'" % (error.reason, error.url)
         else:
@@ -524,7 +535,17 @@ class MainController(NSObject):
             if self.targetVolume:
                 self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume.mountpoint)
 
-            selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
+            if self.target_volume_name:
+                try:
+                    selected_volume = "/Volumes/%s" %(self.target_volume_name)
+                    volume_list.index(selected_volume) # Check if target volume is in list
+                except ValueError:
+                    selected_volume = volume_list[0]
+
+                self.chooseTargetDropDown.selectItemWithTitle_(selected_volume)
+            else:
+                selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
+
             for volume in self.volumes:
                 if str(volume.mountpoint) == str(selected_volume):
                     #imaging_target = volume
