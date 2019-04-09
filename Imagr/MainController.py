@@ -579,6 +579,8 @@ class MainController(NSObject):
                     selected_volume = "/Volumes/%s" %(self.target_volume_name)
                     volume_list.index(selected_volume) # Check if target volume is in list
                 except ValueError:
+                    NSLog("Could not find a volume with target name: %@", self.target_volume_name)
+                    self.autorunWorkflow = None
                     selected_volume = volume_list[0]
 
                 self.chooseTargetDropDown.selectItemWithTitle_(selected_volume)
