@@ -162,6 +162,25 @@ class MainController(NSObject):
         else:
             self.setStartupDisk_(self)
 
+    def errorNotificationPanel_(self, error):
+        if error:
+            errorText = str(error)
+        else:
+            errorText = "Unknown error"
+
+        # Send a report to the URL if it's configured
+        Utils.sendReport('error', errorText)
+
+        self.alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
+            NSLocalizedString(errorText, None),
+            NSLocalizedString(u"OK", None),
+            NSLocalizedString(u"", None),
+            objc.nil,
+            NSLocalizedString(u"", None))
+
+        self.errorMessage = None
+        self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.mainWindow, self, None, objc.nil)
 
     @objc.python_method
     def receiveSignal(self,signalNumber, frame):
@@ -579,9 +598,11 @@ class MainController(NSObject):
                     selected_volume = "/Volumes/%s" %(self.target_volume_name)
                     volume_list.index(selected_volume) # Check if target volume is in list
                 except ValueError:
-                    NSLog("Could not find a volume with target name: %@", self.target_volume_name)
+                    self.errorMessage = "Could not find a volume with target name: %s" % self.target_volume_name
+                    NSLog(self.errorMessage)
                     self.autorunWorkflow = None
                     selected_volume = volume_list[0]
+                    self.errorNotificationPanel_(self.errorMessage)
 
                 self.chooseTargetDropDown.selectItemWithTitle_(selected_volume)
             else:
