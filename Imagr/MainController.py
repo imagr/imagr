@@ -1986,9 +1986,7 @@ class MainController(NSObject):
                 format='APFS'
                 NSLog("Detected APFS - unmount and mounting all partitions to make sure nothing is holding on to them prior to erasing")
                 parent_disk = self.targetVolume.Info()['ParentWholeDisk']
-                if not macdisk.Disk(parent_disk).Mount():
-                    self.errorMessage = "Error Mounting all volumes on disk"
-                    return
+                macdisk.Disk(parent_disk).Mount()
                 if not macdisk.Disk(parent_disk).Unmount():
                     self.errorMessage = "Error unmounting volumes on target prior to erase. Restart and try again."
                     macdisk.Disk(parent_disk).Mount()
