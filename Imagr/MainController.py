@@ -785,7 +785,6 @@ class MainController(NSObject):
                     settingName = True
                     break
 
-
             if not settingName and settingVariables:
                 self.getVariables()
 
@@ -1213,7 +1212,10 @@ class MainController(NSObject):
             else:
                 self.computerName = existing_name
             self.theTabView.selectTabViewItem_(self.mainTab)
-            self.workflowOnThreadPrep()
+            if self.variablesArray:
+                self.getVariables()
+            else:
+                self.workflowOnThreadPrep()
         else:
             if component.get('use_serial', False):
                 self.computerNameInput.setStringValue_(hardware_info.get('serial_number', ''))
