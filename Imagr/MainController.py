@@ -426,6 +426,8 @@ class MainController(NSObject):
                         pass
 
             if plistData:
+                plistData = plistData.replace("{{current_volume_path}}", Utils.currentVolumePath()).encode("utf8")
+
                 try:
                     converted_plist = FoundationPlist.readPlistFromString(plistData)
                 except:
