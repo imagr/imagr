@@ -839,6 +839,7 @@ class MainController(NSObject):
         self.imagingProgress.setIndeterminate_(True)
         self.imagingProgress.setUsesThreadedAnimation_(True)
         self.imagingProgress.startAnimation_(self)
+
         NSThread.detachNewThreadSelector_toTarget_withObject_(
             self.processWorkflowOnThread_, self, None)
 
@@ -952,7 +953,6 @@ class MainController(NSObject):
             component_count = len(components)
 
             self.should_update_volume_list = False
-
             for item in self.selectedWorkflow['components']:
                 if (item.get('type') == 'startosinstall' and
                         self.first_boot_items):
@@ -1025,8 +1025,8 @@ class MainController(NSObject):
                 self.first_boot_items = True
             # Expand package folder and pass contents to runComponent_
             elif item.get('type') == 'package_folder':
-                url = item.get('url')
-                url_path = urlparse.urlparse(urllib2.unquote(url.encode())).path
+                url = item.get('url').encode("utf8")
+                url_path = urlparse.urlparse(urllib2.unquote(url)).path
                 if os.path.isdir(url_path):
                     for f in os.listdir(url_path):
                         if os.path.basename(f).endswith('.pkg'):
