@@ -756,7 +756,6 @@ class MainController(NSObject):
             if selected_workflow == workflow['name']:
                 self.selectedWorkflow = workflow
                 break
-        NSLog("Running Workflow %@",self.selectedWorkflow['name'])
         if self.selectedWorkflow:
             if 'restart_action' in self.selectedWorkflow:
                 self.restartAction = self.selectedWorkflow['restart_action']
@@ -830,7 +829,7 @@ class MainController(NSObject):
 
     def workflowOnThreadPrep(self):
         self.disableWorkflowViewControls()
-        Utils.sendReport('in_progress', 'Preparing to run workflow %s...' % self.selectedWorkflow['name'])
+        Utils.sendReport('in_progress', 'Preparing to run workflow %s...' % self.selectedWorkflow['name'].UTF8String())
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
         self.imagingProgressDetail.setStringValue_('')
         self.contractImagingProgressPanel()
@@ -847,7 +846,10 @@ class MainController(NSObject):
 
     def countdownOnThreadPrep(self):
         self.disableWorkflowViewControls()
-        self.imagingLabel.setStringValue_("Preparing to run {} on {}".format(self.autorunWorkflow, self.targetVolume.mountpoint))
+
+        label_string = "Preparing to run %s on %s " % (self.autorunWorkflow,self.targetVolume.mountpoint)
+
+        self.imagingLabel.setStringValue_(label_string)
         #self.imagingProgressDetail.setStringValue_('')
         self.expandImagingProgressPanel()
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
@@ -1026,7 +1028,7 @@ class MainController(NSObject):
             # Expand package folder and pass contents to runComponent_
             elif item.get('type') == 'package_folder':
                 url = item.get('url')
-                url_path = urlparse.urlparse(urllib2.unquote(url)).path
+                url_path = urlparse.urlparse(urllib2.unquote(url.encode())).path
                 if os.path.isdir(url_path):
                     for f in os.listdir(url_path):
                         if os.path.basename(f).endswith('.pkg'):
