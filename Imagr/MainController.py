@@ -1973,73 +1973,28 @@ class MainController(NSObject):
         NSLog("Format is: %@", format)
 
         if format == 'auto_hfs_or_apfs':
-
-            if self.targetVolume.filevault and self.targetVolume._attributes['Content'] == 'Apple_CoreStorage' and self.targetVolume._attributes['CoreStorageLVGUUID'] :
-                NSLog("Deleting Corestorage and converting to HFS+")
-                self.deletecorestorage_(self.targetVolume.mountpoint)
-                self.targetVolume.filevault=False
-                self.should_update_volume_list = True
-                self.targetVolume.EnsureMountedWithRefresh()
-
             if self.targetVolume._attributes['FilesystemType'] == 'hfs':
                 format='Journaled HFS+'
                 NSLog("Detected HFS+ - erasing target")
             elif self.targetVolume._attributes['FilesystemType'] == 'apfs':
                 format='APFS'
-                NSLog("Detected APFS - unmount and mounting all partitions to make sure nothing is holding on to them prior to erasing")
-                parent_disk = self.targetVolume.Info()['ParentWholeDisk']
-                macdisk.Disk(parent_disk).Mount()
-                if not macdisk.Disk(parent_disk).Unmount():
-                    self.errorMessage = "Error unmounting volumes on target prior to erase. Restart and try again."
-                    macdisk.Disk(parent_disk).Mount()
-                    return
-
-                NSLog("Detected APFS - removing APFS container")
-                cmd = ['/usr/sbin/diskutil', 'deleteContainer', self.targetVolume.deviceidentifier ]
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                (eraseOut, eraseErr) = proc.communicate()
-                if eraseErr:
-                    NSLog("Error occured when erasing volume: %@", eraseErr)
-                    self.errorMessage = eraseErr
-                cmd = ['/usr/sbin/diskutil', 'erase', self.targetVolume.deviceidentifier ]
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                (eraseOut, eraseErr) = proc.communicate()
-                if eraseErr:
-                    NSLog("Error occured when erasing volume: %@", eraseErr)
-                    self.errorMessage = eraseErr
-
-
+                NSLog("Detected APFS - erasing target")
             else:
                 NSLog("Volume not HFS+ or APFS, system returned: %@", self.targetVolume._attributes['FilesystemType'])
                 self.errorMessage = "Not HFS+ or APFS - specify volume format and reload workflows."
 
-        if self.targetVolume.filevault or format=="APFS":
-            NSLog("erasing with identifier since we had filevault or APFS")
-            cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.deviceidentifier ]
-        else:
-                NSLog("erasing volume")
-                cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
+        cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
+        NSLog("%@", cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (eraseOut, eraseErr) = proc.communicate()
         if eraseErr:
             NSLog("Error occured when erasing volume: %@", eraseErr)
             self.errorMessage = eraseErr
-        if self.targetVolume.filevault:
-            self.targetVolume.filevault=False
-        self.targetVolume.EnsureMountedWithRefresh()
+        NSLog("%@", eraseOut)
         # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
-#        elif name != 'Macintosh HD':
+        if name != 'Macintosh HD':
             # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
-        self.should_update_volume_list = True
-
-    def deletecorestorage_(self,mountpoint):
-        cmd = ['/usr/sbin/diskutil', 'cs', 'delete', self.targetVolume._attributes['CoreStorageLVGUUID'] ]
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (eraseOut, eraseErr) = proc.communicate()
-        if eraseErr:
-            NSLog("Error occured when removing from core storage: %@", eraseErr)
-            self.errorMessage = eraseErr
-
+            self.should_update_volume_list = True
 
 
     def copyLocalize_(self, item):
