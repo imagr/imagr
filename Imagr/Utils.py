@@ -378,6 +378,14 @@ def getDMGSize(url):
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
 
+# Return the volume path of current working directory
+def currentVolumePath():
+    path = NSBundle.mainBundle().bundlePath()
+    path = os.path.abspath(path)
+    while not os.path.ismount(path):
+       path = os.path.dirname(path)
+    NSLog("Current working directory path: %@", path)
+    return path
 
 def getPlistData(data):
     # Try the user's homedir
@@ -408,7 +416,9 @@ def getPlistData(data):
     appPath = NSBundle.mainBundle().bundlePath()
     appDirPath = os.path.dirname(appPath)
     try:
-        plist = FoundationPlist.readPlist(os.path.join(appDirPath, "com.grahamgilbert.Imagr.plist"))
+        plistData = open(os.path.join(appDirPath, "com.grahamgilbert.Imagr.plist")).read()
+        plistData = plistData.replace("{{current_volume_path}}", currentVolumePath()).encode("utf8")
+        plist = FoundationPlist.readPlistFromString(plistData)
         return plist[data]
     except:
         pass
