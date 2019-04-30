@@ -84,7 +84,6 @@ def post_url(url, post_data, message=None, follow_redirects=False,
                'post_data': post_data,
                'additional_headers': header_dict_from_list(additional_headers),
                'logging_function': NSLog}
-    NSLog('gurl options: %@', options)
 
     connection = Gurl.alloc().initWithOptions_(options)
     stored_percent_complete = -1
@@ -201,7 +200,6 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                'username': username,
                'password': password,
                'logging_function': NSLogWrapper}
-    NSLog('gurl options: %@', options)
 
     connection = Gurl.alloc().initWithOptions_(options)
     stored_percent_complete = -1
@@ -384,7 +382,6 @@ def currentVolumePath():
     path = os.path.abspath(path)
     while not os.path.ismount(path):
        path = os.path.dirname(path)
-    NSLog("Current working directory path: %@", path)
     return path
 
 def getPlistData(data):
@@ -482,7 +479,6 @@ def setDate():
 
 def getServerURL():
     data = getPlistData('serverurl')
-    NSLog('Report: %@', data)
     return data
 
 

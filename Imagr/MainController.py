@@ -189,10 +189,8 @@ class MainController(NSObject):
         return
 
     def runStartupTasks(self):
-        NSLog(u"background_window is set to %@", repr(self.backgroundWindowSetting()))
         signal.signal(signal.SIGUSR1, self.receiveSignal)
 
-        NSLog("process is %i",os.getpid())
         if self.backgroundWindowSetting() == u"always":
             self.showBackgroundWindow()
 
@@ -363,7 +361,6 @@ class MainController(NSObject):
             NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
                                                                                       self.variablePanel, self.mainWindow, self, None, None)
         else:
-            NSLog("%@",self.environmentVariableArray)
             self.workflowOnThreadPrep()
 
 
@@ -426,8 +423,7 @@ class MainController(NSObject):
                         pass
 
             if plistData:
-                plistData = plistData.replace("{{current_volume_path}}", Utils.currentVolumePath()).encode("utf8")
-
+                plistData = plistData.replace("{{current_volume_path}}", Utils.currentVolumePath().encode("utf8"))
                 try:
                     converted_plist = FoundationPlist.readPlistFromString(plistData)
                 except:
@@ -827,7 +823,7 @@ class MainController(NSObject):
         if returncode == 1:
             self.runWorkflowNow()
         elif returncode == 0:
-            NSLog("Here")
+            NSLog("Cancelling")
 
     def workflowOnThreadPrep(self):
         self.disableWorkflowViewControls()
