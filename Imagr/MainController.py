@@ -1183,7 +1183,7 @@ class MainController(NSObject):
 
         for currVar in writeArray:
 
-            cmd = ['/usr/sbin/nvram', currVar.keys()[0]+"=\'"+currVar.values()[0]+"\'" ]
+            cmd = ['/usr/sbin/nvram', currVar.keys()[0]+"="+currVar.values()[0] ]
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             (eraseOut, eraseErr) = proc.communicate()
             if eraseErr:
@@ -1194,8 +1194,6 @@ class MainController(NSObject):
     def getComputerName_(self, component):
         auto_run = component.get('auto', False)
         hardware_info = Utils.get_hardware_info()
-
-
 
         # Try to get existing HostName
         try:
@@ -1209,6 +1207,8 @@ class MainController(NSObject):
         if auto_run:
             if component.get('use_serial', False):
                 self.computerName = hardware_info.get('serial_number', 'UNKNOWN')
+            elif component.get('computer_name', None):
+                self.computerName=Utils.replacePlaceholders(component.get('computer_name'),None)
             else:
                 self.computerName = existing_name
             self.theTabView.selectTabViewItem_(self.mainTab)
@@ -1221,6 +1221,8 @@ class MainController(NSObject):
                 self.computerNameInput.setStringValue_(hardware_info.get('serial_number', ''))
             elif component.get('prefix', None):
                 self.computerNameInput.setStringValue_(component.get('prefix'))
+            elif component.get('computer_name', None):
+                self.computerNameInput.setStringValue_(Utils.replacePlaceholders(component.get('computer_name'),None))
             else:
                 self.computerNameInput.setStringValue_(existing_name)
 
@@ -1312,7 +1314,6 @@ class MainController(NSObject):
             command.append("--noverify")
 
         self.updateProgressTitle_Percent_Detail_('Restoring %s' % source, -1, '')
-        NSLog("%@", str(command))
         task = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         message = ""
         while task.poll() is None:
