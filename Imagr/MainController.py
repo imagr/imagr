@@ -172,7 +172,7 @@ class MainController(NSObject):
         Utils.sendReport('error', errorText)
 
         self.alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
-            NSLocalizedString(errorText, None),
+            NSLocalizedString(errorText.decode('utf8'), None),
             NSLocalizedString(u"OK", None),
             NSLocalizedString(u"", None),
             objc.nil,
@@ -317,7 +317,7 @@ class MainController(NSObject):
                 selected_volume = volume_list[0]
             self.chooseTargetDropDown.selectItemWithTitle_(selected_volume)
         for volume in self.volumes:
-            if str(volume.mountpoint) == str(selected_volume):
+            if str(volume.mountpoint.encode('utf8')) == str(selected_volume.encode('utf8')):
                 self.targetVolume = volume
 
     def expandImagingProgressPanel(self):
@@ -593,11 +593,11 @@ class MainController(NSObject):
 
             if self.target_volume_name:
                 try:
-                    selected_volume = "/Volumes/%s" %(self.target_volume_name)
+                    selected_volume = "/Volumes/%s" % self.target_volume_name
                     volume_list.index(selected_volume) # Check if target volume is in list
                 except ValueError:
-                    self.errorMessage = "Could not find a volume with target name: %s" % self.target_volume_name
-                    NSLog(self.errorMessage)
+                    self.errorMessage = "Could not find a volume with target name: %s" % self.target_volume_name.UTF8String()
+                    NSLog(self.errorMessage.decode('utf8'))
                     self.autorunWorkflow = None
                     selected_volume = volume_list[0]
                     self.errorNotificationPanel_(self.errorMessage)
@@ -607,8 +607,7 @@ class MainController(NSObject):
                 selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
 
             for volume in self.volumes:
-                if str(volume.mountpoint) == str(selected_volume):
-                    #imaging_target = volume
+                if str(volume.mountpoint.encode('utf8')) == str(selected_volume.encode('utf8')):
                     self.targetVolume = volume
                     break
             self.selectWorkflow_(sender)
@@ -639,7 +638,7 @@ class MainController(NSObject):
     def selectImagingTarget_(self, sender):
         volume_name = self.chooseTargetDropDown.titleOfSelectedItem()
         for volume in self.volumes:
-            if str(volume.mountpoint) == str(volume_name):
+            if str(volume.mountpoint.encode('utf8')) == str(volume_name.encode('utf8')):
                 self.targetVolume = volume
                 break
         NSLog("Imaging target is %@", self.targetVolume.mountpoint)
@@ -975,7 +974,7 @@ class MainController(NSObject):
         # Disable autorun so users are able to select additional workflows to run.
         self.autorunWorkflow = None
 
-        Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'])
+        Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'].UTF8String())
 
         # Bless the target if we need to
         if self.blessTarget == True:
@@ -983,7 +982,7 @@ class MainController(NSObject):
                 self.targetVolume.SetStartupDisk()
             except:
                 for volume in self.volumes:
-                    if str(volume.mountpoint) == str(self.targetVolume.mountpoint):
+                    if str(volume.mountpoint.encode('utf8')) == str(self.targetVolume.mountpoint.encode('utf8')):
                         volume.SetStartupDisk()
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
@@ -1077,7 +1076,7 @@ class MainController(NSObject):
             # Format a volume
             elif item.get('type') == 'eraseVolume':
                 if self.targetVolume:
-                    target_volume_string = str(self.targetVolume.mountpoint).split('/Volumes/')[-1]
+                    target_volume_string = str(self.targetVolume.mountpoint.encode('utf8')).split('/Volumes/')[-1]
                 else: 
                     target_volume_string = 'Macintosh HD'
 
