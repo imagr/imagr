@@ -1991,11 +1991,9 @@ class MainController(NSObject):
             NSLog("Error occured when erasing volume: %@", eraseErr)
             self.errorMessage = eraseErr
         NSLog("%@", eraseOut)
-        # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
-        if name != 'Macintosh HD':
-            # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
-            self.should_update_volume_list = True
-
+        # Reload possible targets because original target name might not exist
+        self.should_update_volume_list = True
+        self.targetVolume.EnsureMountedWithRefresh()
 
     def copyLocalize_(self, item):
         if 'keyboard_layout_name' in item:
