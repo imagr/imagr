@@ -30,6 +30,7 @@ import urlparse
 import powermgr
 import osinstall
 import signal
+import unicodedata
 
 class MainController(NSObject):
 
@@ -593,7 +594,7 @@ class MainController(NSObject):
 
             if self.target_volume_name:
                 try:
-                    selected_volume = "/Volumes/%s" % self.target_volume_name
+                    selected_volume = unicodedata.normalize("NFD", "/Volumes/%s" % self.target_volume_name)
                     volume_list.index(selected_volume) # Check if target volume is in list
                 except ValueError:
                     self.errorMessage = "Could not find a volume with target name: %s" % self.target_volume_name.UTF8String()
@@ -1081,7 +1082,7 @@ class MainController(NSObject):
                     target_volume_string = 'Macintosh HD'
 
                 Utils.sendReport('in_progress', 'Erasing volume with name %s' % target_volume_string)
-                new_volume_name = item.get('name', target_volume_string)
+                new_volume_name = item.get('name', target_volume_string).UTF8String()
                 if new_volume_name != target_volume_string:
                     Utils.sendReport('in_progress', 'Volume will be renamed as: %s' % new_volume_name)
                 self.eraseTargetVolume(new_volume_name, item.get('format', 'Journaled HFS+'))
