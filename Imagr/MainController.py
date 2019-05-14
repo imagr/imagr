@@ -1984,7 +1984,12 @@ class MainController(NSObject):
                 NSLog("Volume not HFS+ or APFS, system returned: %@", self.targetVolume._attributes['FilesystemType'])
                 self.errorMessage = "Not HFS+ or APFS - specify volume format and reload workflows."
 
-        cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
+        if self.targetVolume.filevault or format=="APFS":
+            NSLog("erasing with identifier since we had filevault or APFS")
+            cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.deviceidentifier ]
+        else:
+            cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
+
         NSLog("%@", cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (eraseOut, eraseErr) = proc.communicate()
@@ -1994,11 +1999,6 @@ class MainController(NSObject):
         if self.targetVolume.filevault:
             self.targetVolume.filevault=False
         # Reload possible targets because original target name might not exist
-        self.should_update_volume_list = True
-        self.targetVolume.EnsureMountedWithRefresh()
-        # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
-#        elif name != 'Macintosh HD':
-            # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
         self.should_update_volume_list = True
         self.targetVolume.EnsureMountedWithRefresh()
 
