@@ -1076,7 +1076,7 @@ class MainController(NSObject):
 
             # Format a volume
             elif item.get('type') == 'eraseVolume':
-                if self.targetVolume and not self.filevault:
+                if self.targetVolume and not self.targetVolume.filevault:
                     target_volume_string = str(self.targetVolume.mountpoint.encode('utf8')).split('/Volumes/')[-1]
                 else: 
                     target_volume_string = 'Macintosh HD'
