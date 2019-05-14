@@ -1077,9 +1077,9 @@ class MainController(NSObject):
 
             # Format a volume
             elif item.get('type') == 'eraseVolume':
-                if self.targetVolume:
+                if self.targetVolume and not self.filevault:
                     target_volume_string = str(self.targetVolume.mountpoint).split('/Volumes/')[-1]
-                else: 
+                else:
                     target_volume_string = 'Macintosh HD'
 
                 Utils.sendReport('in_progress', 'Erasing volume with name %s' % target_volume_string)
@@ -2026,6 +2026,8 @@ class MainController(NSObject):
             self.errorMessage = eraseErr
         if self.targetVolume.filevault:
             self.targetVolume.filevault=False
+        # Reload possible targets because original target name might not exist
+        self.should_update_volume_list = True
         self.targetVolume.EnsureMountedWithRefresh()
         # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
 #        elif name != 'Macintosh HD':
