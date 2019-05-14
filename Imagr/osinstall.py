@@ -173,7 +173,7 @@ def download_and_cache_pkgs(
 def filter_and_expand_paths(paths_array, file_extension):
     new_paths = []
     for url in paths_array:
-        url_path = urlparse.urlparse(urllib2.unquote(url)).path
+        url_path = urlparse.urlparse(urllib2.unquote(url.encode('utf8'))).path
         if os.path.isdir(url_path):
             for f in os.listdir(url_path):
                 if os.path.basename(f).endswith(file_extension):

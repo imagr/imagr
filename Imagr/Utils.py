@@ -84,7 +84,6 @@ def post_url(url, post_data, message=None, follow_redirects=False,
                'post_data': post_data,
                'additional_headers': header_dict_from_list(additional_headers),
                'logging_function': NSLog}
-    NSLog('gurl options: %@', options)
 
     connection = Gurl.alloc().initWithOptions_(options)
     stored_percent_complete = -1
@@ -201,7 +200,6 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
                'username': username,
                'password': password,
                'logging_function': NSLogWrapper}
-    NSLog('gurl options: %@', options)
 
     connection = Gurl.alloc().initWithOptions_(options)
     stored_percent_complete = -1
@@ -378,6 +376,13 @@ def getDMGSize(url):
 def getPasswordHash(password):
     return hashlib.sha512(password).hexdigest()
 
+# Return the volume path of current working directory
+def currentVolumePath():
+    path = NSBundle.mainBundle().bundlePath()
+    path = os.path.abspath(path)
+    while not os.path.ismount(path):
+       path = os.path.dirname(path)
+    return path
 
 def getPlistData(data):
     # Try the user's homedir
@@ -408,7 +413,9 @@ def getPlistData(data):
     appPath = NSBundle.mainBundle().bundlePath()
     appDirPath = os.path.dirname(appPath)
     try:
-        plist = FoundationPlist.readPlist(os.path.join(appDirPath, "com.grahamgilbert.Imagr.plist"))
+        plistData = open(os.path.join(appDirPath, "com.grahamgilbert.Imagr.plist")).read()
+        plistData = plistData.replace("{{current_volume_path}}", currentVolumePath()).encode("utf8")
+        plist = FoundationPlist.readPlistFromString(plistData)
         return plist[data]
     except:
         pass
@@ -472,7 +479,6 @@ def setDate():
 
 def getServerURL():
     data = getPlistData('serverurl')
-    NSLog('Report: %@', data)
     return data
 
 
@@ -496,7 +502,6 @@ def sendReport(status, message):
             'serial': SERIAL,
             'message': message
         }
-        NSLog('Report: %@', data)
         data = urllib.urlencode(data)
         # silently fail here, sending reports is a nice to have, if server is
         # down, meh.
