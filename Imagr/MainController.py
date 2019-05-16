@@ -1082,7 +1082,7 @@ class MainController(NSObject):
                     target_volume_string = 'Macintosh HD'
 
                 Utils.sendReport('in_progress', 'Erasing volume with name %s' % target_volume_string)
-                new_volume_name = str(item.get('name', target_volume_string).encode('utf8'))
+                new_volume_name = str(item.get('name', target_volume_string))
                 if new_volume_name != target_volume_string:
                     Utils.sendReport('in_progress', 'Volume will be renamed as: %s' % new_volume_name)
                 self.eraseTargetVolume(new_volume_name, item.get('format', 'Journaled HFS+'))
