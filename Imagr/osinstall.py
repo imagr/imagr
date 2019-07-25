@@ -154,10 +154,10 @@ def download_and_cache_pkgs(
                 not os.path.basename(url).endswith('.dmg')):
             error = "%s doesn't end with either '.pkg' or '.dmg'" % url
             raise PkgCachingError(error)
-        NSLog("Caching pkg from %@", url)
         if url.startswith("file://"):
             pkgpath = urlparse.urlparse(urllib2.unquote(url)).path
         else:
+            NSLog("Caching pkg from %@", url)
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
             if os.path.basename(url).endswith('.dmg'):

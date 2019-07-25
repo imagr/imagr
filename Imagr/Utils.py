@@ -856,7 +856,8 @@ def mountedVolumes():
                 if (u"MountPoint" in part) and (not part[u"MountPoint"].startswith("/private/var")) and (part.get(u"VolumeName") in volumeNames):
                     volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
             for part in disk.get(u"APFSVolumes", []):
-                if (u"MountPoint" in part) and (not part[u"MountPoint"].startswith("/private/var")) and (part.get(u"VolumeName") in volumeNames):
+                if (u"MountPoint" in part) and (not part[u"MountPoint"].startswith("/private/var")) and (part.get(u"VolumeName") in volumeNames) and (not " - Data" in part.get(u"VolumeName")):
+                    print part.get(u"VolumeName")
                     volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
 
 #         volumes = [disk for disk in volumes if not disk.mountpoint in APFSVolumesToHide]
@@ -902,10 +903,8 @@ def apfs_filevault_volumes():
                 volumes.append(newDisk)
     return volumes
 
-def apfs_volumes():
-
-    volumes = []
-    cmd = ['/usr/sbin/diskutil', 'apfs', 'list','-plist']
+def apfs_volume_uuid(device):
+    cmd = ['/usr/sbin/diskutil', 'info','-plist',device]
     proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -919,13 +918,116 @@ def apfs_volumes():
     except BaseException as e:
         NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
 
+    return plist[u'VolumeUUID']
+
+
+def apfs_container(volume_uuid):
+    cmd = ['/usr/sbin/diskutil', 'apfs', 'list','-plist']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return ""
+
+    try:
+        plist = plistlib.readPlistFromString(output)
+    except BaseException as e:
+        NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
     for container in plist[u"Containers"]:
         for volume in container[u"Volumes"]:
-            newDisk=macdisk.Disk(volume[u"DeviceIdentifier"])
-            if (u"FileVault" in volume) and (volume["FileVault"]==True):
-                newDisk.filevault=True
-            newDisk.Refresh()
-            volumes.append(newDisk)
+            NSLog(u"volume : %@",volume[u"APFSVolumeUUID"])
+            if volume[u"APFSVolumeUUID"]==volume_uuid:
+                return container[u"APFSContainerUUID"]
+
+def first_apfs_volume(apfs_container_uuid):
+    NSLog(u"finding first_apfs_volume from %@",apfs_container_uuid)
+    new_device=""
+    cmd = ['/usr/sbin/diskutil', 'apfs', 'list','-plist',apfs_container_uuid]
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return ""
+
+    try:
+        plist = plistlib.readPlistFromString(output)
+    except BaseException as e:
+        NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
+        
+    try:
+        new_device=plist[u"Containers"][0][u"Volumes"][0][u"DeviceIdentifier"]
+    except BaseException as e:
+        NSLog(u"Couldn't get new device from %@",apfs_container_uuid)
+
+    return new_device
+
+    
+
+def reset_apfs_container(device,new_volume_name=u"Macintosh HD"):
+    NSLog(u"reset_apfs_container device: %@ volumename: %@",device,new_volume_name)
+
+    apfs_vol_uuid=apfs_volume_uuid(device)
+    NSLog(u"apfs_vol_uuid:%@",apfs_vol_uuid)
+    apfs_container_uuid=apfs_container(apfs_vol_uuid)
+    NSLog(u"apfs_container_uuid:%@",apfs_container_uuid)
+
+    if apfs_container_uuid:
+        cmd = ['/usr/sbin/diskutil', 'apfs', 'list','-plist',apfs_container_uuid]
+        proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (output, unused_error) = proc.communicate()
+        if proc.returncode:
+            NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+            
+
+        try:
+            plist = plistlib.readPlistFromString(output)
+        except BaseException as e:
+            NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
+        
+        NSLog(u"deleting volumes");
+        for container in plist[u"Containers"]:
+            for volume in container[u"Volumes"]:
+                NSLog("deleting...")
+                apfs_delete_volume(volume[u"APFSVolumeUUID"])
+                NSLog("done")
+
+        NSLog(u"adding volume named %@ to container UUID %@", new_volume_name,apfs_container_uuid)
+        apfs_add_volume(apfs_container_uuid, new_volume_name)
+        NSLog(u"finding first volume in container %@",apfs_container_uuid)
+        first_vol=first_apfs_volume(apfs_container_uuid)
+        NSLog(u"Found volume at device %@",first_vol)
+        return first_vol
+        
+
+
+def apfs_add_volume(apfs_container_uuid,new_name):
+    NSLog(u"adding APFS volume with UUID: %@",apfs_container_uuid)
+
+    cmd = ['/usr/sbin/diskutil', 'apfs', 'addVolume',apfs_container_uuid,"apfs",new_name]
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+
+
+def apfs_delete_volume(apfs_volume_uuid):
+    NSLog(u"deleting APFS volume with UUID: %@",apfs_volume_uuid)
+
+    cmd = ['/usr/sbin/diskutil', 'apfs', 'deleteVolume',apfs_volume_uuid]
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
 
 def cs_filevault_volumes():
 
@@ -958,6 +1060,10 @@ def cs_filevault_volumes():
                         NSLog("Not locked")
 
     return volumes
+
+
+
+
 
 def cs_volume_info(cs_disk_id):
 
