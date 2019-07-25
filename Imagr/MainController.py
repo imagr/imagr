@@ -31,7 +31,7 @@ import powermgr
 import osinstall
 import signal
 import unicodedata
-
+import powermgr
 class MainController(NSObject):
 
     mainWindow = objc.IBOutlet()
@@ -1972,7 +1972,6 @@ class MainController(NSObject):
         'format' type of 'auto_hfs_or_apfs' will check for HFS+ or APFS
         If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
         """
-        NSLog("Format is: %@", format)
 
         if format == 'auto_hfs_or_apfs':
             if self.targetVolume._attributes['FilesystemType'] == 'hfs':
@@ -1980,7 +1979,32 @@ class MainController(NSObject):
                 NSLog("Detected HFS+ - erasing target")
             elif self.targetVolume._attributes['FilesystemType'] == 'apfs':
                 format='APFS'
-                NSLog("Detected APFS - erasing target")
+                NSLog("Detected APFS - unmount and mounting all partitions to make sure nothing is holding on to them prior to erasing")              
+                parent_disk = self.targetVolume.Info()['ParentWholeDisk']
+                if not macdisk.Disk(parent_disk).Mount():
+                    self.errorMessage = "Error Mounting all volumes on disk"
+                    return
+                if not macdisk.Disk(parent_disk).Unmount():
+                    self.errorMessage = "Error unmounting volumes on target prior to erase. Restart and try again."
+                    macdisk.Disk(parent_disk).Mount()
+                    return
+
+                NSLog("Detected APFS - removing APFS volumes")
+                apfs_vols=self.targetVolume.apfs_volumes()
+                
+                cmd = ['/usr/sbin/diskutil', 'deleteContainer', self.targetVolume.deviceidentifier ]
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                (eraseOut, eraseErr) = proc.communicate()
+                if eraseErr:
+                    NSLog("Error occured when erasing volume: %@", eraseErr)
+                    self.errorMessage = eraseErr
+                cmd = ['/usr/sbin/diskutil', 'erase', self.targetVolume.deviceidentifier ]
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                (eraseOut, eraseErr) = proc.communicate()
+                if eraseErr:
+                    NSLog("Error occured when erasing volume: %@", eraseErr)
+                    self.errorMessage = eraseErr
+
             else:
                 NSLog("Volume not HFS+ or APFS, system returned: %@", self.targetVolume._attributes['FilesystemType'])
                 self.errorMessage = "Not HFS+ or APFS - specify volume format and reload workflows."
