@@ -902,6 +902,31 @@ def apfs_filevault_volumes():
                 volumes.append(newDisk)
     return volumes
 
+def apfs_volumes():
+
+    volumes = []
+    cmd = ['/usr/sbin/diskutil', 'apfs', 'list','-plist']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return volumes
+
+    try:
+        plist = plistlib.readPlistFromString(output)
+    except BaseException as e:
+        NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
+
+    for container in plist[u"Containers"]:
+        for volume in container[u"Volumes"]:
+            newDisk=macdisk.Disk(volume[u"DeviceIdentifier"])
+            if (u"FileVault" in volume) and (volume["FileVault"]==True):
+                newDisk.filevault=True
+            newDisk.Refresh()
+            volumes.append(newDisk)
+
 def cs_filevault_volumes():
 
     volumes = []
