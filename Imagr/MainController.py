@@ -716,6 +716,7 @@ class MainController(NSObject):
 
     @objc.IBAction
     def runWorkflow_(self, sender):
+        powermgr.assertNoIdleSleep()
         selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
 
 
