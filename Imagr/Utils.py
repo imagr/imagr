@@ -857,7 +857,7 @@ def mountedVolumes():
                     volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
             for part in disk.get(u"APFSVolumes", []):
                 if (u"MountPoint" in part) and (not part[u"MountPoint"].startswith("/private/var")) and (part.get(u"VolumeName") in volumeNames) and (not " - Data" in part.get(u"VolumeName")):
-                    print part.get(u"VolumeName")
+                    NSLog("%@", part.get(u"VolumeName"))
                     volumes.append(macdisk.Disk(part[u"DeviceIdentifier"]))
 
 #         volumes = [disk for disk in volumes if not disk.mountpoint in APFSVolumesToHide]
