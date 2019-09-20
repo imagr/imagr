@@ -1,4 +1,4 @@
-# Imagr
+# Imagr has been archived - [please see this post]https://grahamgilbert.com/blog/2019/09/20/imaging-is-dead-rip-imagr/)
 
 Imagr is an application designed to be run from a NetInstall environment created with [AutoNBI](https://bitbucket.org/bruienne/autonbi/src). It is able replace tools such as DeployStudio for many organisations without the requirement of needing to be run on OS X servers.
 
