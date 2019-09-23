@@ -6,7 +6,7 @@ import os
 import subprocess
 import shutil
 
-firstboot_dir = '/.imagr/first-boot'
+firstboot_dir = '/private/var/.imagr/first-boot'
 config_plist = os.path.join(firstboot_dir, 'config.plist')
 items_dir = os.path.join(firstboot_dir, 'items')
 items_done = None

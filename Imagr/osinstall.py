@@ -28,12 +28,13 @@ import subprocess
 from distutils import version
 
 # PyObjC bindings
-from Foundation import NSLog
+from Foundation import NSBundle, NSLog
 
 # our imports
 import FoundationPlist
 import Utils
-
+import urllib2
+import urlparse
 
 def find_install_macos_app(dir_path):
     '''Returns the path to the first Install macOS.app found the top level of
@@ -145,45 +146,66 @@ def download_and_cache_pkgs(
         os.chown(private_tmp_dir, 0, 0)
         os.chmod(private_tmp_dir, 01777)
     dest_dir = os.path.join(target, 'private/tmp/pkgcache')
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir)
-    for url in pkgurls:
+
+    expanded_pkgurls = filter_and_expand_paths(pkgurls, '.pkg')
+
+    for url in expanded_pkgurls:
         if (not os.path.basename(url).endswith('.pkg') and
                 not os.path.basename(url).endswith('.dmg')):
             error = "%s doesn't end with either '.pkg' or '.dmg'" % url
             raise PkgCachingError(error)
-        NSLog("Caching pkg from %@", url)
-        if os.path.basename(url).endswith('.dmg'):
-            pkgpath = cache_pkg_from_dmg(url, dest_dir)
+        if url.startswith("file://"):
+            pkgpath = urlparse.urlparse(urllib2.unquote(url)).path
         else:
-            pkgpath = cache_pkg(
-                url, dest_dir, progress_method=progress_method,
-                additional_headers=additional_headers)
+            if not os.path.exists(dest_dir):
+                os.makedirs(dest_dir)
+            if os.path.basename(url).endswith('.dmg'):
+                pkgpath = cache_pkg_from_dmg(url, dest_dir)
+            else:
+                pkgpath = cache_pkg(
+                    url, dest_dir, progress_method=progress_method,
+                    additional_headers=additional_headers)
         pkgpaths.append(pkgpath)
 
     return pkgpaths
 
+def filter_and_expand_paths(paths_array, file_extension):
+    new_paths = []
+    for url in paths_array:
+        url = url.encode('utf8')
+        url_path = urlparse.urlparse(urllib2.unquote(url)).path
+        if os.path.isdir(url_path):
+            for f in os.listdir(url_path):
+                if os.path.basename(f).endswith(file_extension):
+                    new_paths.append(os.path.join(url, f))
+        else:
+            new_paths.append(url)
+    return new_paths
 
 def run(item, target, progress_method=None):
     '''Run startosinstall from Install macOS app on a disk image'''
     url = item.get('url')
-    # url better point to a disk image containing the Install macOS app
-    try:
-        dmgmountpoints = Utils.mountdmg(url)
-        dmgmountpoint = dmgmountpoints[0]
-    except:
-        error_message = "Couldn't mount disk image from %s" % url
-        return False, error_message
+    if (url.rstrip('/').endswith('.app')):
+        # Support receiving direct file path to macOS installer
+        app_path = urlparse.urlparse(urllib2.unquote(url)).path
+    else:
+        # url better point to a disk image containing the Install macOS app
+        try:
+            dmgmountpoints = Utils.mountdmg(url)
+            dmgmountpoint = dmgmountpoints[0]
+        except:
+            error_message = "Couldn't mount disk image from %s" % url
+            return False, error_message
+        app_path = find_install_macos_app(dmgmountpoint)
 
-    app_path = find_install_macos_app(dmgmountpoint)
     startosinstall_path = os.path.join(
         app_path, 'Contents/Resources/startosinstall')
     installed_os_version = get_os_version(app_path)
-
     additional_package_paths = []
-    if (version.LooseVersion(
-            installed_os_version) >= version.LooseVersion('10.13') and
-            'additional_package_urls' in item):
+#    if (version.LooseVersion(
+#            installed_os_version) >= version.LooseVersion('10.13') and
+#            'additional_package_urls' in item):
+    if ('additional_package_urls' in item):
         try:
             additional_package_paths = download_and_cache_pkgs(
                 item['additional_package_urls'], target,
@@ -192,29 +214,45 @@ def run(item, target, progress_method=None):
         except PkgCachingError, err:
             return False, unicode(err)
 
+    NSLog("additional packages complete")
     # we need to wrap our call to startosinstall with a utility
     # that makes startosinstall think it is connected to a tty-like
     # device so its output is unbuffered so we can get progress info
     # otherwise we get nothing until the process exits.
     #
+    # Get path to python interpreter
+    python_interpreter = "/usr/bin/python"
+    if not os.path.exists(python_interpreter):
+        python_interpreter = os.path.join(
+            NSBundle.mainBundle().privateFrameworksPath(), "Python.framework/Versions/2.7/bin/python")
     # Try to find our ptyexec tool
     # first look in the this file's enclosing directory
     # (../)
     this_dir = os.path.dirname(os.path.abspath(__file__))
     ptyexec_path = os.path.join(this_dir, 'ptyexec')
-    if os.path.exists(ptyexec_path):
-        cmd = [ptyexec_path]
-    else:
+    if os.path.exists(python_interpreter) and os.path.exists(ptyexec_path):
+        cmd = [python_interpreter, ptyexec_path]
+    elif os.path.exists('/usr/bin/script'):
         # fall back to /usr/bin/script
         # this is not preferred because it uses way too much CPU
         # checking stdin for input that will never come...
         cmd = ['/usr/bin/script', '-q', '-t', '1', '/dev/null']
+    else:
+        # don't wrap it in a tty-like environment at all. Progress info will
+        # be poor to non-existent.
+        cmd = []
 
     cmd.extend([startosinstall_path,
                 '--agreetolicense',
-                '--applicationpath', app_path,
+                '--rebootdelay','5',
+                '--pidtosignal',str(os.getpid()),
                 '--volume', target,
                 '--nointeraction'])
+
+#    if (version.LooseVersion(installed_os_version) < version.LooseVersion('10.14')):
+#        cmd.extend(['--applicationpath', app_path])
+
+
 
     # add additional startosinstall options if any
     if 'additional_startosinstall_options' in item:

@@ -26,9 +26,12 @@ import tempfile
 import shutil
 import Quartz
 import time
+import urlparse
 import powermgr
 import osinstall
-
+import signal
+import unicodedata
+import powermgr
 class MainController(NSObject):
 
     mainWindow = objc.IBOutlet()
@@ -52,6 +55,10 @@ class MainController(NSObject):
 
     progressIndicator = objc.IBOutlet()
     progressText = objc.IBOutlet()
+
+    variablePanel = objc.IBOutlet()
+    variablePanelLabel = objc.IBOutlet()
+    variablePanelValue = objc.IBOutlet()
 
     authenticationPanel = objc.IBOutlet()
     authenticationPanelUsernameField = objc.IBOutlet()
@@ -115,6 +122,9 @@ class MainController(NSObject):
     cancelledAutorun = False
     authenticatedUsername = None
     authenticatedPassword = None
+    target_volume_name = None
+    variablesArray = []
+    environmentVariableArray = []
 
     # For localize script
     keyboard_layout_name = None
@@ -123,7 +133,7 @@ class MainController(NSObject):
     locale = None
     timezone = None
 
-    def errorPanel(self, error):
+    def errorPanel_(self, error):
         if error:
             errorText = str(error)
         else:
@@ -153,8 +163,34 @@ class MainController(NSObject):
         else:
             self.setStartupDisk_(self)
 
+    def errorNotificationPanel_(self, error):
+        if error:
+            errorText = str(error)
+        else:
+            errorText = "Unknown error"
+
+        # Send a report to the URL if it's configured
+        Utils.sendReport('error', errorText)
+
+        self.alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
+            NSLocalizedString(errorText.decode('utf8'), None),
+            NSLocalizedString(u"OK", None),
+            NSLocalizedString(u"", None),
+            objc.nil,
+            NSLocalizedString(u"", None))
+
+        self.errorMessage = None
+        self.alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.mainWindow, self, None, objc.nil)
+
+    @objc.python_method
+    def receiveSignal(self,signalNumber, frame):
+        NSLog("startosinstall prepare phase complete")
+        Utils.sendReport('in_progress', 'startosinstall prepare phase complete')
+        return
+
     def runStartupTasks(self):
-        NSLog(u"background_window is set to %@", repr(self.backgroundWindowSetting()))
+        signal.signal(signal.SIGUSR1, self.receiveSignal)
 
         if self.backgroundWindowSetting() == u"always":
             self.showBackgroundWindow()
@@ -188,7 +224,7 @@ class MainController(NSObject):
         self.backgroundWindow.setLevel_(kCGNormalWindowLevel - 1)
         self.backgroundWindow.setCollectionBehavior_(NSWindowCollectionBehaviorStationary | NSWindowCollectionBehaviorCanJoinAllSpaces)
 
-    def loadBackgroundImage(self, urlString):
+    def loadBackgroundImage_(self, urlString):
         if self.backgroundWindowSetting() == u"never":
             return
         NSLog(u"Loading background image")
@@ -224,34 +260,31 @@ class MainController(NSObject):
         url = NSURL.URLWithString_(urlString)
         image = NSImage.alloc().initWithContentsOfURL_(url)
         self.performSelectorOnMainThread_withObject_waitUntilDone_(
-            self.setBackgroundImage, image, YES)
+            self.setBackgroundImage_, image, YES)
 
-    def setBackgroundImage(self, image):
+    def setBackgroundImage_(self, image):
         self.backgroundWindow.contentView().setWantsLayer_(True)
         self.backgroundWindow.contentView().layer().setContents_(image)
 
     def registerForWorkspaceNotifications(self):
         nc = NSWorkspace.sharedWorkspace().notificationCenter()
         nc.addObserver_selector_name_object_(
-            self, self.wsNotificationReceived, NSWorkspaceDidMountNotification, None)
+            self, self.wsNotificationReceived_, NSWorkspaceDidMountNotification, None)
         nc.addObserver_selector_name_object_(
-            self, self.wsNotificationReceived, NSWorkspaceDidUnmountNotification, None)
+            self, self.wsNotificationReceived_, NSWorkspaceDidUnmountNotification, None)
         nc.addObserver_selector_name_object_(
-            self, self.wsNotificationReceived, NSWorkspaceDidRenameVolumeNotification, None)
+            self, self.wsNotificationReceived_, NSWorkspaceDidRenameVolumeNotification, None)
 
-    def wsNotificationReceived(self, notification):
+    def wsNotificationReceived_(self, notification):
         if self.workflow_is_running:
             self.should_update_volume_list = True
             return
         notification_name = notification.name()
         user_info = notification.userInfo()
-        NSLog("NSWorkspace notification was: %@", notification_name)
         if notification_name == NSWorkspaceDidMountNotification:
             new_volume = user_info['NSDevicePath']
-            NSLog("%@ was mounted", new_volume)
         elif notification_name == NSWorkspaceDidUnmountNotification:
             removed_volume = user_info['NSDevicePath']
-            NSLog("%@ was unmounted", removed_volume)
         elif notification_name == NSWorkspaceDidRenameVolumeNotification:
             pass
         self.reloadVolumes()
@@ -260,13 +293,17 @@ class MainController(NSObject):
         volume_list = []
         for volume in self.volumes:
             if volume.mountpoint != '/':
-                if volume.mountpoint.startswith("/Volumes/"):
+                if volume.mountpoint.startswith("/Volumes/") or volume.filevault :
                     if volume.writable:
                         volume_list.append(volume.mountpoint)
         return volume_list
 
     def reloadVolumes(self):
-        self.volumes = Utils.mountedVolumes()
+        if self.targetVolume._attributes['FilesystemType'] == 'apfs':
+            self.targetVolume=Utils.system_volume(self.targetVolume)
+            if not self.targetVolume.Mounted():
+                self.targetVolume.Mount()
+        self.volumes = Utils.available_volumes()
         self.chooseTargetDropDown.removeAllItems()
         volume_list = self.validTargetVolumes()
         self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
@@ -275,10 +312,13 @@ class MainController(NSObject):
             self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume.mountpoint)
             selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
         else:
-            selected_volume = volume_list[0]
+            if self.target_volume_name:
+                selected_volume = self.target_volume_name
+            else:
+                selected_volume = volume_list[0]
             self.chooseTargetDropDown.selectItemWithTitle_(selected_volume)
         for volume in self.volumes:
-            if str(volume.mountpoint) == str(selected_volume):
+            if volume.mountpoint and str(volume.mountpoint.encode('utf8')) == str(selected_volume.encode('utf8')):
                 self.targetVolume = volume
 
     def expandImagingProgressPanel(self):
@@ -302,6 +342,28 @@ class MainController(NSObject):
         self.imagingProgress.setFrameSize_(NSSize(426, 20))
         self.imagingProgressDetail.setFrameOrigin_(NSPoint(18, 20))
         self.imagingProgressDetail.setFrameSize_(NSSize(431, 17))
+
+
+    @objc.IBAction
+    def endVariablePanel_(self, sender):
+        '''Called when user clicks 'OK' in the variable panel'''
+        # store the username and password
+        NSApp.endSheet_(self.variablePanel)
+
+        self.environmentVariableArray.append({self.variablesArray[0].keys()[0]:self.variablePanelValue.stringValue()})
+
+
+        self.variablePanel.orderOut_(self)
+        self.variablesArray.pop(0)
+
+        if (self.variablesArray):
+            self.variablePanelLabel.setStringValue_(self.variablesArray[0].values()[0])
+            self.variablePanelValue.setStringValue_("")
+            NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                                                                                      self.variablePanel, self.mainWindow, self, None, None)
+        else:
+            self.workflowOnThreadPrep()
+
 
     def showAuthenticationPanel(self):
         '''Show the authentication panel'''
@@ -328,7 +390,10 @@ class MainController(NSObject):
     def loadData(self):
         pool = NSAutoreleasePool.alloc().init()
         self.buildUtilitiesMenu()
-        self.volumes = Utils.mountedVolumes()
+        self.volumes = Utils.available_volumes()
+
+
+#        self.volumes = Utils.mountedVolumes()
         theURL = Utils.getServerURL()
 
         if theURL:
@@ -359,6 +424,7 @@ class MainController(NSObject):
                         pass
 
             if plistData:
+                plistData = plistData.replace("{{current_volume_path}}", Utils.currentVolumePath().encode("utf8"))
                 try:
                     converted_plist = FoundationPlist.readPlistFromString(plistData)
                 except:
@@ -376,7 +442,7 @@ class MainController(NSObject):
 
                 try:
                     urlString = converted_plist['background_image']
-                    NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadBackgroundImage, self, urlString)
+                    NSThread.detachNewThreadSelector_toTarget_withObject_(self.loadBackgroundImage_, self, urlString)
                 except:
                     pass
 
@@ -404,6 +470,13 @@ class MainController(NSObject):
                         self.autorunWorkflow = None
                 except:
                     pass
+
+                try:
+                    self.target_volume_name = urllib2.unquote(
+                        converted_plist['target_volume_name'])
+                    NSLog("Set target volume name as: %@", self.target_volume_name)
+                except:
+                    pass
             else:
                 self.errorMessage = "Couldn't get configuration plist. \n %s. \n '%s'" % (error.reason, error.url)
         else:
@@ -418,7 +491,7 @@ class MainController(NSObject):
         #self.reloadWorkflowsMenuItem.setEnabled_(True)
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
-            self.errorPanel(self.errorMessage)
+            self.errorPanel_(self.errorMessage)
         else:
             if self.hasLoggedIn:
                 self.enableWorkflowViewControls()
@@ -426,6 +499,7 @@ class MainController(NSObject):
                 self.chooseImagingTarget_(None)
 
                 self.isAutorun()
+
             else:
                 self.theTabView.selectTabViewItem_(self.loginTab)
                 self.mainWindow.makeFirstResponder_(self.password)
@@ -518,10 +592,23 @@ class MainController(NSObject):
             if self.targetVolume:
                 self.chooseTargetDropDown.selectItemWithTitle_(self.targetVolume.mountpoint)
 
-            selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
+            if self.target_volume_name:
+                try:
+                    selected_volume = unicodedata.normalize("NFD", "/Volumes/%s" % self.target_volume_name)
+                    volume_list.index(selected_volume) # Check if target volume is in list
+                except ValueError:
+                    self.errorMessage = "Could not find a volume with target name: %s" % self.target_volume_name.UTF8String()
+                    NSLog(self.errorMessage.decode('utf8'))
+                    self.autorunWorkflow = None
+                    selected_volume = volume_list[0]
+                    self.errorNotificationPanel_(self.errorMessage)
+
+                self.chooseTargetDropDown.selectItemWithTitle_(selected_volume)
+            else:
+                selected_volume = self.chooseTargetDropDown.titleOfSelectedItem()
+
             for volume in self.volumes:
-                if str(volume.mountpoint) == str(selected_volume):
-                    #imaging_target = volume
+                if str(volume.mountpoint.encode('utf8')) == str(selected_volume.encode('utf8')):
                     self.targetVolume = volume
                     break
             self.selectWorkflow_(sender)
@@ -552,10 +639,9 @@ class MainController(NSObject):
     def selectImagingTarget_(self, sender):
         volume_name = self.chooseTargetDropDown.titleOfSelectedItem()
         for volume in self.volumes:
-            if str(volume.mountpoint) == str(volume_name):
+            if str(volume.mountpoint.encode('utf8')) == str(volume_name.encode('utf8')):
                 self.targetVolume = volume
                 break
-        NSLog("Imaging target is %@", self.targetVolume.mountpoint)
 
 
     @objc.IBAction
@@ -629,14 +715,41 @@ class MainController(NSObject):
 
     @objc.IBAction
     def runWorkflow_(self, sender):
-        '''Set up the selected workflow to run on secondary thread'''
-        self.workflow_is_running = True
+        NSLog(u"Preventing sleep...")
+        powermgr.assertNoIdleSleep()
         selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
 
+
         if self.autorunWorkflow:
-            selected_workflow = self.autorunWorkflow
+            NSLog("running autorun workflow")
+            runWorkflowNow()
+
+        self.selectedWorkflow = None
+        for workflow in self.workflows:
+            if selected_workflow == workflow['name']:
+                self.selectedWorkflow = workflow
+                break
+
+        label_string = "Are you sure you want to run workflow %s?" % self.selectedWorkflow['name']
+
+        alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
+                                                                                                                  NSLocalizedString(label_string, None),
+                                                                                                                  NSLocalizedString(u"Run", None),
+                                                                                                                  NSLocalizedString(u"Cancel", None),
+                                                                                                                  NSLocalizedString(u"", None),
+                                                                                                                  NSLocalizedString(u"", None),)
+
+        alert.beginSheetModalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                                                                                                                                                                                           self.mainWindow, self, self.startWorkflowAlertDidEnd_returnCode_contextInfo_, objc.nil)
+    def runWorkflowNow(self):
+        '''Set up the selected workflow to run on secondary thread'''
+        self.workflow_is_running = True
 
         # let's get the workflow
+        if self.autorunWorkflow:
+            selected_workflow = self.autorunWorkflow
+        else:
+            selected_workflow = self.chooseWorkflowDropDown.titleOfSelectedItem()
         self.selectedWorkflow = None
         for workflow in self.workflows:
             if selected_workflow == workflow['name']:
@@ -655,31 +768,67 @@ class MainController(NSObject):
             # Show the computer name tab if needed. I hate waiting to put in the
             # name in DS.
             settingName = False
+            settingVariables = False
+            variablesArray = []
+            self.environmentVariableArray = []
             for item in self.selectedWorkflow['components']:
-                if self.checkForNameComponent(item):
+                if self.checkForVariablesNameComponent_(item):
+                    self.variablesArray = item.get('variableLabels', [])
+                    settingVariables=True
+                    break
+
+            for item in self.selectedWorkflow['components']:
+                if self.checkForNameComponent_(item):
                     self.getComputerName_(item)
                     settingName = True
                     break
 
-            if not settingName:
+            if not settingName and settingVariables:
+                self.getVariables()
+
+            if not settingName and not settingVariables:
                 self.workflowOnThreadPrep()
 
-    def checkForNameComponent(self, item):
+    def checkForNameComponent_(self, item):
         if item.get('type') == 'computer_name':
             return True
         if item.get('type') == 'included_workflow':
-            included_workflow = self.getIncludedWorkflow(item)
+            included_workflow = self.getIncludedWorkflow_(item)
             for workflow in self.workflows:
                 if workflow['name'] == included_workflow:
                     for new_item in workflow['components']:
-                        if self.checkForNameComponent(new_item):
+                        if self.checkForNameComponent_(new_item):
                             return True
 
         return False
 
+    def checkForVariablesNameComponent_(self, item):
+        if item.get('type') == 'variables':
+            return True
+        if item.get('type') == 'included_workflow':
+            included_workflow = self.getIncludedWorkflow_(item)
+            for workflow in self.workflows:
+                if workflow['name'] == included_workflow:
+                    for new_item in workflow['components']:
+                        if self.checkForNameComponent_(new_item):
+                            return True
+
+        return False
+
+    @PyObjCTools.AppHelper.endSheetMethod
+    def startWorkflowAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
+
+        # 0 = Cancel
+        # 1 = Run
+
+        if returncode == 1:
+            self.runWorkflowNow()
+        elif returncode == 0:
+            NSLog("Cancelling")
+
     def workflowOnThreadPrep(self):
         self.disableWorkflowViewControls()
-        Utils.sendReport('in_progress', 'Preparing to run workflow %s...' % self.selectedWorkflow['name'])
+        Utils.sendReport('in_progress', 'Preparing to run workflow %s...' % self.selectedWorkflow['name'].UTF8String())
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
         self.imagingProgressDetail.setStringValue_('')
         self.contractImagingProgressPanel()
@@ -691,26 +840,30 @@ class MainController(NSObject):
         self.imagingProgress.setIndeterminate_(True)
         self.imagingProgress.setUsesThreadedAnimation_(True)
         self.imagingProgress.startAnimation_(self)
+
         NSThread.detachNewThreadSelector_toTarget_withObject_(
-            self.processWorkflowOnThread, self, None)
+            self.processWorkflowOnThread_, self, None)
 
     def countdownOnThreadPrep(self):
         self.disableWorkflowViewControls()
-        self.imagingLabel.setStringValue_("Preparing to run {} on {}".format(self.autorunWorkflow, self.targetVolume.mountpoint))
+
+        label_string = "Preparing to run %s on %s " % (self.autorunWorkflow,self.targetVolume.mountpoint)
+
+        self.imagingLabel.setStringValue_(label_string)
         #self.imagingProgressDetail.setStringValue_('')
         self.expandImagingProgressPanel()
         NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
             self.imagingProgressPanel, self.mainWindow, self, None, None)
         # initialize the progress bar
         self.imagingProgress.setMinValue_(0.0)
-        self.imagingProgress.setMaxValue_(30.0)
+        self.imagingProgress.setMaxValue_(self.autoRunTime)
         self.imagingProgress.setIndeterminate_(True)
         self.imagingProgress.setUsesThreadedAnimation_(True)
         self.imagingProgress.startAnimation_(self)
         NSThread.detachNewThreadSelector_toTarget_withObject_(
-            self.processCountdownOnThread, self, None)
+            self.processCountdownOnThread_, self, None)
 
-    def processCountdownOnThread(self, sender):
+    def processCountdownOnThread_(self, sender):
         '''Count down for 30s or admin provided'''
         countdown = self.autoRunTime
         #pool = NSAutoreleasePool.alloc().init()
@@ -737,7 +890,7 @@ class MainController(NSObject):
 
         # Make sure the user still wants to autorun the default workflow (i.e. hasn't clicked cancel).
         if self.autorunWorkflow:
-            self.runWorkflow_(None)
+            self.runWorkflowNow()
 
     @objc.IBAction
     def cancelCountdown_(self, sender):
@@ -779,20 +932,20 @@ class MainController(NSObject):
             self.updateProgressWithInfo_, info, objc.NO)
 
     def setupFirstBootDir(self):
-        first_boot_items_dir = os.path.join(self.targetVolume.mountpoint, '.imagr/first-boot/items/')
+        first_boot_items_dir = os.path.join(self.targetVolume.mountpoint, 'private/var/.imagr/first-boot/items/')
         if not os.path.exists(first_boot_items_dir):
             os.makedirs(first_boot_items_dir, 0755)
 
     def setupFirstBootTools(self):
         # copy bits for first boot script
         packages_dir = os.path.join(
-            self.targetVolume.mountpoint, '.imagr/first-boot/')
+            self.targetVolume.mountpoint, 'private/var/.imagr/first-boot/')
         if not os.path.exists(packages_dir):
             self.setupFirstBootDir()
         Utils.copyFirstBoot(self.targetVolume.mountpoint,
                             self.waitForNetwork, self.firstBootReboot)
 
-    def processWorkflowOnThread(self, sender):
+    def processWorkflowOnThread_(self, sender):
         '''Process the selected workflow'''
         pool = NSAutoreleasePool.alloc().init()
         if self.selectedWorkflow:
@@ -801,13 +954,12 @@ class MainController(NSObject):
             component_count = len(components)
 
             self.should_update_volume_list = False
-
             for item in self.selectedWorkflow['components']:
                 if (item.get('type') == 'startosinstall' and
                         self.first_boot_items):
                     # we won't get a chance to do this after this component
                     self.setupFirstBootTools()
-                self.runComponent(item)
+                self.runComponent_(item)
             if self.first_boot_items:
                 self.setupFirstBootTools()
 
@@ -824,19 +976,20 @@ class MainController(NSObject):
         # Disable autorun so users are able to select additional workflows to run.
         self.autorunWorkflow = None
 
-        Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'])
+        Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'].UTF8String())
 
         # Bless the target if we need to
         if self.blessTarget == True:
+            self.targetVolume=Utils.system_volume(self.targetVolume)
             try:
                 self.targetVolume.SetStartupDisk()
             except:
                 for volume in self.volumes:
-                    if str(volume.mountpoint) == str(self.targetVolume.mountpoint):
+                    if volume.mountpoint and str(volume.mountpoint.encode('utf8')) == str(self.targetVolume.mountpoint.encode('utf8')):
                         volume.SetStartupDisk()
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
-            self.errorPanel(self.errorMessage)
+            self.errorPanel_(self.errorMessage)
         elif self.restartAction == 'restart' or self.restartAction == 'shutdown':
             self.restartToImagedVolume()
         else:
@@ -845,7 +998,7 @@ class MainController(NSObject):
                 self.reloadVolumes()
             self.openEndWorkflowPanel()
 
-    def runComponent(self, item):
+    def runComponent_(self, item):
         '''Run the selected workflow component'''
         # No point carrying on if something is broken
         if not self.errorMessage:
@@ -866,14 +1019,29 @@ class MainController(NSObject):
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
                 Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
-                self.downloadAndInstallPackages(item)
+                self.downloadAndInstallPackages_(item)
             # Download and copy package
             elif item.get('type') == 'package' and item.get('first_boot', True):
+                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
                 self.downloadAndCopyPackage(item, self.counter)
                 self.first_boot_items = True
+            # Expand package folder and pass contents to runComponent_
+            elif item.get('type') == 'package_folder':
+                url = item.get('url').encode("utf8")
+                url_path = urlparse.urlparse(urllib2.unquote(url)).path
+                if os.path.isdir(url_path):
+                    for f in os.listdir(url_path):
+                        if os.path.basename(f).endswith('.pkg'):
+                            new_url = os.path.join(url, f)
+                            item['url'] = new_url
+                            item['type'] = 'package'
+                            self.runComponent_(item)
+                else:
+                    raise TypeError("package_folder expected a folder path: %s" %(url))
             # Copy first boot script
             elif item.get('type') == 'script' and item.get('first_boot', True):
+                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
@@ -887,6 +1055,7 @@ class MainController(NSObject):
                 self.first_boot_items = True
             # Run script
             elif item.get('type') == 'script' and not item.get('first_boot', True):
+                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Running script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
@@ -899,7 +1068,7 @@ class MainController(NSObject):
                     self.runPreFirstBootScript(item.get('content'), self.counter)
             # Partition a disk
             elif item.get('type') == 'partition':
-                Utils.sendReport('in_progress', 'Running partiton task.')
+                Utils.sendReport('in_progress', 'Running partition task.')
                 self.partitionTargetDisk(item.get('partitions'), item.get('map'))
                 if self.future_target == False:
                     # If a partition task is done without a new target specified, no other tasks can be parsed.
@@ -908,34 +1077,46 @@ class MainController(NSObject):
 
             elif item.get('type') == 'included_workflow':
                 Utils.sendReport('in_progress', 'Running included workflow.')
-                self.runIncludedWorkflow(item)
+                self.runIncludedWorkflow_(item)
 
             # Format a volume
             elif item.get('type') == 'eraseVolume':
-                Utils.sendReport('in_progress', 'Erasing volume with name %s' % item.get('name', 'Macintosh HD'))
-                self.eraseTargetVolume(item.get('name', 'Macintosh HD'), item.get('format', 'Journaled HFS+'))
+                if self.targetVolume and not self.targetVolume.filevault:
+                    target_volume_string = str(self.targetVolume.mountpoint.encode('utf8')).split('/Volumes/')[-1]
+                else: 
+                    target_volume_string = 'Macintosh HD'
+
+                Utils.sendReport('in_progress', 'Erasing volume with name %s' % target_volume_string)
+                new_volume_name = str(item.get('name', target_volume_string))
+                if new_volume_name != target_volume_string:
+                    Utils.sendReport('in_progress', 'Volume will be renamed as: %s' % new_volume_name)
+                self.eraseTargetVolume(new_volume_name, item.get('format', 'Journaled HFS+'))
             elif item.get('type') == 'computer_name':
-                if self.computerName:
+                self.targetVolume=Utils.data_volume(self.targetVolume)
+                if not item.get('nvram',False):
                     Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
                     script_dir = os.path.dirname(os.path.realpath(__file__))
                     with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
                         script=script.read()
                     self.copyFirstBootScript(script, self.counter)
-                    self.first_boot_items = True
             elif item.get('type') == 'localize':
+                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Localizing Mac')
-                self.copyLocalize(item)
+                self.copyLocalize_(item)
                 self.first_boot_items = True
 
             # Workflow specific restart action
             elif item.get('type') == 'restart_action':
                 Utils.sendReport('in_progress', 'Setting restart_action to %s' % item.get('action'))
                 self.restartAction = item.get('action')
+            elif item.get('type') == 'variables':
+                self.writeToNVRAM_(self.environmentVariableArray)
+
             else:
                 Utils.sendReport('error', 'Found an unknown workflow item.')
                 self.errorMessage = "Found an unknown workflow item."
 
-    def getIncludedWorkflow(self, item):
+    def getIncludedWorkflow_(self, item):
         included_workflow = None
         # find the workflow we're looking for
         progress_method = self.updateProgressTitle_Percent_Detail_
@@ -978,20 +1159,19 @@ class MainController(NSObject):
             return
         return included_workflow
 
-    def runIncludedWorkflow(self, item):
+    def runIncludedWorkflow_(self, item):
         '''Runs an included workflow'''
 
-        included_workflow = self.getIncludedWorkflow(item)
+        included_workflow = self.getIncludedWorkflow_(item)
         if included_workflow:
             for workflow in self.workflows:
                 if included_workflow.strip() == workflow['name'].strip():
-                    NSLog(u"Included Workflow: %@", str(included_workflow))
                     # run the workflow
                     for component in workflow['components']:
                         if (component.get('type') == 'startosinstall' and
                             self.first_boot_items):
                             self.setupFirstBootTools()
-                        self.runComponent(component)
+                        self.runComponent_(component)
                     return
             else:
                 Utils.sendReport('error', 'Could not find included workflow %s' % included_workflow)
@@ -999,6 +1179,22 @@ class MainController(NSObject):
         else:
             Utils.sendReport('error', 'No included workflow passed %s' % included_workflow)
             self.errorMessage = 'No included workflow passed %s' % included_workflow
+
+    def getVariables(self):
+        self.variablePanelLabel.setStringValue_(self.variablesArray[0].values()[0])
+        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+        self.variablePanel, self.mainWindow, self, None, None)
+
+    def writeToNVRAM_(self,writeArray):
+
+        for currVar in writeArray:
+
+            cmd = ['/usr/sbin/nvram', currVar.keys()[0]+"="+currVar.values()[0] ]
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            (eraseOut, eraseErr) = proc.communicate()
+            if eraseErr:
+                self.errorMessage = eraseErr
+
 
     def getComputerName_(self, component):
         auto_run = component.get('auto', False)
@@ -1016,15 +1212,22 @@ class MainController(NSObject):
         if auto_run:
             if component.get('use_serial', False):
                 self.computerName = hardware_info.get('serial_number', 'UNKNOWN')
+            elif component.get('computer_name', None):
+                self.computerName=Utils.replacePlaceholders(component.get('computer_name'),None)
             else:
                 self.computerName = existing_name
             self.theTabView.selectTabViewItem_(self.mainTab)
-            self.workflowOnThreadPrep()
+            if self.variablesArray:
+                self.getVariables()
+            else:
+                self.workflowOnThreadPrep()
         else:
             if component.get('use_serial', False):
                 self.computerNameInput.setStringValue_(hardware_info.get('serial_number', ''))
             elif component.get('prefix', None):
                 self.computerNameInput.setStringValue_(component.get('prefix'))
+            elif component.get('computer_name', None):
+                self.computerNameInput.setStringValue_(Utils.replacePlaceholders(component.get('computer_name'),None))
             else:
                 self.computerNameInput.setStringValue_(existing_name)
 
@@ -1036,8 +1239,12 @@ class MainController(NSObject):
     def setComputerName_(self, sender):
         self.computerName = self.computerNameInput.stringValue()
         self.theTabView.selectTabViewItem_(self.mainTab)
-        self.workflowOnThreadPrep()
+        if self.variablesArray:
+            self.getVariables()
+        else:
+            self.workflowOnThreadPrep()
 
+    @objc.python_method
     def Clone(self, source, target, erase=True, verify=True,
               show_activity=True, ramdisk=False):
         """A wrapper around 'asr' to clone one disk object onto another.
@@ -1077,11 +1284,9 @@ class MainController(NSObject):
 
         is_apfs = False
         if Utils.is_apfs(source):
-            NSLog("%@","Source is APFS")
             is_apfs = True
             # we need to restore to a whole disk here
             if not self.targetVolume.wholedisk:
-                NSLog("%@","Source is not a whole disk")
                 target_ref = "/dev/%s" % self.targetVolume._attributes['ParentWholeDisk']
         command = ["/usr/sbin/asr", "restore", "--source", str(source),
                    "--target", target_ref, "--noprompt", "--puppetstrings"]
@@ -1112,7 +1317,6 @@ class MainController(NSObject):
             command.append("--noverify")
 
         self.updateProgressTitle_Percent_Detail_('Restoring %s' % source, -1, '')
-        NSLog("%@", str(command))
         task = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         message = ""
         while task.poll() is None:
@@ -1150,6 +1354,7 @@ class MainController(NSObject):
                                           stderr=subprocess.PIPE)
             return True
 
+    @objc.python_method
     def startOSinstall(self, item, ramdisk):
         if ramdisk:
             ramdisksource = self.RAMDisk(item, imaging=False)
@@ -1176,6 +1381,7 @@ class MainController(NSObject):
         if not success:
             self.errorMessage = detail
 
+    @objc.python_method
     def RAMDisk(self, source, imaging=False):
         if imaging is True:
             apfs_image = Utils.is_apfs(source)
@@ -1199,23 +1405,23 @@ class MainController(NSObject):
         # Ex: ('hw.memsize: 1111111\n', '')
         memsize = int(
             memsizetuple[0].split('\n')[0].replace('hw.memsize: ', ''))
-        NSLog(u"Total Memory is %@", str(memsize))
+#        NSLog(u"Total Memory is %@", str(memsize))
         # Assume netinstall uses at least 650MB of RAM. If we don't require
         # enough RAM, gurl will timeout or cause RecoveryOS to crash.
         availablemem = memsize - 681574400
-        NSLog(u"Available Memory for DMG is %@", str(availablemem))
+#        NSLog(u"Available Memory for DMG is %@", str(availablemem))
         if imaging is True:
             filesize = Utils.getDMGSize(source)[0]
         else:
             filesize = Utils.getDMGSize(source.get('url'))[0]
-        NSLog(u"Required Memory for DMG is %@", str(filesize))
+#        NSLog(u"Required Memory for DMG is %@", str(filesize))
         # Formatting RAM Disk requires around 5% of the total amount of
         # bytes. Add 10% to compensate for the padding we will need.
         paddedfilesize = int(filesize) * 1.10
-        NSLog(u"Padded Memory for DMG is %@", str(paddedfilesize))
+#        NSLog(u"Padded Memory for DMG is %@", str(paddedfilesize))
         if filesize is False:
-            NSLog(u"Error when calculating source size. Using original method "
-                  "instead of gurl...")
+#            NSLog(u"Error when calculating source size. Using original method "
+#                  "instead of gurl...")
             return False, True
         elif imaging is True and 9000000000 > memsize:
             NSLog(u"Feature requires more than 9GB of RAM. Using asr "
@@ -1281,7 +1487,7 @@ class MainController(NSObject):
                 return False, False, error
             return sourceram, devdiskstr
 
-    def downloadAndInstallPackages(self, item):
+    def downloadAndInstallPackages_(self, item):
         url = item.get('url')
         custom_headers = item.get('additional_headers')
         self.updateProgressTitle_Percent_Detail_('Installing packages...', -1, '')
@@ -1294,6 +1500,7 @@ class MainController(NSObject):
             progress_method=self.updateProgressTitle_Percent_Detail_,
             additional_headers=custom_headers)
 
+    @objc.python_method
     def downloadAndInstallPackage(self, url, target, progress_method=None, additional_headers=None):
         if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.dmg'):
             self.errorMessage = "%s doesn't end with either '.pkg' or '.dmg'" % url
@@ -1331,11 +1538,15 @@ class MainController(NSObject):
             temp_dir = tempfile.mkdtemp(dir=target)
             # Download it
             packagename = os.path.basename(url)
-            (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(temp_dir,
-            packagename), additional_headers=additional_headers)
-            if error:
-                self.errorMessage = "Couldn't download - %s \n %s" % (url, error)
-                return False
+            if url.startswith("file://"):
+                url_parse = urlparse.urlparse(url)
+                downloaded_file=url_parse.path.replace("%20", " ")
+            else:
+                (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(temp_dir,
+                packagename), additional_headers=additional_headers)
+                if error:
+                    self.errorMessage = "Couldn't download - %s \n %s" % (url, error)
+                    return False
             # Install it
             retcode = self.installPkg(downloaded_file, target, progress_method=progress_method)
             if retcode != 0:
@@ -1344,14 +1555,13 @@ class MainController(NSObject):
             # Clean up after ourselves
             shutil.rmtree(temp_dir)
 
-
+    @objc.python_method
     def downloadDMG(self, url, target):
         if os.path.basename(url).endswith('.dmg'):
             # Download it
             dmgname = os.path.basename(url)
             failsleft = 3
             dmgpath = os.path.join(target, dmgname)
-            NSLog(u"DMG Path %@", str(dmgpath))
             while not os.path.isfile(dmgpath):
                 (dmg, error) = Utils.downloadChunks(url, dmgpath, resume=True,
                                                     progress_method=self.updateProgressTitle_Percent_Detail_)
@@ -1368,7 +1578,7 @@ class MainController(NSObject):
             return False
         return dmg
 
-
+    @objc.python_method
     def downloadAndCopyPackage(self, item, counter):
         self.updateProgressTitle_Percent_Detail_(
             'Copying packages for install on first boot...', -1, '')
@@ -1384,9 +1594,10 @@ class MainController(NSObject):
             self.errorMessage = "Error copying first boot package %s - %s" % (url, error)
             return False
 
+    @objc.python_method
     def downloadPackage(self, url, target, number, progress_method=None, additional_headers=None):
         error = None
-        dest_dir = os.path.join(target, '.imagr/first-boot/items')
+        dest_dir = os.path.join(target, 'private/var/.imagr/first-boot/items')
         if not os.path.exists(dest_dir):
             self.setupFirstBootDir()
         if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.dmg'):
@@ -1404,6 +1615,7 @@ class MainController(NSObject):
 
         return output, error
 
+    @objc.python_method
     def copyPkgFromDmg(self, url, dest_dir, number):
         error = None
         # We're going to mount the dmg
@@ -1440,6 +1652,7 @@ class MainController(NSObject):
 
         return pkg_list, None
 
+    @objc.python_method
     def copyFirstBootScript(self, script, counter):
         if not self.targetVolume.Mounted():
             self.targetVolume.Mount()
@@ -1452,6 +1665,7 @@ class MainController(NSObject):
             self.errorMessage = "Couldn't copy script %s" % str(counter)
             return False
 
+    @objc.python_method
     def runPreFirstBootScript(self, script, counter):
         self.updateProgressTitle_Percent_Detail_(
             'Preparing to run scripts...', -1, '')
@@ -1462,17 +1676,14 @@ class MainController(NSObject):
 
         # if the script wipes out the partition, we keep a record of the parent disk.
         if not self.targetVolume.Info()['WholeDisk'] and 'IORegistryEntryName' in self.targetVolume._attributes:
-            NSLog("IORegistryEntryName of selected volume: %@", self.targetVolume._attributes['IORegistryEntryName'])
             parent_disk = macdisk.Disk(self.targetVolume.Info()['ParentWholeDisk'])
             is_apfs_target = parent_disk._attributes['IORegistryEntryName'] == "AppleAPFSMedia"
-            NSLog("Target is child of an APFS container: %@", is_apfs_target)
         else:
             is_apfs_target = False
             NSLog("Not a child of APFS")
 
         if 'IORegistryEntryName' in self.targetVolume._attributes:
             is_efi_target = self.targetVolume._attributes['IORegistryEntryName'] == "EFI System Partition"
-            NSLog("Target is an EFI partition: %@", is_efi_target)
 
         retcode, error_output = self.runScript(
             script, self.targetVolume.mountpoint,
@@ -1508,14 +1719,17 @@ class MainController(NSObject):
                         self.targetVolume = volume
                         break
 
-                NSLog("New target volume mountpoint is %@", self.targetVolume.mountpoint)
 
+    @objc.python_method
     def runScript(self, script, target, progress_method=None):
         """
         Replaces placeholders in a script and then runs it.
         """
         # replace the placeholders in the script
         script = Utils.replacePlaceholders(script, target)
+        if self.computerName:
+            script = Utils.replacePlaceholders(script, target,self.computerName)
+
         error_output = None
         output_list = []
         # Copy script content to a temporary location and make executable
@@ -1525,7 +1739,10 @@ class MainController(NSObject):
         os.chmod(script_file.name, 0700)
         if progress_method:
             progress_method("Running script...", -1, '')
-        proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        my_env = os.environ.copy()
+        url_parse = urlparse.urlparse(Utils.getServerURL())
+        my_env["server_path"]=url_parse.path
+        proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True,env=my_env)
         while proc.poll() is None:
             output = proc.stdout.readline().strip().decode('UTF-8')
             output_list.append(output)
@@ -1536,12 +1753,13 @@ class MainController(NSObject):
             error_output = '\n'.join(output_list)
         return proc.returncode, error_output
 
+    @objc.python_method
     def copyScript(self, script, target, number, progress_method=None):
         """
         Copies a
          script to a specific volume
         """
-        dest_dir = os.path.join(target, '.imagr/first-boot/items')
+        dest_dir = os.path.join(target, 'private/var.imagr/first-boot/items')
         if not os.path.exists(dest_dir):
             self.setupFirstBootDir()
         dest_file = os.path.join(dest_dir, "%03d" % number)
@@ -1633,6 +1851,7 @@ class MainController(NSObject):
                 new_item.setTarget_(self)
                 self.utilities_menu.addItem_(new_item)
 
+    @objc.python_method
     def installPkg(self, pkg, target, progress_method=None):
         """
         Installs a package on a specific volume
@@ -1649,13 +1868,13 @@ class MainController(NSObject):
                 if msg.startswith("PHASE:"):
                     phase = msg[6:]
                     if phase:
-                        NSLog(phase)
+                        NSLog("%@",phase)
                         if progress_method:
                             progress_method(None, None, phase)
                 elif msg.startswith("STATUS:"):
                     status = msg[7:]
                     if status:
-                        NSLog(status)
+                        NSLog("%@",status)
                         if progress_method:
                             progress_method(None, None, status)
                 elif msg.startswith("%"):
@@ -1664,20 +1883,21 @@ class MainController(NSObject):
                     if progress_method:
                         progress_method(None, percent, None)
                 elif msg.startswith(" Error"):
-                    NSLog(msg)
+                    NSLog("%@",msg)
                     if progress_method:
                         progress_method(None, None, msg)
                 elif msg.startswith(" Cannot install"):
-                    NSLog(msg)
+                    NSLog("%@",msg)
                     if progress_method:
                         progress_method(None, None, msg)
                 else:
-                    NSLog(msg)
+                    NSLog("%@",msg)
                     if progress_method:
                         progress_method(None, None, msg)
 
         return proc.returncode
 
+    @objc.python_method
     def partitionTargetDisk(self, partitions=None, partition_map="GPTFormat", progress_method=None):
         """
         Formats a target disk according to specifications.
@@ -1687,7 +1907,6 @@ class MainController(NSObject):
         # self.targetVolume.mountpoint should be the actual volume we're targeting.
         # self.targetVolume is the macdisk object that can be queried for its parent disk
         parent_disk = self.targetVolume.Info()['ParentWholeDisk']
-        NSLog("Parent disk: %@", parent_disk)
 
         numPartitions = 0
         cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk]
@@ -1719,13 +1938,11 @@ class MainController(NSObject):
             # with one volume, named 'Macintosh HD', using JHFS+, GPT Format
             cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk,
                     '1', 'GPTFormat', 'Journaled HFS+', 'Macintosh HD', '100%']
-        NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
         if partErr:
             NSLog("Error occurred: %@", partErr)
             self.errorMessage = partErr
-        NSLog("%@", partOut)
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
         self.should_update_volume_list = True
         if self.future_target == True:
@@ -1740,7 +1957,7 @@ class MainController(NSObject):
                     break
             NSLog("New target volume mountpoint is %@", self.targetVolume.mountpoint)
 
-
+    @objc.python_method
     def eraseTargetVolume(self, name='Macintosh HD', format='Journaled HFS+', progress_method=None):
         """
         Erases the target volume.
@@ -1749,33 +1966,45 @@ class MainController(NSObject):
         'format' type of 'auto_hfs_or_apfs' will check for HFS+ or APFS
         If no options are provided, it will format the volume with name 'Macintosh HD' with JHFS+.
         """
-        NSLog("Format is: %@", format)
-        
+
         if format == 'auto_hfs_or_apfs':
             if self.targetVolume._attributes['FilesystemType'] == 'hfs':
                 format='Journaled HFS+'
                 NSLog("Detected HFS+ - erasing target")
+                cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
+
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                (eraseOut, eraseErr) = proc.communicate()
+                if eraseErr:
+                    NSLog("Error occurred when erasing volume: %@", eraseErr)
+                    self.errorMessage = eraseErr
+                if self.targetVolume.filevault:
+                    self.targetVolume.filevault=False
+
             elif self.targetVolume._attributes['FilesystemType'] == 'apfs':
                 format='APFS'
-                NSLog("Detected APFS - erasing target")
+                NSLog("Detected APFS - unmount and mounting all partitions to make sure nothing is holding on to them prior to erasing")              
+                parent_disk = self.targetVolume.Info()['ParentWholeDisk']
+                if not macdisk.Disk(parent_disk).Mount():
+                    self.errorMessage = "Error Mounting all volumes on disk"
+                    return
+                if not macdisk.Disk(parent_disk).Unmount():
+                    self.errorMessage = "Error unmounting volumes on target prior to erase. Restart and try again."
+                    macdisk.Disk(parent_disk).Mount()
+                    return
+
+                NSLog("Removing APFS volumes")
+                self.targetVolume.deviceid=Utils.reset_apfs_container(self.targetVolume.deviceidentifier,name)
+                
             else:
                 NSLog("Volume not HFS+ or APFS, system returned: %@", self.targetVolume._attributes['FilesystemType'])
                 self.errorMessage = "Not HFS+ or APFS - specify volume format and reload workflows."
-        
-        cmd = ['/usr/sbin/diskutil', 'eraseVolume', format, name, self.targetVolume.mountpoint ]
-        NSLog("%@", cmd)
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (eraseOut, eraseErr) = proc.communicate()
-        if eraseErr:
-            NSLog("Error occured when erasing volume: %@", eraseErr)
-            self.errorMessage = eraseErr
-        NSLog("%@", eraseOut)
-        # Reload possible targets, because '/Volumes/Macintosh HD' might not exist
-        if name != 'Macintosh HD':
-            # If the volume was renamed, or isn't named 'Macintosh HD', then we should recheck the volume list
-            self.should_update_volume_list = True
 
-    def copyLocalize(self, item):
+        # Reload possible targets because original target name might not exist
+        self.should_update_volume_list = True
+        self.targetVolume.EnsureMountedWithRefresh()
+
+    def copyLocalize_(self, item):
         if 'keyboard_layout_name' in item:
             self.keyboard_layout_name = item['keyboard_layout_name']
 
@@ -1816,3 +2045,5 @@ class MainController(NSObject):
     @objc.IBAction
     def showHelp_(self, sender):
         NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_("https://github.com/grahamgilbert/imagr/wiki"))
+
+    

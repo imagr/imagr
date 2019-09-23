@@ -10,6 +10,7 @@ import subprocess
 import xml.parsers.expat
 #from . import gmacpyutil
 import gmacpyutil
+from Foundation import NSBundle, NSLog
 
 
 class MacDiskError(Exception):
@@ -24,7 +25,7 @@ class Disk(object):
   really are just 'disks'. Mostly. Can take device ids of the form "disk1" or
   of the form "/dev/disk1".
   """
-
+  filevault = False
   def __init__(self, deviceid):
     if deviceid.startswith("/dev/"):
       deviceid = deviceid.replace("/dev/", "", 1)
@@ -61,6 +62,8 @@ class Disk(object):
     else:
       self.diskimage = False
 
+    if self.filevault==True :
+        self.mountpoint="/dev/"+self.deviceid+" (FileVault encrypted)"
   def Mounted(self):
     """Is it mounted."""
     try:
@@ -88,10 +91,13 @@ class Disk(object):
 
   def Mount(self):
     """Mounts single volumes for partitions, all volumes for whole disks."""
+
     if self.Mounted():
       raise MacDiskError("%s is already mounted" % self.deviceid)
     else:
       command = ["diskutil", "mount", self.deviceid]
+      if self.wholedisk:  # pylint: disable=no-member
+        command[1] = "mountDisk"
       rc = gmacpyutil.RunProcess(command)[2]
       if rc == 0:
         try:
@@ -129,7 +135,7 @@ class Disk(object):
 
   def Unmount(self, force=False):
     """Unounts single volumes for partitions, all volumes for whole disks."""
-    if not self.Mounted():
+    if not self.Mounted() and not self.wholedisk:
       raise MacDiskError("%s is not mounted" % self.deviceid)
     else:
       command = ["diskutil", "unmount", self.deviceid]

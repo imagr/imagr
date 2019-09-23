@@ -9,13 +9,18 @@
 
 from Foundation import *
 from AppKit import *
-
+import Utils
+import macdisk
 class AppDelegate(NSObject):
     
     mainController = objc.IBOutlet()
     
     def applicationDidFinishLaunching_(self, sender):
-        NSLog("Application did finish launching.")
+
+        dict = NSBundle.mainBundle().infoDictionary()
+
+        Utils.bringToFront(dict["CFBundleIdentifier"]);
+
         if self.mainController:
             self.mainController.runStartupTasks()
         
