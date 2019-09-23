@@ -98,7 +98,7 @@ ifeq ($(DMGPATH),none)
 	rm -f ./Imagr*.dmg
 	rm -rf Imagr.app
 	curl -sL -o ./Imagr.dmg --connect-timeout 30 $$(curl -s \
-		https://api.github.com/repos/grahamgilbert/imagr/releases | \
+		https://api.github.com/repos/imagr/imagr/releases | \
 		python -c 'import json,sys;obj=json.load(sys.stdin); \
 		print obj[0]["assets"][0]["browser_download_url"]')
 	hdiutil attach "Imagr.dmg" -mountpoint "$(TMPMOUNT)"
