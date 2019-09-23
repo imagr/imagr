@@ -281,13 +281,10 @@ class MainController(NSObject):
             return
         notification_name = notification.name()
         user_info = notification.userInfo()
-        NSLog("NSWorkspace notification was: %@", notification_name)
         if notification_name == NSWorkspaceDidMountNotification:
             new_volume = user_info['NSDevicePath']
-            NSLog("%@ was mounted", new_volume)
         elif notification_name == NSWorkspaceDidUnmountNotification:
             removed_volume = user_info['NSDevicePath']
-            NSLog("%@ was unmounted", removed_volume)
         elif notification_name == NSWorkspaceDidRenameVolumeNotification:
             pass
         self.reloadVolumes()
@@ -302,8 +299,11 @@ class MainController(NSObject):
         return volume_list
 
     def reloadVolumes(self):
+        if self.targetVolume._attributes['FilesystemType'] == 'apfs':
+            self.targetVolume=Utils.system_volume(self.targetVolume)
+            if not self.targetVolume.Mounted():
+                self.targetVolume.Mount()
         self.volumes = Utils.available_volumes()
-
         self.chooseTargetDropDown.removeAllItems()
         volume_list = self.validTargetVolumes()
         self.chooseTargetDropDown.addItemsWithTitles_(volume_list)
@@ -318,7 +318,7 @@ class MainController(NSObject):
                 selected_volume = volume_list[0]
             self.chooseTargetDropDown.selectItemWithTitle_(selected_volume)
         for volume in self.volumes:
-            if str(volume.mountpoint.encode('utf8')) == str(selected_volume.encode('utf8')):
+            if volume.mountpoint and str(volume.mountpoint.encode('utf8')) == str(selected_volume.encode('utf8')):
                 self.targetVolume = volume
 
     def expandImagingProgressPanel(self):
@@ -642,7 +642,6 @@ class MainController(NSObject):
             if str(volume.mountpoint.encode('utf8')) == str(volume_name.encode('utf8')):
                 self.targetVolume = volume
                 break
-        NSLog("Imaging target is %@", self.targetVolume.mountpoint)
 
 
     @objc.IBAction
@@ -933,14 +932,14 @@ class MainController(NSObject):
             self.updateProgressWithInfo_, info, objc.NO)
 
     def setupFirstBootDir(self):
-        first_boot_items_dir = os.path.join(self.targetVolume.mountpoint, '.imagr/first-boot/items/')
+        first_boot_items_dir = os.path.join(self.targetVolume.mountpoint, 'private/var/.imagr/first-boot/items/')
         if not os.path.exists(first_boot_items_dir):
             os.makedirs(first_boot_items_dir, 0755)
 
     def setupFirstBootTools(self):
         # copy bits for first boot script
         packages_dir = os.path.join(
-            self.targetVolume.mountpoint, '.imagr/first-boot/')
+            self.targetVolume.mountpoint, 'private/var/.imagr/first-boot/')
         if not os.path.exists(packages_dir):
             self.setupFirstBootDir()
         Utils.copyFirstBoot(self.targetVolume.mountpoint,
@@ -981,11 +980,12 @@ class MainController(NSObject):
 
         # Bless the target if we need to
         if self.blessTarget == True:
+            self.targetVolume=Utils.system_volume(self.targetVolume)
             try:
                 self.targetVolume.SetStartupDisk()
             except:
                 for volume in self.volumes:
-                    if str(volume.mountpoint.encode('utf8')) == str(self.targetVolume.mountpoint.encode('utf8')):
+                    if volume.mountpoint and str(volume.mountpoint.encode('utf8')) == str(self.targetVolume.mountpoint.encode('utf8')):
                         volume.SetStartupDisk()
         if self.errorMessage:
             self.theTabView.selectTabViewItem_(self.errorTab)
@@ -1022,6 +1022,7 @@ class MainController(NSObject):
                 self.downloadAndInstallPackages_(item)
             # Download and copy package
             elif item.get('type') == 'package' and item.get('first_boot', True):
+                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
                 self.downloadAndCopyPackage(item, self.counter)
                 self.first_boot_items = True
@@ -1040,6 +1041,7 @@ class MainController(NSObject):
                     raise TypeError("package_folder expected a folder path: %s" %(url))
             # Copy first boot script
             elif item.get('type') == 'script' and item.get('first_boot', True):
+                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
@@ -1053,6 +1055,7 @@ class MainController(NSObject):
                 self.first_boot_items = True
             # Run script
             elif item.get('type') == 'script' and not item.get('first_boot', True):
+                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Running script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
@@ -1089,6 +1092,7 @@ class MainController(NSObject):
                     Utils.sendReport('in_progress', 'Volume will be renamed as: %s' % new_volume_name)
                 self.eraseTargetVolume(new_volume_name, item.get('format', 'Journaled HFS+'))
             elif item.get('type') == 'computer_name':
+                self.targetVolume=Utils.data_volume(self.targetVolume)
                 if not item.get('nvram',False):
                     Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
                     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -1096,6 +1100,7 @@ class MainController(NSObject):
                         script=script.read()
                     self.copyFirstBootScript(script, self.counter)
             elif item.get('type') == 'localize':
+                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Localizing Mac')
                 self.copyLocalize_(item)
                 self.first_boot_items = True
@@ -1161,7 +1166,6 @@ class MainController(NSObject):
         if included_workflow:
             for workflow in self.workflows:
                 if included_workflow.strip() == workflow['name'].strip():
-                    NSLog(u"Included Workflow: %@", str(included_workflow))
                     # run the workflow
                     for component in workflow['components']:
                         if (component.get('type') == 'startosinstall' and
@@ -1189,7 +1193,6 @@ class MainController(NSObject):
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             (eraseOut, eraseErr) = proc.communicate()
             if eraseErr:
-                NSLog("Error occurred when setting variable to nvram: %@", eraseErr)
                 self.errorMessage = eraseErr
 
 
@@ -1281,11 +1284,9 @@ class MainController(NSObject):
 
         is_apfs = False
         if Utils.is_apfs(source):
-            NSLog("%@","Source is APFS")
             is_apfs = True
             # we need to restore to a whole disk here
             if not self.targetVolume.wholedisk:
-                NSLog("%@","Source is not a whole disk")
                 target_ref = "/dev/%s" % self.targetVolume._attributes['ParentWholeDisk']
         command = ["/usr/sbin/asr", "restore", "--source", str(source),
                    "--target", target_ref, "--noprompt", "--puppetstrings"]
@@ -1404,23 +1405,23 @@ class MainController(NSObject):
         # Ex: ('hw.memsize: 1111111\n', '')
         memsize = int(
             memsizetuple[0].split('\n')[0].replace('hw.memsize: ', ''))
-        NSLog(u"Total Memory is %@", str(memsize))
+#        NSLog(u"Total Memory is %@", str(memsize))
         # Assume netinstall uses at least 650MB of RAM. If we don't require
         # enough RAM, gurl will timeout or cause RecoveryOS to crash.
         availablemem = memsize - 681574400
-        NSLog(u"Available Memory for DMG is %@", str(availablemem))
+#        NSLog(u"Available Memory for DMG is %@", str(availablemem))
         if imaging is True:
             filesize = Utils.getDMGSize(source)[0]
         else:
             filesize = Utils.getDMGSize(source.get('url'))[0]
-        NSLog(u"Required Memory for DMG is %@", str(filesize))
+#        NSLog(u"Required Memory for DMG is %@", str(filesize))
         # Formatting RAM Disk requires around 5% of the total amount of
         # bytes. Add 10% to compensate for the padding we will need.
         paddedfilesize = int(filesize) * 1.10
-        NSLog(u"Padded Memory for DMG is %@", str(paddedfilesize))
+#        NSLog(u"Padded Memory for DMG is %@", str(paddedfilesize))
         if filesize is False:
-            NSLog(u"Error when calculating source size. Using original method "
-                  "instead of gurl...")
+#            NSLog(u"Error when calculating source size. Using original method "
+#                  "instead of gurl...")
             return False, True
         elif imaging is True and 9000000000 > memsize:
             NSLog(u"Feature requires more than 9GB of RAM. Using asr "
@@ -1561,7 +1562,6 @@ class MainController(NSObject):
             dmgname = os.path.basename(url)
             failsleft = 3
             dmgpath = os.path.join(target, dmgname)
-            NSLog(u"DMG Path %@", str(dmgpath))
             while not os.path.isfile(dmgpath):
                 (dmg, error) = Utils.downloadChunks(url, dmgpath, resume=True,
                                                     progress_method=self.updateProgressTitle_Percent_Detail_)
@@ -1597,7 +1597,7 @@ class MainController(NSObject):
     @objc.python_method
     def downloadPackage(self, url, target, number, progress_method=None, additional_headers=None):
         error = None
-        dest_dir = os.path.join(target, '.imagr/first-boot/items')
+        dest_dir = os.path.join(target, 'private/var/.imagr/first-boot/items')
         if not os.path.exists(dest_dir):
             self.setupFirstBootDir()
         if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.dmg'):
@@ -1676,17 +1676,14 @@ class MainController(NSObject):
 
         # if the script wipes out the partition, we keep a record of the parent disk.
         if not self.targetVolume.Info()['WholeDisk'] and 'IORegistryEntryName' in self.targetVolume._attributes:
-            NSLog("IORegistryEntryName of selected volume: %@", self.targetVolume._attributes['IORegistryEntryName'])
             parent_disk = macdisk.Disk(self.targetVolume.Info()['ParentWholeDisk'])
             is_apfs_target = parent_disk._attributes['IORegistryEntryName'] == "AppleAPFSMedia"
-            NSLog("Target is child of an APFS container: %@", is_apfs_target)
         else:
             is_apfs_target = False
             NSLog("Not a child of APFS")
 
         if 'IORegistryEntryName' in self.targetVolume._attributes:
             is_efi_target = self.targetVolume._attributes['IORegistryEntryName'] == "EFI System Partition"
-            NSLog("Target is an EFI partition: %@", is_efi_target)
 
         retcode, error_output = self.runScript(
             script, self.targetVolume.mountpoint,
@@ -1722,7 +1719,6 @@ class MainController(NSObject):
                         self.targetVolume = volume
                         break
 
-                NSLog("New target volume mountpoint is %@", self.targetVolume.mountpoint)
 
     @objc.python_method
     def runScript(self, script, target, progress_method=None):
@@ -1763,7 +1759,7 @@ class MainController(NSObject):
         Copies a
          script to a specific volume
         """
-        dest_dir = os.path.join(target, '.imagr/first-boot/items')
+        dest_dir = os.path.join(target, 'private/var.imagr/first-boot/items')
         if not os.path.exists(dest_dir):
             self.setupFirstBootDir()
         dest_file = os.path.join(dest_dir, "%03d" % number)
@@ -1911,7 +1907,6 @@ class MainController(NSObject):
         # self.targetVolume.mountpoint should be the actual volume we're targeting.
         # self.targetVolume is the macdisk object that can be queried for its parent disk
         parent_disk = self.targetVolume.Info()['ParentWholeDisk']
-        NSLog("Parent disk: %@", parent_disk)
 
         numPartitions = 0
         cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk]
@@ -1943,13 +1938,11 @@ class MainController(NSObject):
             # with one volume, named 'Macintosh HD', using JHFS+, GPT Format
             cmd = ['/usr/sbin/diskutil', 'partitionDisk', '/dev/' + parent_disk,
                     '1', 'GPTFormat', 'Journaled HFS+', 'Macintosh HD', '100%']
-        NSLog("%@", str(cmd))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (partOut, partErr) = proc.communicate()
         if partErr:
             NSLog("Error occurred: %@", partErr)
             self.errorMessage = partErr
-        NSLog("%@", partOut)
         # At this point, we need to reload the possible targets, because '/Volumes/Macintosh HD' might not exist
         self.should_update_volume_list = True
         if self.future_target == True:

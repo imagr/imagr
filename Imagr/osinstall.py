@@ -157,7 +157,6 @@ def download_and_cache_pkgs(
         if url.startswith("file://"):
             pkgpath = urlparse.urlparse(urllib2.unquote(url)).path
         else:
-            NSLog("Caching pkg from %@", url)
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
             if os.path.basename(url).endswith('.dmg'):
@@ -202,7 +201,6 @@ def run(item, target, progress_method=None):
     startosinstall_path = os.path.join(
         app_path, 'Contents/Resources/startosinstall')
     installed_os_version = get_os_version(app_path)
-    NSLog("app path is %@ and startosinstall_path is %@",app_path,startosinstall_path)
     additional_package_paths = []
 #    if (version.LooseVersion(
 #            installed_os_version) >= version.LooseVersion('10.13') and
