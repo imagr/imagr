@@ -89,7 +89,7 @@ def diskutil_apfs_list():
         (output, unused_error) = proc.communicate()
         if proc.returncode:
             NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
-            return volumes
+            return ""
         try:
             diskutil_apfs_list_cache = plistlib.readPlistFromString(output)
         except BaseException as e:
@@ -904,6 +904,10 @@ def data_volume(source) :
     if (source._attributes['FilesystemType'] == 'apfs'):
         container_reference=source._attributes['ParentWholeDisk']
         plist = diskutil_apfs_list()
+        NSLog("1")
+
+        if (plist==""):
+            return newDisk
         for container in plist[u"Containers"]:
             if (container[u"ContainerReference"]!=container_reference):
                 continue
@@ -918,6 +922,10 @@ def system_volume(source):
     if (source._attributes['FilesystemType'] == 'apfs'):
         container_reference=source._attributes['ParentWholeDisk']
         plist = diskutil_apfs_list()
+        NSLog("11")
+
+        if (plist==""):
+            return newDisk
         for container in plist[u"Containers"]:
             if (container[u"ContainerReference"]!=container_reference):
                 continue
@@ -944,6 +952,8 @@ def available_apfs_volumes():
 
     volumes = []
     plist = diskutil_apfs_list()
+    if (plist==""):
+        return volumes
     mount_vols=mounted_apfs_volumes()
     for container in plist[u"Containers"]:
         for volume in container[u"Volumes"]:
@@ -959,7 +969,10 @@ def apfs_filevault_volumes():
 
     volumes = []
     plist = diskutil_apfs_list()
+    NSLog("1111")
 
+    if (plist==""):
+        volumes
     for container in plist[u"Containers"]:
         for volume in container[u"Volumes"]:
             if (u"FileVault" in volume) and (volume["FileVault"]==True):
@@ -989,6 +1002,10 @@ def apfs_volume_uuid(device):
 
 def apfs_container(volume_uuid):
     plist = diskutil_apfs_list()
+    NSLog("111111")
+
+    if (plist==""):
+        return ""
     for container in plist[u"Containers"]:
         for volume in container[u"Volumes"]:
             if volume[u"APFSVolumeUUID"]==volume_uuid:
@@ -997,6 +1014,10 @@ def apfs_container(volume_uuid):
 def first_apfs_volume(apfs_container_uuid):
     new_device=""
     plist=diskutil_apfs_list()
+    NSLog("1111111")
+
+    if (plist==""):
+        return new_device
     try:
         new_device=plist[u"Containers"][0][u"Volumes"][0][u"DeviceIdentifier"]
     except BaseException as e:
