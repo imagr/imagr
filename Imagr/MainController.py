@@ -1983,22 +1983,29 @@ class MainController(NSObject):
 
             elif self.targetVolume._attributes['FilesystemType'] == 'apfs':
                 format='APFS'
-                NSLog("Detected APFS - unmount and mounting all partitions to make sure nothing is holding on to them prior to erasing")              
                 parent_disk = self.targetVolume.Info()['ParentWholeDisk']
-                if not macdisk.Disk(parent_disk).Mount():
-                    self.errorMessage = "Error Mounting all volumes on disk"
-                    return
-                if not macdisk.Disk(parent_disk).Unmount():
-                    self.errorMessage = "Error unmounting volumes on target prior to erase. Restart and try again."
-                    macdisk.Disk(parent_disk).Mount()
+
+                if self.targetVolume.filevault==False:
+                    NSLog("Detected non-filevaulted APFS - unmount and mounting all partitions to make sure nothing is holding on to them prior to erasing")
+
+                    if not macdisk.Disk(parent_disk).Unmount():
+                        self.errorMessage = "Error unmounting volumes on target prior to erase. Restart and try again."
+                        macdisk.Disk(parent_disk).Mount()
+                        return
+                    if not macdisk.Disk(parent_disk).Mount():
+                        self.errorMessage = "Error Mounting all volumes on disk"
                     return
 
+
                 NSLog("Removing APFS volumes")
-                self.targetVolume.deviceid=Utils.reset_apfs_container(self.targetVolume.deviceidentifier,name)
-                
+                self.targetVolume=Utils.reset_apfs_container(self.targetVolume.deviceidentifier,name)
+                if (self.targetVolume==None):
+                    self.errorMessage = "The new APFS volume could not be found"
+                    return
             else:
                 NSLog("Volume not HFS+ or APFS, system returned: %@", self.targetVolume._attributes['FilesystemType'])
                 self.errorMessage = "Not HFS+ or APFS - specify volume format and reload workflows."
+                return
 
         # Reload possible targets because original target name might not exist
         self.should_update_volume_list = True

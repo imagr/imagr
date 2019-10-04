@@ -904,7 +904,6 @@ def data_volume(source) :
     if (source._attributes['FilesystemType'] == 'apfs'):
         container_reference=source._attributes['ParentWholeDisk']
         plist = diskutil_apfs_list()
-        NSLog("1")
 
         if (plist==""):
             return newDisk
@@ -922,7 +921,6 @@ def system_volume(source):
     if (source._attributes['FilesystemType'] == 'apfs'):
         container_reference=source._attributes['ParentWholeDisk']
         plist = diskutil_apfs_list()
-        NSLog("11")
 
         if (plist==""):
             return newDisk
@@ -969,7 +967,6 @@ def apfs_filevault_volumes():
 
     volumes = []
     plist = diskutil_apfs_list()
-    NSLog("1111")
 
     if (plist==""):
         volumes
@@ -1002,7 +999,6 @@ def apfs_volume_uuid(device):
 
 def apfs_container(volume_uuid):
     plist = diskutil_apfs_list()
-    NSLog("111111")
 
     if (plist==""):
         return ""
@@ -1012,25 +1008,25 @@ def apfs_container(volume_uuid):
                 return container[u"APFSContainerUUID"]
 
 def first_apfs_volume(apfs_container_uuid):
-    new_device=""
+    ret_disk=None
     plist=diskutil_apfs_list()
-    NSLog("1111111")
 
     if (plist==""):
-        return new_device
+        return None
     try:
         new_device=plist[u"Containers"][0][u"Volumes"][0][u"DeviceIdentifier"]
+        ret_disk=macdisk.Disk(new_device)
     except BaseException as e:
         NSLog(u"Couldn't get new device from %@",apfs_container_uuid)
 
-    return new_device
+    return ret_disk
 
-    
 
 def reset_apfs_container(device,new_volume_name=u"Macintosh HD"):
 
     apfs_vol_uuid=apfs_volume_uuid(device)
     apfs_container_uuid=apfs_container(apfs_vol_uuid)
+    first_vol=None
 
     if apfs_container_uuid:
         cmd = ['/usr/sbin/diskutil', 'apfs', 'list','-plist',apfs_container_uuid]
@@ -1050,14 +1046,17 @@ def reset_apfs_container(device,new_volume_name=u"Macintosh HD"):
         NSLog(u"deleting volumes");
         for container in plist[u"Containers"]:
             for volume in container[u"Volumes"]:
-                NSLog("deleting...")
                 apfs_delete_volume(volume[u"APFSVolumeUUID"])
 
         NSLog(u"adding volume named %@ to container UUID %@", new_volume_name,apfs_container_uuid)
         apfs_add_volume(apfs_container_uuid, new_volume_name)
         NSLog(u"finding first volume in container %@",apfs_container_uuid)
+        diskutil_list_cache=""
+        diskutil_apfs_list=""
         first_vol=first_apfs_volume(apfs_container_uuid)
-        return first_vol
+
+    return first_vol
+
         
 
 
