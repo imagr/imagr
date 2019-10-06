@@ -1066,6 +1066,21 @@ class MainController(NSObject):
                         self.runPreFirstBootScript(data, self.counter)
                 else:
                     self.runPreFirstBootScript(item.get('content'), self.counter)
+            elif item.get('type') == 'script_folder':
+                self.targetVolume=Utils.data_volume(self.targetVolume)
+                url = item.get('url')
+                url_path = urlparse.urlparse(urllib2.unquote(url)).path
+                if os.path.isdir(url_path):
+                    for f in os.listdir(url_path):
+                        new_url = os.path.join(url, f)
+                        new_url_path = urlparse.urlparse(urllib2.unquote(new_url)).path
+                        if os.path.isfile(new_url_path) and f.startswith(".")==False:
+                            item['url'] = new_url
+                            item['type'] = 'script'
+                            item['first_boot'] = 'No'
+                            self.runComponent_(item)
+                else:
+                    raise TypeError("package_folder expected a folder path: %s" %(url))
             # Partition a disk
             elif item.get('type') == 'partition':
                 Utils.sendReport('in_progress', 'Running partition task.')
