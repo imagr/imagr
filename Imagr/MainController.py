@@ -2009,7 +2009,7 @@ class MainController(NSObject):
                         return
                     if not macdisk.Disk(parent_disk).Mount():
                         self.errorMessage = "Error Mounting all volumes on disk"
-                    return
+                        return
 
 
                 NSLog("Removing APFS volumes")
