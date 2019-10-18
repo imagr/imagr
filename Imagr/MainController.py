@@ -33,7 +33,7 @@ import signal
 import unicodedata
 import powermgr
 class MainController(NSObject):
-
+    objc.setVerbose(1)
     mainWindow = objc.IBOutlet()
     backgroundWindow = objc.IBOutlet()
 
