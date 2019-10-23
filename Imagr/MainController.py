@@ -1022,7 +1022,6 @@ class MainController(NSObject):
                 self.downloadAndInstallPackages_(item)
             # Download and copy package
             elif item.get('type') == 'package' and item.get('first_boot', True):
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
                 self.downloadAndCopyPackage(item, self.counter)
                 self.first_boot_items = True
@@ -1041,7 +1040,6 @@ class MainController(NSObject):
                     raise TypeError("package_folder expected a folder path: %s" %(url))
             # Copy first boot script
             elif item.get('type') == 'script' and item.get('first_boot', True):
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
@@ -1055,7 +1053,6 @@ class MainController(NSObject):
                 self.first_boot_items = True
             # Run script
             elif item.get('type') == 'script' and not item.get('first_boot', True):
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Running script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
@@ -1067,7 +1064,6 @@ class MainController(NSObject):
                 else:
                     self.runPreFirstBootScript(item.get('content'), self.counter)
             elif item.get('type') == 'script_folder':
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 url = item.get('url')
                 url_path = urlparse.urlparse(urllib2.unquote(url)).path
                 if os.path.isdir(url_path):
@@ -1107,7 +1103,6 @@ class MainController(NSObject):
                     Utils.sendReport('in_progress', 'Volume will be renamed as: %s' % new_volume_name)
                 self.eraseTargetVolume(new_volume_name, item.get('format', 'Journaled HFS+'))
             elif item.get('type') == 'computer_name':
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 if not item.get('nvram',False):
                     Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
                     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -1115,7 +1110,6 @@ class MainController(NSObject):
                         script=script.read()
                     self.copyFirstBootScript(script, self.counter)
             elif item.get('type') == 'localize':
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Localizing Mac')
                 self.copyLocalize_(item)
                 self.first_boot_items = True
@@ -2008,7 +2002,7 @@ class MainController(NSObject):
                         macdisk.Disk(parent_disk).Mount()
                         return
                     if not macdisk.Disk(parent_disk).Mount():
-                        self.errorMessage = "Error Mounting all volumes on disk"
+                        self.errorMessage = "Error Mounting all volumes on disk. Restart and try again."
                         return
 
 
