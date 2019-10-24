@@ -197,6 +197,12 @@ def run(item, target, progress_method=None):
             error_message = "Couldn't mount disk image from %s" % url
             return False, error_message
         app_path = find_install_macos_app(dmgmountpoint)
+        if app_path == None:
+            dmgmountpoint_app = os.path.join(dmgmountpoint,"Applications")
+            app_path = find_install_macos_app(dmgmountpoint_app)
+            if app_path == None:
+                error_message = "counld not find install macos app in mount point %s" % dmg
+                return False, error_message
 
     startosinstall_path = os.path.join(
         app_path, 'Contents/Resources/startosinstall')

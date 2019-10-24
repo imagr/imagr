@@ -33,7 +33,7 @@ import signal
 import unicodedata
 import powermgr
 class MainController(NSObject):
-
+    objc.setVerbose(1)
     mainWindow = objc.IBOutlet()
     backgroundWindow = objc.IBOutlet()
 
@@ -1022,7 +1022,6 @@ class MainController(NSObject):
                 self.downloadAndInstallPackages_(item)
             # Download and copy package
             elif item.get('type') == 'package' and item.get('first_boot', True):
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
                 self.downloadAndCopyPackage(item, self.counter)
                 self.first_boot_items = True
@@ -1041,7 +1040,6 @@ class MainController(NSObject):
                     raise TypeError("package_folder expected a folder path: %s" %(url))
             # Copy first boot script
             elif item.get('type') == 'script' and item.get('first_boot', True):
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
@@ -1055,7 +1053,6 @@ class MainController(NSObject):
                 self.first_boot_items = True
             # Run script
             elif item.get('type') == 'script' and not item.get('first_boot', True):
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Running script %s' % str(self.counter))
                 if item.get('url'):
                     if item.get('additional_headers'):
@@ -1066,6 +1063,20 @@ class MainController(NSObject):
                         self.runPreFirstBootScript(data, self.counter)
                 else:
                     self.runPreFirstBootScript(item.get('content'), self.counter)
+            elif item.get('type') == 'script_folder':
+                url = item.get('url')
+                url_path = urlparse.urlparse(urllib2.unquote(url)).path
+                if os.path.isdir(url_path):
+                    for f in os.listdir(url_path):
+                        new_url = os.path.join(url, f)
+                        new_url_path = urlparse.urlparse(urllib2.unquote(new_url)).path
+                        if os.path.isfile(new_url_path) and f.startswith(".")==False:
+                            item['url'] = new_url
+                            item['type'] = 'script'
+                            item['first_boot'] = 'No'
+                            self.runComponent_(item)
+                else:
+                    raise TypeError("package_folder expected a folder path: %s" %(url))
             # Partition a disk
             elif item.get('type') == 'partition':
                 Utils.sendReport('in_progress', 'Running partition task.')
@@ -1092,7 +1103,6 @@ class MainController(NSObject):
                     Utils.sendReport('in_progress', 'Volume will be renamed as: %s' % new_volume_name)
                 self.eraseTargetVolume(new_volume_name, item.get('format', 'Journaled HFS+'))
             elif item.get('type') == 'computer_name':
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 if not item.get('nvram',False):
                     Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
                     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -1100,7 +1110,6 @@ class MainController(NSObject):
                         script=script.read()
                     self.copyFirstBootScript(script, self.counter)
             elif item.get('type') == 'localize':
-                self.targetVolume=Utils.data_volume(self.targetVolume)
                 Utils.sendReport('in_progress', 'Localizing Mac')
                 self.copyLocalize_(item)
                 self.first_boot_items = True
@@ -1983,22 +1992,29 @@ class MainController(NSObject):
 
             elif self.targetVolume._attributes['FilesystemType'] == 'apfs':
                 format='APFS'
-                NSLog("Detected APFS - unmount and mounting all partitions to make sure nothing is holding on to them prior to erasing")              
                 parent_disk = self.targetVolume.Info()['ParentWholeDisk']
-                if not macdisk.Disk(parent_disk).Mount():
-                    self.errorMessage = "Error Mounting all volumes on disk"
-                    return
-                if not macdisk.Disk(parent_disk).Unmount():
-                    self.errorMessage = "Error unmounting volumes on target prior to erase. Restart and try again."
-                    macdisk.Disk(parent_disk).Mount()
-                    return
+
+                if self.targetVolume.filevault==False:
+                    NSLog("Detected non-filevaulted APFS - unmount and mounting all partitions to make sure nothing is holding on to them prior to erasing")
+
+                    if not macdisk.Disk(parent_disk).Unmount():
+                        self.errorMessage = "Error unmounting volumes on target prior to erase. Restart and try again."
+                        macdisk.Disk(parent_disk).Mount()
+                        return
+                    if not macdisk.Disk(parent_disk).Mount():
+                        self.errorMessage = "Error Mounting all volumes on disk. Restart and try again."
+                        return
+
 
                 NSLog("Removing APFS volumes")
-                self.targetVolume.deviceid=Utils.reset_apfs_container(self.targetVolume.deviceidentifier,name)
-                
+                self.targetVolume=Utils.reset_apfs_container(self.targetVolume.deviceidentifier,name)
+                if (self.targetVolume==None):
+                    self.errorMessage = "The new APFS volume could not be found"
+                    return
             else:
                 NSLog("Volume not HFS+ or APFS, system returned: %@", self.targetVolume._attributes['FilesystemType'])
                 self.errorMessage = "Not HFS+ or APFS - specify volume format and reload workflows."
+                return
 
         # Reload possible targets because original target name might not exist
         self.should_update_volume_list = True
