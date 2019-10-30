@@ -572,7 +572,7 @@
 					"$(PROJECT_DIR)/Imagr/Resources",
 				);
 				INFOPLIST_FILE = Imagr/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks/Python.framework";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config",
@@ -596,7 +596,7 @@
 					"$(PROJECT_DIR)/Imagr/Resources",
 				);
 				INFOPLIST_FILE = Imagr/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks/Python.framework";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SYSTEM_LIBRARY_DIR)/Frameworks/Python.framework/Versions/2.7/lib/python2.7/config",

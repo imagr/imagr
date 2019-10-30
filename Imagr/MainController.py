@@ -1768,7 +1768,7 @@ class MainController(NSObject):
         Copies a
          script to a specific volume
         """
-        dest_dir = os.path.join(target, 'private/var.imagr/first-boot/items')
+        dest_dir = os.path.join(target, 'private/var/.imagr/first-boot/items')
         if not os.path.exists(dest_dir):
             self.setupFirstBootDir()
         dest_file = os.path.join(dest_dir, "%03d" % number)
