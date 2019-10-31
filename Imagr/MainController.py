@@ -597,7 +597,10 @@ class MainController(NSObject):
                     selected_volume = unicodedata.normalize("NFD", "/Volumes/%s" % self.target_volume_name)
                     volume_list.index(selected_volume) # Check if target volume is in list
                 except ValueError:
-                    self.errorMessage = "Could not find a volume with target name: %s" % self.target_volume_name.UTF8String()
+                    try:
+                        self.errorMessage = "Could not find a volume with target name: %s" % self.target_volume_name.UTF8String()
+                    except:
+                        self.errorMessage = "Could not find a volume with target name (unreadable unicode)"
                     NSLog(self.errorMessage.decode('utf8'))
                     self.autorunWorkflow = None
                     selected_volume = volume_list[0]
@@ -730,7 +733,10 @@ class MainController(NSObject):
                 self.selectedWorkflow = workflow
                 break
 
-        label_string = "Are you sure you want to run workflow %s?" % self.selectedWorkflow['name']
+        try:
+            label_string = "Are you sure you want to run workflow %s?" % self.selectedWorkflow['name']
+        except:
+            label_string = "Are you sure you want to run workflow?"
 
         alert = NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat_(
                                                                                                                   NSLocalizedString(label_string, None),
@@ -1226,13 +1232,19 @@ class MainController(NSObject):
                     Utils.sendReport('error', 'Could not find included workflow %s' % included_workflow)
                 except:
                     Utils.sendReport('error', 'Could not find included workflow')
-                self.errorMessage = 'Could not find included workflow %s' % included_workflow
+                try:
+                    self.errorMessage = 'Could not find included workflow %s' % included_workflow
+                except:
+                    self.errorMessage = 'Could not find included workflow'
         else:
             try:
                 Utils.sendReport('error', 'No included workflow passed %s' % included_workflow)
             except:
                 Utils.sendReport('error', 'No included workflow passed')
-            self.errorMessage = 'No included workflow passed %s' % included_workflow
+            try:
+                self.errorMessage = 'No included workflow passed %s' % included_workflow
+            except:
+                self.errorMessage = 'No included workflow passed'
 
     def getVariables(self):
         self.variablePanelLabel.setStringValue_(self.variablesArray[0].values()[0])
@@ -1564,7 +1576,10 @@ class MainController(NSObject):
     @objc.python_method
     def downloadAndInstallPackage(self, url, target, progress_method=None, additional_headers=None):
         if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.dmg'):
-            self.errorMessage = "%s doesn't end with either '.pkg' or '.dmg'" % url
+            try:
+                self.errorMessage = "%s doesn't end with either '.pkg' or '.dmg'" % url
+            except:
+                self.errorMessage = "Package file name doesn't end with either '.pkg' or '.dmg'"
             return False
         if os.path.basename(url).endswith('.dmg'):
             error = None
@@ -1635,7 +1650,10 @@ class MainController(NSObject):
             if failsleft == 0:
                 return False
         else:
-            self.errorMessage = "%s doesn't end with '.dmg'" % url
+            try:
+                self.errorMessage = "%s doesn't end with '.dmg'" % url
+            except:
+                self.errorMessage = "DMG file doesn't end with '.dmg'"
             return False
         return dmg
 
@@ -1652,7 +1670,10 @@ class MainController(NSObject):
         (output, error) = self.downloadPackage(url, self.targetVolume.mountpoint, counter,
                               progress_method=self.updateProgressTitle_Percent_Detail_, additional_headers=custom_headers)
         if error:
-            self.errorMessage = "Error copying first boot package %s - %s" % (url, error)
+            try:
+                self.errorMessage = "Error copying first boot package %s - %s" % (url, error)
+            except:
+                self.errorMessage = "Error copying first boot package - %s" % (error)
             return False
 
     @objc.python_method
@@ -1662,7 +1683,10 @@ class MainController(NSObject):
         if not os.path.exists(dest_dir):
             self.setupFirstBootDir()
         if not os.path.basename(url).endswith('.pkg') and not os.path.basename(url).endswith('.dmg'):
-            error = "%s doesn't end with either '.pkg' or '.dmg'" % url
+            try:
+                error = "%s doesn't end with either '.pkg' or '.dmg'" % url
+            except:
+                error = "Package file doesn't end with either '.pkg' or '.dmg'"
             return False, error
         if os.path.basename(url).endswith('.dmg'):
             NSLog("Copying pkg(s) from %@", url)
@@ -1684,7 +1708,10 @@ class MainController(NSObject):
             dmgmountpoints = Utils.mountdmg(url)
             dmgmountpoint = dmgmountpoints[0]
         except:
-            self.errorMessage = "Couldn't mount %s" % url
+            try:
+                self.errorMessage = "Couldn't mount %s" % url
+            except:
+                self.errorMessage = "Couldn't mount dmg"
             return False, self.errorMessage
 
         # Now we're going to go over everything that ends .pkg or
@@ -1708,7 +1735,10 @@ class MainController(NSObject):
         try:
             Utils.unmountdmg(dmgmountpoint)
         except:
-            self.errorMessage = "Couldn't unmount %s" % dmgmountpoint
+            try:
+                self.errorMessage = "Couldn't unmount %s" % dmgmountpoint
+            except:
+                self.errorMessage = "Couldn't unmount dmg mountpoint"
             return False, self.errorMessage
 
         return pkg_list, None
