@@ -828,7 +828,10 @@ class MainController(NSObject):
 
     def workflowOnThreadPrep(self):
         self.disableWorkflowViewControls()
-        Utils.sendReport('in_progress', 'Preparing to run workflow %s...' % self.selectedWorkflow['name'].UTF8String())
+        try:
+            Utils.sendReport('in_progress', 'Preparing to run workflow %s...' % self.selectedWorkflow['name'].UTF8String())
+        except:
+            Utils.sendReport('in_progress', 'Preparing to run workflow')
         self.imagingLabel.setStringValue_("Preparing to run workflow...")
         self.imagingProgressDetail.setStringValue_('')
         self.contractImagingProgressPanel()
@@ -976,7 +979,10 @@ class MainController(NSObject):
         # Disable autorun so users are able to select additional workflows to run.
         self.autorunWorkflow = None
 
-        Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'].UTF8String())
+        try:
+            Utils.sendReport('success', 'Finished running %s.' % self.selectedWorkflow['name'].UTF8String())
+        except:
+            Utils.sendReport('success', 'Finished running workflow.')
 
         # Bless the target if we need to
         if self.blessTarget == True:
@@ -1005,7 +1011,10 @@ class MainController(NSObject):
             self.counter = self.counter + 1.0
             # Restore image
             if item.get('type') == 'image' and item.get('url'):
-                Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
+                try:
+                    Utils.sendReport('in_progress', 'Restoring DMG: %s' % item.get('url'))
+                except:
+                    Utils.sendReport('in_progress', 'Restoring DMG')
                 self.Clone(
                     item.get('url'),
                     self.targetVolume,
@@ -1014,15 +1023,24 @@ class MainController(NSObject):
                 )
             # startosinstall
             elif item.get('type') == 'startosinstall':
-                Utils.sendReport('in_progress', 'starting macOS install: %s' % item.get('url'))
+                try:
+                    Utils.sendReport('in_progress', 'starting macOS install: %s' % item.get('url'))
+                except:
+                    Utils.sendReport('in_progress', 'starting macOS install')
                 self.startOSinstall(item, ramdisk=item.get('ramdisk', False))
             # Download and install package
             elif item.get('type') == 'package' and not item.get('first_boot', True):
-                Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
+                try:
+                    Utils.sendReport('in_progress', 'Downloading and installing package(s): %s' % item.get('url'))
+                except:
+                    Utils.sendReport('in_progress', 'Downloading and installing package(s)')
                 self.downloadAndInstallPackages_(item)
             # Download and copy package
             elif item.get('type') == 'package' and item.get('first_boot', True):
-                Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
+                try:
+                    Utils.sendReport('in_progress', 'Downloading and installing first boot package(s): %s' % item.get('url'))
+                except:
+                    Utils.sendReport('in_progress', 'Downloading and installing first boot package(s)')
                 self.downloadAndCopyPackage(item, self.counter)
                 self.first_boot_items = True
             # Expand package folder and pass contents to runComponent_
@@ -1040,7 +1058,10 @@ class MainController(NSObject):
                     raise TypeError("package_folder expected a folder path: %s" %(url))
             # Copy first boot script
             elif item.get('type') == 'script' and item.get('first_boot', True):
-                Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
+                try:
+                    Utils.sendReport('in_progress', 'Copying first boot script %s' % str(self.counter))
+                except:
+                    Utils.sendReport('in_progress', 'Copying first boot script')
                 if item.get('url'):
                     if item.get('additional_headers'):
                         (data, error) = Utils.downloadFile(item.get('url'), item.get('additional_headers'))
@@ -1053,7 +1074,10 @@ class MainController(NSObject):
                 self.first_boot_items = True
             # Run script
             elif item.get('type') == 'script' and not item.get('first_boot', True):
-                Utils.sendReport('in_progress', 'Running script %s' % str(self.counter))
+                try:
+                    Utils.sendReport('in_progress', 'Running script %s' % str(self.counter))
+                except:
+                    Utils.sendReport('in_progress', 'Running script')
                 if item.get('url'):
                     if item.get('additional_headers'):
                         (data, error) = Utils.downloadFile(item.get('url'), item.get('additional_headers'))
@@ -1097,14 +1121,23 @@ class MainController(NSObject):
                 else: 
                     target_volume_string = 'Macintosh HD'
 
-                Utils.sendReport('in_progress', 'Erasing volume with name %s' % target_volume_string)
+                try:
+                    Utils.sendReport('in_progress', 'Erasing volume with name %s' % target_volume_string)
+                except:
+                    Utils.sendReport('in_progress', 'Erasing volume with name')
                 new_volume_name = str(item.get('name', target_volume_string))
                 if new_volume_name != target_volume_string:
-                    Utils.sendReport('in_progress', 'Volume will be renamed as: %s' % new_volume_name)
+                    try:
+                        Utils.sendReport('in_progress', 'Volume will be renamed as: %s' % new_volume_name)
+                    except:
+                        Utils.sendReport('in_progress', 'Volume will be renamed')
                 self.eraseTargetVolume(new_volume_name, item.get('format', 'Journaled HFS+'))
             elif item.get('type') == 'computer_name':
                 if not item.get('nvram',False):
-                    Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
+                    try:
+                        Utils.sendReport('in_progress', 'Setting computer name to %s' % self.computerName)
+                    except:
+                        Utils.sendReport('in_progress', 'Setting computer name')
                     script_dir = os.path.dirname(os.path.realpath(__file__))
                     with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
                         script=script.read()
@@ -1116,7 +1149,10 @@ class MainController(NSObject):
 
             # Workflow specific restart action
             elif item.get('type') == 'restart_action':
-                Utils.sendReport('in_progress', 'Setting restart_action to %s' % item.get('action'))
+                try:
+                    Utils.sendReport('in_progress', 'Setting restart_action to %s' % item.get('action'))
+                except:
+                    Utils.sendReport('in_progress', 'Setting restart_action')
                 self.restartAction = item.get('action')
             elif item.get('type') == 'variables':
                 self.writeToNVRAM_(self.environmentVariableArray)
@@ -1150,7 +1186,10 @@ class MainController(NSObject):
             os.remove(script_file.name)
             if proc.returncode != 0:
                 error_output = '\n'.join(output_list)
-                Utils.sendReport('error', 'Could not run included workflow script: %s' % error_output)
+                try:
+                    Utils.sendReport('error', 'Could not run included workflow script: %s' % error_output)
+                except:
+                    Utils.sendReport('error', 'Could not run included workflow script')
                 self.errorMessage = 'Could not run included workflow script: %s' % error_output
                 return
             else:
@@ -1183,10 +1222,16 @@ class MainController(NSObject):
                         self.runComponent_(component)
                     return
             else:
-                Utils.sendReport('error', 'Could not find included workflow %s' % included_workflow)
+                try:
+                    Utils.sendReport('error', 'Could not find included workflow %s' % included_workflow)
+                except:
+                    Utils.sendReport('error', 'Could not find included workflow')
                 self.errorMessage = 'Could not find included workflow %s' % included_workflow
         else:
-            Utils.sendReport('error', 'No included workflow passed %s' % included_workflow)
+            try:
+                Utils.sendReport('error', 'No included workflow passed %s' % included_workflow)
+            except:
+                Utils.sendReport('error', 'No included workflow passed')
             self.errorMessage = 'No included workflow passed %s' % included_workflow
 
     def getVariables(self):
