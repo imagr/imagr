@@ -268,7 +268,17 @@ def run(item, target, progress_method=None):
     for pkg in additional_package_paths:
         cmd.extend(['--installpackage', pkg])
 
-    NSLog('startosinstall cmd: %@', cmd)
+    count=0
+    output_string=""
+    for x in cmd:
+        count+=1
+        if count<3:
+            continue
+
+        output_string = output_string + '\"%s\" '%x
+
+    NSLog(u"%@",output_string)
+
 
     # more magic to get startosinstall to not buffer its output for
     # percent complete
@@ -281,6 +291,7 @@ def run(item, target, progress_method=None):
     startosinstall_output = []
     while True:
         output = proc.stdout.readline()
+        proc.poll()
         if not output and (proc.returncode != None):
             break
         info_output = output.rstrip('\n').decode('UTF-8')
@@ -328,10 +339,14 @@ def run(item, target, progress_method=None):
                 progress_method(None, None, msg)
 
     return_code = proc.returncode
-    errors = proc.stderr.read()
+    errors = None
+    if(proc.stderr != None) :
+        errors = proc.stderr.read()
     if return_code != 0:
-        NSLog('##### startosinstall stderr: #####')
-        NSLog('%@', errors)
-        return False, 'startosinstall failed with return code %s' % return_code
+        NSLog('##### startosinstall error #####')
+        NSLog('startosinstall failed with return code %i. Please verify that the recovery partition is not older than the macOS you are trying to install, and verify that the certificate used to sign the install package is not expired.',return_code)
+        if (errors != None):
+            NSLog('%@', errors)
+        return False, 'startosinstall failed with return code %s. Please verify that the recovery partition is not older than the macOS you are trying to install, and verify that the certificate used to sign the install package is not expired.' % return_code
     else:
         return True, 'OK'

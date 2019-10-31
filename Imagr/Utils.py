@@ -172,8 +172,6 @@ def post_url(url, post_data, message=None, follow_redirects=False,
 
     if connection.error is not None:
         # Gurl returned an error
-        NSLog('Download error %@: %@', connection.error.code(),
-              connection.error.localizedDescription())
         if connection.SSLerror:
             NSLog('SSL error detail: %@', str(connection.SSLerror))
         NSLog('Headers: %@', str(connection.headers))
@@ -286,11 +284,8 @@ def get_url(url, destinationpath, message=None, follow_redirects=False,
 
     if connection.error is not None:
         # Gurl returned an error
-        NSLog('Download error %@: %@', connection.error.code(),
-              connection.error.localizedDescription())
         if connection.SSLerror:
             NSLog('SSL error detail: %@', str(connection.SSLerror))
-        NSLog('Headers: %@', str(connection.headers))
         if os.path.exists(tempdownloadpath):
             os.remove(tempdownloadpath)
         raise GurlError(connection.error.code(),
@@ -531,9 +526,11 @@ def sendReport(status, message):
     SERIAL = hardware_info.get('serial_number', 'UNKNOWN')
 
     report_url = getReportURL()
+    curr_hostname = hostname()
     if report_url and len(message) > 0:
         # Should probably do some validation on the status at some point
         data = {
+            'hostname':curr_hostname,
             'status': status,
             'serial': SERIAL,
             'message': message
@@ -550,6 +547,7 @@ def sendReport(status, message):
         log_message = "[{}] {}".format(SERIAL, message)
         log = logging.getLogger("Imagr")
         NSLog(log_message)
+        
         if status == 'error':
             log.error(log_message)
         else:
@@ -933,6 +931,20 @@ def system_volume(source):
                     newDisk.Refresh()
     return newDisk
 
+
+def hostname():
+    hostname="Unknown"
+    cmd = ['/bin/hostname','-s']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (hostname, unused_error) = proc.communicate()
+
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return hostname
+
+    return hostname.rstrip('\r\n')
 
 
 def available_volumes():

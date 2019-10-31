@@ -980,8 +980,8 @@ class MainController(NSObject):
 
         # Bless the target if we need to
         if self.blessTarget == True:
-            self.targetVolume=Utils.system_volume(self.targetVolume)
             try:
+                self.targetVolume=Utils.system_volume(self.targetVolume)
                 self.targetVolume.SetStartupDisk()
             except:
                 for volume in self.volumes:
@@ -1073,7 +1073,7 @@ class MainController(NSObject):
                         if os.path.isfile(new_url_path) and f.startswith(".")==False:
                             item['url'] = new_url
                             item['type'] = 'script'
-                            item['first_boot'] = 'No'
+                            item['first_boot'] = False
                             self.runComponent_(item)
                 else:
                     raise TypeError("package_folder expected a folder path: %s" %(url))
@@ -1324,6 +1324,13 @@ class MainController(NSObject):
 
         if not verify:
             command.append("--noverify")
+
+        count=0
+        output_string=""
+        for x in command:
+            output_string = output_string + '\"%s\" '%x
+
+        NSLog(u"%@",output_string)
 
         self.updateProgressTitle_Percent_Detail_('Restoring %s' % source, -1, '')
         task = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
