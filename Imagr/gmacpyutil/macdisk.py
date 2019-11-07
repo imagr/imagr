@@ -10,6 +10,7 @@ import subprocess
 import xml.parsers.expat
 #from . import gmacpyutil
 import gmacpyutil
+import Utils
 from Foundation import NSBundle, NSLog
 
 
@@ -121,10 +122,12 @@ class Disk(object):
       return True
     else:
       command = ["diskutil", "mount", self.deviceid]
-    #   if self.wholedisk:  # pylint: disable=no-member
-    #     command[1] = "mountDisk"
       rc = gmacpyutil.RunProcess(command)[2]
       if rc == 0:
+        datavol=data_volume(self)
+        if data_volume:
+            command = ["diskutil", "mount", datavol.deviceid]
+            rc = gmacpyutil.RunProcess(command)[2]
         try:
           command = ["diskutil", "enableOwnership", self.deviceid]
           rc = gmacpyutil.RunProcess(command)[2]
