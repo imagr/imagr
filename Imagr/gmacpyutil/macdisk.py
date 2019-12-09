@@ -124,8 +124,8 @@ class Disk(object):
       command = ["diskutil", "mount", self.deviceid]
       rc = gmacpyutil.RunProcess(command)[2]
       if rc == 0:
-        datavol=data_volume(self)
-        if data_volume:
+        datavol=Utils.data_volume(self)
+        if datavol:
             command = ["diskutil", "mount", datavol.deviceid]
             rc = gmacpyutil.RunProcess(command)[2]
         try:

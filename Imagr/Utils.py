@@ -1063,8 +1063,9 @@ def reset_apfs_container(device,new_volume_name=u"Macintosh HD"):
         NSLog(u"adding volume named %@ to container UUID %@", new_volume_name,apfs_container_uuid)
         apfs_add_volume(apfs_container_uuid, new_volume_name)
         NSLog(u"finding first volume in container %@",apfs_container_uuid)
-        diskutil_list_cache=""
-        diskutil_apfs_list=""
+          = []
+        diskutil_list_cache = []
+        diskutil_apfs_list_cache =  []
         first_vol=first_apfs_volume(apfs_container_uuid)
 
     return first_vol
