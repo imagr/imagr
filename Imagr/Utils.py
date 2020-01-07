@@ -58,44 +58,37 @@ class CustomThread(threading.Thread):
         pass
 
 
-diskutil_apfs_list_cache = []
-diskutil_list_cache = []
-
-
 def diskutil_list():
-    global diskutil_list_cache
-    if len(diskutil_list_cache)==0:
-        cmd = ['/usr/sbin/diskutil', 'list', '-plist']
-        proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
-                                stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (output, unused_error) = proc.communicate()
-        if proc.returncode:
-            NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
-            return volumes
-        try:
-            diskutil_list_cache = plistlib.readPlistFromString(output)
-        except BaseException as e:
-            NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
-    return diskutil_list_cache
+    cmd = ['/usr/sbin/diskutil', 'list', '-plist']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return volumes
+    try:
+        diskutil_list = plistlib.readPlistFromString(output)
+    except BaseException as e:
+        NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
+
+    return diskutil_list
 
 def diskutil_apfs_list():
-    global diskutil_apfs_list_cache
-    if len(diskutil_apfs_list_cache)==0:
-        cmd = ['/usr/sbin/diskutil', 'apfs','list', '-plist']
-        proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
-                                stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (output, unused_error) = proc.communicate()
-        if proc.returncode:
-            NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
-            return ""
-        try:
-            diskutil_apfs_list_cache = plistlib.readPlistFromString(output)
-        except BaseException as e:
-            NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
+    cmd = ['/usr/sbin/diskutil', 'apfs','list', '-plist']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    if proc.returncode:
+        NSLog(u"%@ failed with return code %d", u" ".join(cmd), proc.returncode)
+        return ""
+    try:
+        diskutil_apfs_list = plistlib.readPlistFromString(output)
+    except BaseException as e:
+        NSLog(u"Couldn't parse output from %@: %@", u" ".join(cmd), unicode(e))
 
-    return diskutil_apfs_list_cache
+    return diskutil_apfs_list
 
 def header_dict_from_list(array):
     """Given a list of strings in http header format, return a dict.
@@ -556,7 +549,7 @@ def sendReport(status, message):
 
 def bringToFront(bundleID):
     startTime = time.time()
-    while time.time() - startTime < 10:
+    while time.time() - startTime < 1:
         for runapp in NSRunningApplication.runningApplicationsWithBundleIdentifier_(bundleID):
             runapp.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
             if runapp.isActive():
@@ -914,6 +907,7 @@ def data_volume(source) :
                     newDisk.Refresh()
     return newDisk
 
+
 def system_volume(source):
     newDisk=source
     if (source._attributes['FilesystemType'] == 'apfs'):
@@ -948,11 +942,7 @@ def hostname():
 
 
 def available_volumes():
-    global diskutil_list_cache
-    global diskutil_apfs_list_cache
 
-    diskutil_list_cache=[]
-    diskutil_apfs_list_cache=[]
     volumes=available_apfs_volumes()
     volumes.extend(cs_filevault_volumes())
     volumes.extend(mountedVolumes())
@@ -1063,9 +1053,6 @@ def reset_apfs_container(device,new_volume_name=u"Macintosh HD"):
         NSLog(u"adding volume named %@ to container UUID %@", new_volume_name,apfs_container_uuid)
         apfs_add_volume(apfs_container_uuid, new_volume_name)
         NSLog(u"finding first volume in container %@",apfs_container_uuid)
-          = []
-        diskutil_list_cache = []
-        diskutil_apfs_list_cache =  []
         first_vol=first_apfs_volume(apfs_container_uuid)
 
     return first_vol

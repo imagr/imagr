@@ -941,6 +941,8 @@ class MainController(NSObject):
             self.updateProgressWithInfo_, info, objc.NO)
 
     def setupFirstBootDir(self):
+        NSLog(u"mnt point is %@",self.targetVolume.mountpoint)
+
         first_boot_items_dir = os.path.join(self.targetVolume.mountpoint, 'private/var/.imagr/first-boot/items/')
         if not os.path.exists(first_boot_items_dir):
             os.makedirs(first_boot_items_dir, 0755)
@@ -993,7 +995,6 @@ class MainController(NSObject):
         # Bless the target if we need to
         if self.blessTarget == True:
             try:
-                self.targetVolume=Utils.system_volume(self.targetVolume)
                 self.targetVolume.SetStartupDisk()
             except:
                 for volume in self.volumes:
@@ -1337,6 +1338,7 @@ class MainController(NSObject):
             raise macdisk.MacDiskError("target is not a Disk object")
 
         if ramdisk:
+            NSLog("We have a RAM disk")
             ramdisksource = self.RAMDisk(source, imaging=True)
             if ramdisksource[0]:
                 source = ramdisksource[0]
@@ -1350,12 +1352,14 @@ class MainController(NSObject):
 
         is_apfs = False
         if Utils.is_apfs(source):
+            NSLog("Source is APFS")
             is_apfs = True
             # we need to restore to a whole disk here
             if not self.targetVolume.wholedisk:
                 target_ref = "/dev/%s" % self.targetVolume._attributes['ParentWholeDisk']
         command = ["/usr/sbin/asr", "restore", "--source", str(source),
                    "--target", target_ref, "--noprompt", "--puppetstrings"]
+        NSLog("Checking Mount")
 
         self.targetVolume.EnsureMountedWithRefresh()
         if 'FilesystemType' not in self.targetVolume._attributes:
@@ -1417,6 +1421,8 @@ class MainController(NSObject):
             self.targetVolume.EnsureMountedWithRefresh()
             return False
         if task.poll() == 0:
+            #the target may have changed so set to new target
+            self.targetVolume=Utils.system_volume(self.targetVolume)
             self.targetVolume.EnsureMountedWithRefresh()
             if 'ramdisk' in source:
                 NSLog(u"Detaching RAM Disk post imaging.")

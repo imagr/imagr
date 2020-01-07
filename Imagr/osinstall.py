@@ -286,7 +286,7 @@ def run(item, target, progress_method=None):
 
     proc = subprocess.Popen(
         cmd, shell=False, bufsize=-1, env=env,
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True, stderr=subprocess.STDOUT)
 
     startosinstall_output = []
     while True:
