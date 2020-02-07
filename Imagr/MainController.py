@@ -60,6 +60,11 @@ class MainController(NSObject):
     variablePanelLabel = objc.IBOutlet()
     variablePanelValue = objc.IBOutlet()
 
+    variablePopupPanel = objc.IBOutlet()
+    variablePopupPanelLabel = objc.IBOutlet()
+    variablePopupPanelPopupMenu = objc.IBOutlet()
+    variableOtherTextField = objc.IBOutlet()
+
     authenticationPanel = objc.IBOutlet()
     authenticationPanelUsernameField = objc.IBOutlet()
     authenticationPanelPasswordField = objc.IBOutlet()
@@ -347,23 +352,26 @@ class MainController(NSObject):
     @objc.IBAction
     def endVariablePanel_(self, sender):
         '''Called when user clicks 'OK' in the variable panel'''
-        # store the username and password
-        NSApp.endSheet_(self.variablePanel)
 
-        self.environmentVariableArray.append({self.variablesArray[0].keys()[0]:self.variablePanelValue.stringValue()})
+        if sender.tag()==0: #text panel
+            NSApp.endSheet_(self.variablePanel)
+            self.environmentVariableArray.append({self.variablesArray[0].keys()[0]:self.variablePanelValue.stringValue()})
+            self.variablePanel.orderOut_(self)
 
+        else: #popup panel
+            NSApp.endSheet_(self.variablePopupPanel)
+            if self.variablePopupPanelPopupMenu.selectedTag()==99:
+                self.environmentVariableArray.append({self.variablesArray[0]['label']:self.variableOtherTextField.stringValue()})
+            else:
+                self.environmentVariableArray.append({self.variablesArray[0]['label']:self.variablePopupPanelPopupMenu.title()})
+            self.variablePopupPanel.orderOut_(self)
 
-        self.variablePanel.orderOut_(self)
         self.variablesArray.pop(0)
+        if self.variablesArray:
+            self.process_variables()
 
-        if (self.variablesArray):
-            self.variablePanelLabel.setStringValue_(self.variablesArray[0].values()[0])
-            self.variablePanelValue.setStringValue_("")
-            NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-                                                                                      self.variablePanel, self.mainWindow, self, None, None)
         else:
             self.workflowOnThreadPrep()
-
 
     def showAuthenticationPanel(self):
         '''Show the authentication panel'''
@@ -777,11 +785,20 @@ class MainController(NSObject):
             settingVariables = False
             variablesArray = []
             self.environmentVariableArray = []
+
             for item in self.selectedWorkflow['components']:
-                if self.checkForVariablesNameComponent_(item):
-                    self.variablesArray = item.get('variableLabels', [])
+                if self.checkForExtendedVariablesNameComponent_(item):
+                    self.variablesArray=self.variablesArray+(item.get('variable_selections', []))
                     settingVariables=True
                     break
+
+            if not settingVariables:
+                for item in self.selectedWorkflow['components']:
+                    if self.checkForVariablesNameComponent_(item):
+                        self.variablesArray = item.get('variableLabels', [])
+                        settingVariables=True
+                        break
+
 
             for item in self.selectedWorkflow['components']:
                 if self.checkForNameComponent_(item):
@@ -821,6 +838,18 @@ class MainController(NSObject):
 
         return False
 
+    def checkForExtendedVariablesNameComponent_(self, item):
+        if item.get('type') == 'extended_variables':
+            return True
+        if item.get('type') == 'included_workflow':
+            included_workflow = self.getIncludedWorkflow_(item)
+            for workflow in self.workflows:
+                if workflow['name'] == included_workflow:
+                    for new_item in workflow['components']:
+                        if self.checkForNameComponent_(new_item):
+                            return True
+
+            return False
     @PyObjCTools.AppHelper.endSheetMethod
     def startWorkflowAlertDidEnd_returnCode_contextInfo_(self, alert, returncode, contextinfo):
 
@@ -1161,9 +1190,8 @@ class MainController(NSObject):
                 except:
                     Utils.sendReport('in_progress', 'Setting restart_action')
                 self.restartAction = item.get('action')
-            elif item.get('type') == 'variables':
+            elif item.get('type') == 'variables' or item.get('extended_variables'):
                 self.writeToNVRAM_(self.environmentVariableArray)
-
             else:
                 Utils.sendReport('error', 'Found an unknown workflow item.')
                 self.errorMessage = "Found an unknown workflow item."
@@ -1248,9 +1276,40 @@ class MainController(NSObject):
                 self.errorMessage = 'No included workflow passed'
 
     def getVariables(self):
-        self.variablePanelLabel.setStringValue_(self.variablesArray[0].values()[0])
-        NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
-        self.variablePanel, self.mainWindow, self, None, None)
+        self.process_variables()
+
+    @objc.IBAction
+    def variablespopoverchanged_(self, sender):
+        if sender.selectedTag()==99:
+            self.variableOtherTextField.setHidden_(False)
+        else:
+            self.variableOtherTextField.setStringValue_(u'')
+            self.variableOtherTextField.setHidden_(True)
+
+    def process_variables(self):
+        if 'label' in self.variablesArray[0]: #new style
+            if 'options' in self.variablesArray[0]: #list selection
+                self.variablePopupPanelLabel.setStringValue_(self.variablesArray[0]['prompt'])
+                self.variablePopupPanelPopupMenu.removeAllItems()
+
+                self.variablePopupPanelPopupMenu.addItemsWithTitles_(self.variablesArray[0]['options'])
+                if 'add_other_option' in self.variablesArray[0] and self.variablesArray[0]['add_other_option'] is True:
+                    self.variablePopupPanelPopupMenu.addItemWithTitle_("Other...")
+                    self.variablePopupPanelPopupMenu.lastItem().setTag_(99);
+
+                NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                self.variablePopupPanel, self.mainWindow, self, None, None)
+            else: #text only
+                self.variablePanelLabel.setStringValue_(self.variablesArray[0]['prompt'])
+                self.variablePanelValue.setStringValue_("")
+                NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+                self.variablePanel, self.mainWindow, self, None, None)
+
+        else:
+            self.variablePanelLabel.setStringValue_(self.variablesArray[0].values()[0])
+            self.variablePanelValue.setStringValue_("")
+            NSApp.beginSheet_modalForWindow_modalDelegate_didEndSelector_contextInfo_(
+            self.variablePanel, self.mainWindow, self, None, None)
 
     def writeToNVRAM_(self,writeArray):
 

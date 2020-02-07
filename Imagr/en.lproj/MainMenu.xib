@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14868" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15705" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14868"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15705"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -83,6 +83,7 @@
                     </menu>
                 </menuItem>
             </items>
+            <point key="canvasLocation" x="140" y="154"/>
         </menu>
         <customObject id="373" userLabel="AppDelegate" customClass="AppDelegate">
             <connections>
@@ -132,9 +133,13 @@
                 <outlet property="startupDiskRestartButton" destination="455" id="694"/>
                 <outlet property="theTabView" destination="829" id="841"/>
                 <outlet property="utilities_menu" destination="899" id="908"/>
+                <outlet property="variableOtherTextField" destination="u34-cb-n2K" id="cMw-Cy-EzZ"/>
                 <outlet property="variablePanel" destination="Cuo-id-OwK" id="jgt-UA-fg2"/>
                 <outlet property="variablePanelLabel" destination="p0p-G0-tJ0" id="czF-qq-LbD"/>
                 <outlet property="variablePanelValue" destination="Xy4-Ix-xld" id="1i6-xN-wej"/>
+                <outlet property="variablePopupPanel" destination="LgQ-TW-Fv7" id="SHn-uo-Sz0"/>
+                <outlet property="variablePopupPanelLabel" destination="vMU-Qa-bMy" id="BPf-lA-q8Y"/>
+                <outlet property="variablePopupPanelPopupMenu" destination="gpm-aB-Ws0" id="VYJ-uC-7Ni"/>
                 <outlet property="workflowDescription" destination="sP7-yj-hDN" id="Y04-JB-76Q"/>
                 <outlet property="workflowDescriptionView" destination="IoL-ek-btQ" id="rNn-OZ-TI7"/>
             </connections>
@@ -142,7 +147,7 @@
         <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" animationBehavior="default" id="450">
             <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="26" y="274" width="510" height="275"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1057"/>
             <view key="contentView" wantsLayer="YES" focusRingType="none" id="470" userLabel="Container">
                 <rect key="frame" x="0.0" y="0.0" width="510" height="275"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -158,7 +163,7 @@
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
                             <tabViewItem label="Intro" identifier="" id="834">
-                                <view key="view" id="835">
+                                <view key="view" ambiguous="YES" id="835">
                                     <rect key="frame" x="0.0" y="0.0" width="510" height="275"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
@@ -187,7 +192,7 @@
                                             <rect key="frame" x="109" y="176" width="292" height="22"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Enter Deployment Password" id="480">
-                                                <font key="font" metaFont="system" size="18"/>
+                                                <font key="font" metaFont="label" size="18"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -231,7 +236,7 @@
                                 </view>
                             </tabViewItem>
                             <tabViewItem label="Main" identifier="2" id="830" userLabel="Main">
-                                <view key="view" ambiguous="YES" id="833">
+                                <view key="view" id="833">
                                     <rect key="frame" x="0.0" y="0.0" width="510" height="275"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
@@ -240,7 +245,7 @@
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="711">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="menu"/>
+                                                <font key="font" metaFont="system"/>
                                                 <menu key="menu" id="712">
                                                     <items>
                                                         <menuItem title="Select target volume" id="713"/>
@@ -258,7 +263,7 @@
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="749">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="menu"/>
+                                                <font key="font" metaFont="system"/>
                                                 <menu key="menu" id="750">
                                                     <items>
                                                         <menuItem title="Select workflow" id="751"/>
@@ -294,7 +299,7 @@
                                             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                                             <clipView key="contentView" ambiguous="YES" drawsBackground="NO" copiesOnScroll="NO" id="r0x-ny-BhE">
                                                 <rect key="frame" x="1" y="1" width="468" height="91"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <autoresizingMask key="autoresizingMask"/>
                                                 <subviews>
                                                     <textView ambiguous="YES" editable="NO" importsGraphics="NO" verticallyResizable="YES" usesFontPanel="YES" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" spellingCorrection="YES" smartInsertDelete="YES" id="sP7-yj-hDN">
                                                         <rect key="frame" x="0.0" y="0.0" width="468" height="91"/>
@@ -348,7 +353,7 @@ DQ
                                             <rect key="frame" x="18" y="158" width="134" height="11"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <textFieldCell key="cell" controlSize="mini" lineBreakMode="clipping" title="Workflow Description" id="knD-Eb-rsc">
-                                                <font key="font" metaFont="miniSystem"/>
+                                                <font key="font" metaFont="menu" size="9"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -357,7 +362,7 @@ DQ
                                             <rect key="frame" x="35" y="25" width="83" height="11"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <textFieldCell key="cell" controlSize="mini" lineBreakMode="clipping" title="Powered by Imagr" id="KYQ-tt-u0W">
-                                                <font key="font" metaFont="miniSystem"/>
+                                                <font key="font" metaFont="menu" size="9"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -399,7 +404,7 @@ Gw
                                             <rect key="frame" x="81" y="167" width="349" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Computer Name" id="947">
-                                                <font key="font" metaFont="system" size="18"/>
+                                                <font key="font" metaFont="label" size="18"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -440,7 +445,7 @@ DQ
             <windowStyleMask key="styleMask" utility="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="120" y="121" width="458" height="86"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1057"/>
             <view key="contentView" id="453">
                 <rect key="frame" x="0.0" y="0.0" width="458" height="86"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -459,7 +464,7 @@ DQ
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" title="Startup Disk" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="463" id="459">
                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                            <font key="font" metaFont="menu"/>
+                            <font key="font" metaFont="system"/>
                             <menu key="menu" id="460">
                                 <items>
                                     <menuItem title="Startup Disk" state="on" id="463"/>
@@ -491,7 +496,7 @@ DQ
             <windowStyleMask key="styleMask" utility="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="120" y="121" width="512" height="96"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1057"/>
             <view key="contentView" id="704">
                 <rect key="frame" x="0.0" y="0.0" width="512" height="96"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -538,7 +543,7 @@ Gw
             <windowStyleMask key="styleMask" titled="YES" utility="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="139" y="81" width="466" height="119"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1057"/>
             <view key="contentView" id="792">
                 <rect key="frame" x="0.0" y="0.0" width="466" height="119"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -560,7 +565,7 @@ Gw
                         <rect key="frame" x="89" y="41" width="360" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Imaging progress detail" id="802">
-                            <font key="font" metaFont="smallSystem"/>
+                            <font key="font" metaFont="label" size="11"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
@@ -591,7 +596,7 @@ Gw
         <window title="Backdrop Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hasShadow="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="58G-aZ-OKf" customClass="LLBorderlessWindow">
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="0.0" y="0.0" width="480" height="270"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1057"/>
             <view key="contentView" id="Slo-Fr-LxS">
                 <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -602,7 +607,7 @@ Gw
             <windowStyleMask key="styleMask" titled="YES" utility="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="139" y="81" width="543" height="176"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1057"/>
             <view key="contentView" id="AMe-4Q-AaQ">
                 <rect key="frame" x="0.0" y="0.0" width="543" height="176"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -696,7 +701,7 @@ Gw
             <windowStyleMask key="styleMask" titled="YES" utility="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="139" y="81" width="543" height="176"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1057"/>
             <view key="contentView" id="Rve-Em-7Vu">
                 <rect key="frame" x="0.0" y="0.0" width="543" height="176"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -736,6 +741,69 @@ DQ
                 </subviews>
             </view>
             <point key="canvasLocation" x="-688.5" y="230"/>
+        </window>
+        <window title="Variable Panel" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" hidesOnDeactivate="YES" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="LgQ-TW-Fv7" userLabel="Variable Popup Panel" customClass="NSPanel">
+            <windowStyleMask key="styleMask" titled="YES" utility="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="139" y="81" width="543" height="201"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1344" height="817"/>
+            <view key="contentView" id="gW7-Ss-kCA">
+                <rect key="frame" x="0.0" y="0.0" width="543" height="201"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="z7a-nh-RHe">
+                        <rect key="frame" x="421" y="13" width="108" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="175-Mn-7ec">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                        </buttonCell>
+                        <connections>
+                            <action selector="endVariablePanel:" target="664" id="OSc-U0-aQf"/>
+                        </connections>
+                    </button>
+                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gpm-aB-Ws0">
+                        <rect key="frame" x="18" y="99" width="508" height="25"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="86X-gk-oxo" id="1Ym-nf-jb2">
+                            <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <menu key="menu" id="Lga-jT-EAc">
+                                <items>
+                                    <menuItem title="Item 1" state="on" id="86X-gk-oxo"/>
+                                    <menuItem title="Item 2" id="SHe-bj-vPV"/>
+                                    <menuItem title="Item 3" id="Odq-E8-OGx"/>
+                                </items>
+                            </menu>
+                        </popUpButtonCell>
+                        <connections>
+                            <action selector="variablespopoverchanged:" target="664" id="iYN-1z-0Xh"/>
+                        </connections>
+                    </popUpButton>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vMU-Qa-bMy">
+                        <rect key="frame" x="18" y="138" width="507" height="43"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="197-sK-a3y">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="u34-cb-n2K">
+                        <rect key="frame" x="20" y="61" width="503" height="21"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" id="deu-LZ-TOD">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                </subviews>
+            </view>
+            <point key="canvasLocation" x="-688.5" y="242.5"/>
         </window>
     </objects>
     <resources>

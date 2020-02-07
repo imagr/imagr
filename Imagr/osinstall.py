@@ -344,9 +344,9 @@ def run(item, target, progress_method=None):
         errors = proc.stderr.read()
     if return_code != 0:
         NSLog('##### startosinstall error #####')
-        NSLog('startosinstall failed with return code %i. Please verify that the recovery partition is not older than the macOS you are trying to install, and verify that the certificate used to sign the install package is not expired.',return_code)
+        NSLog('startosinstall failed with return code %i. Please look at the terminal output or check /var/log/install.log for more details.',return_code)
         if (errors != None):
             NSLog('%@', errors)
-        return False, 'startosinstall failed with return code %s. Please verify that the recovery partition is not older than the macOS you are trying to install, and verify that the certificate used to sign the install package is not expired.' % return_code
+        return False, 'startosinstall failed with return code %s. Please look at the terminal output or check /var/log/install.log for more details.' % return_code
     else:
         return True, 'OK'
