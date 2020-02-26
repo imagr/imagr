@@ -305,14 +305,14 @@ def run(item, target, progress_method=None):
             NSLog('%@', msg)
             if progress_method:
                 progress_method(None, None, msg)
-        elif msg.startswith('Preparing '):
+        elif msg.startswith('Preparing'):
             # percent-complete messages
             try:
-                percent = int(float(msg[10:].rstrip().rstrip('.')))
+                percent = int(float(msg[10:].lstrip().rstrip().rstrip('%.')))
             except ValueError:
                 percent = -1
             if progress_method:
-                progress_method(None, percent, None)
+                progress_method(None, percent, "%d%% complete." % percent)
         elif msg.startswith(('By using the agreetolicense option',
                              'If you do not agree,')):
             # annoying legalese

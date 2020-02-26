@@ -1190,11 +1190,11 @@ class MainController(NSObject):
                 except:
                     Utils.sendReport('in_progress', 'Setting restart_action')
                 self.restartAction = item.get('action')
-            elif item.get('type') == 'variables' or item.get('extended_variables'):
+            elif item.get('type') == 'variables' or item.get('type') == 'extended_variables' :
                 self.writeToNVRAM_(self.environmentVariableArray)
             else:
-                Utils.sendReport('error', 'Found an unknown workflow item.')
-                self.errorMessage = "Found an unknown workflow item."
+                Utils.sendReport('error', 'Found an unknown workflow item: %s' % item.get('type'))
+                self.errorMessage = "Found an unknown workflow item: %s" % item.get('type')
 
     def getIncludedWorkflow_(self, item):
         included_workflow = None
@@ -1898,6 +1898,10 @@ class MainController(NSObject):
         my_env = os.environ.copy()
         url_parse = urlparse.urlparse(Utils.getServerURL())
         my_env["server_path"]=url_parse.path
+        if self.environmentVariableArray:
+            for var in self.environmentVariableArray:
+                my_env[var.keys()[0].replace("com.twocanoes.mds.", "mds_")] = var.values()[0]
+
         proc = subprocess.Popen(script_file.name, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True,env=my_env)
         while proc.poll() is None:
             output = proc.stdout.readline().strip().decode('UTF-8')
