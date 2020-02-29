@@ -200,7 +200,14 @@ class MainController(NSObject):
         if self.backgroundWindowSetting() == u"always":
             self.showBackgroundWindow()
 
-        self.mainWindow.center()
+#        self.mainWindow.center()
+
+        screenRect = NSScreen.mainScreen().frame()
+
+        windowRect = self.mainWindow.frame().copy()
+        windowRect.origin.x = screenRect.size.width/2+ ((screenRect.size.width/2-windowRect.size.width)/2)
+        windowRect.origin.y +=100
+        self.mainWindow.setFrame_display_(windowRect,True)
         self.mainWindow.setCanBecomeVisibleWithoutLogin_(True)
         # Run app startup - get the images, password, volumes - anything that takes a while
         self.progressText.setStringValue_("Application Starting...")
@@ -785,6 +792,7 @@ class MainController(NSObject):
             settingVariables = False
             variablesArray = []
             self.environmentVariableArray = []
+            self.environmentVariableArray.append({u'com.twocanoes.mds.workflowname':self.selectedWorkflow['name'].UTF8String()})
 
             for item in self.selectedWorkflow['components']:
                 if self.checkForExtendedVariablesNameComponent_(item):

@@ -19,7 +19,7 @@ class LLAppDelegate(NSObject):
     
     def applicationDidFinishLaunching_(self, sender):
         self.prefs.registerDefaults_({
-            u"logfile": u"/var/log/system.log",
+            u"logfile": u"/var/log/install.log",
         })
         logfile = self.prefs.stringForKey_(u"logfile")
         self.logWindowController.showLogWindow_(logfile)
