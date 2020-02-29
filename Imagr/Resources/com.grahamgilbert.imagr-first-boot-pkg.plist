@@ -6,6 +6,7 @@
 	<string>com.grahamgilbert.imagr-first-boot-pkg</string>
 	<key>ProgramArguments</key>
 	<array>
+		<string>/usr/bin/caffeinate</string>
 		<string>/private/var/.imagr/first-boot/first-boot</string>
 	</array>
 	<key>RunAtLoad</key>
