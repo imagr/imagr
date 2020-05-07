@@ -74,8 +74,12 @@ def diskutil_list():
 
     return diskutil_list
 
-def diskutil_apfs_list():
-    cmd = ['/usr/sbin/diskutil', 'apfs','list', '-plist']
+def diskutil_apfs_list(uuid=None):
+    if uuid is None:
+        cmd = ['/usr/sbin/diskutil', 'apfs','list', '-plist']
+    else:
+        cmd = ['/usr/sbin/diskutil', 'apfs','list', '-plist',uuid]
+        
     proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -1011,7 +1015,7 @@ def apfs_container(volume_uuid):
 
 def first_apfs_volume(apfs_container_uuid):
     ret_disk=None
-    plist=diskutil_apfs_list()
+    plist=diskutil_apfs_list(apfs_container_uuid)
 
     if (plist==""):
         return None

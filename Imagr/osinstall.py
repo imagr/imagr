@@ -137,15 +137,6 @@ def download_and_cache_pkgs(
     on the target volume. Return a list of the stashed paths.
     Raise PkgCaching error if there is a problem'''
     pkgpaths = []
-    private_dir = os.path.join(target, 'private')
-    private_tmp_dir = os.path.join(private_dir, 'tmp')
-    if not os.path.exists(private_tmp_dir):
-        os.makedirs(private_tmp_dir)
-        os.chown(private_dir, 0, 0)
-        os.chmod(private_dir, 0755)
-        os.chown(private_tmp_dir, 0, 0)
-        os.chmod(private_tmp_dir, 01777)
-    dest_dir = os.path.join(target, 'private/tmp/pkgcache')
 
     expanded_pkgurls = filter_and_expand_paths(pkgurls, '.pkg')
 
@@ -157,6 +148,15 @@ def download_and_cache_pkgs(
         if url.startswith("file://"):
             pkgpath = urlparse.urlparse(urllib2.unquote(url)).path
         else:
+            private_dir = os.path.join(target, 'private')
+            private_tmp_dir = os.path.join(private_dir, 'tmp')
+            if not os.path.exists(private_tmp_dir):
+               os.makedirs(private_tmp_dir)
+               os.chown(private_dir, 0, 0)
+               os.chmod(private_dir, 0755)
+               os.chown(private_tmp_dir, 0, 0)
+               os.chmod(private_tmp_dir, 01777)
+            dest_dir = os.path.join(target, 'private/tmp/pkgcache')
             if not os.path.exists(dest_dir):
                 os.makedirs(dest_dir)
             if os.path.basename(url).endswith('.dmg'):
