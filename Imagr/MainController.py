@@ -1507,11 +1507,8 @@ class MainController(NSObject):
         if ramdisk:
             ramdisksource = self.RAMDisk(item, imaging=False)
             if ramdisksource[0]:
-                ositem = {
-                    'ramdisk': True,
-                    'type': 'startosinstall',
-                    'url': ramdisksource[0],
-                    }
+                ositem = item
+                ositem['url'] = ramdisksource[0]
             else:
                 if ramdisksource[1] is True:
                     ositem = item
