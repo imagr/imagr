@@ -1186,7 +1186,7 @@ class MainController(NSObject):
                     with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
                         script=script.read()
                     self.copyFirstBootScript(script, self.counter)
-            elif item.get('type') == 'localize':
+             elif item.get('type') == 'localize':
                 Utils.sendReport('in_progress', 'Localizing Mac')
                 self.copyLocalize_(item)
                 self.first_boot_items = True
@@ -1500,15 +1500,17 @@ class MainController(NSObject):
                                           stderr=subprocess.PIPE)
             return True
 
+#additional_package_urls
     @objc.python_method
     def startOSinstall(self, item, ramdisk):
+        NSLog("item is : %@",item)
         if ramdisk:
             ramdisksource = self.RAMDisk(item, imaging=False)
             if ramdisksource[0]:
                 ositem = {
                     'ramdisk': True,
                     'type': 'startosinstall',
-                    'url': ramdisksource[0]
+                    'url': ramdisksource[0],
                     }
             else:
                 if ramdisksource[1] is True:
@@ -1706,7 +1708,7 @@ class MainController(NSObject):
 
     @objc.python_method
     def downloadDMG(self, url, target):
-        if os.path.basename(url).endswith('.dmg'):
+        if os.path.basename(url).endswith('.dmg') or os.path.basename(url).endswith('.sparseimage'):
             # Download it
             dmgname = os.path.basename(url)
             failsleft = 3
@@ -1724,9 +1726,9 @@ class MainController(NSObject):
                 return False
         else:
             try:
-                self.errorMessage = "%s doesn't end with '.dmg'" % url
+                self.errorMessage = "%s doesn't end with '.dmg' or '.sparseimage'" % url
             except:
-                self.errorMessage = "DMG file doesn't end with '.dmg'"
+                self.errorMessage = "DMG file doesn't end with '.dmg' or '.sparseimage'"
             return False
         return dmg
 
