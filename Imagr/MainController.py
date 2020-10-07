@@ -306,8 +306,7 @@ class MainController(NSObject):
         for volume in self.volumes:
             if volume.mountpoint != '/':
                 if volume.mountpoint.startswith("/Volumes/") or volume.filevault :
-                    if volume.writable:
-                        volume_list.append(volume.mountpoint)
+                    volume_list.append(volume.mountpoint)
         return volume_list
 
     def reloadVolumes(self):
