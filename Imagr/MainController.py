@@ -1186,7 +1186,7 @@ class MainController(NSObject):
                     with open(os.path.join(script_dir, 'set_computer_name.sh')) as script:
                         script=script.read()
                     self.copyFirstBootScript(script, self.counter)
-             elif item.get('type') == 'localize':
+            elif item.get('type') == 'localize':
                 Utils.sendReport('in_progress', 'Localizing Mac')
                 self.copyLocalize_(item)
                 self.first_boot_items = True

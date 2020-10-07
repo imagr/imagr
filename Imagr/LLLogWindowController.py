@@ -72,7 +72,7 @@ class LLLogViewDataSource(NSObject):
         if line.startswith(u"%{") and u"}" in line:
             attrStr, _, rest = line[2:].partition(u"}")
             NSLog(u"attrStr = %@", repr(attrStr))
-            color = NSColor.blackColor()
+            color = NSColor.controlTextColor()
             for attr in [x.strip() for x in attrStr.split(u",")]:
                 NSLog(u"attr = %@", repr(attr))
                 if u"=" in attr:
@@ -86,7 +86,7 @@ class LLLogViewDataSource(NSObject):
                     NSLog(u"Unknown attribute: %@", repr(attr))
             return rest, color
         else:
-            return line, NSColor.blackColor()
+            return line, NSColor.controlTextColor()
 
     def removeAllLines(self):
         self.logFileData.removeAllObjects()
