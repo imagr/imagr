@@ -1,6 +1,7 @@
 #!/bin/bash
 
-NAME="{{computer_name}}"
+NAME="
+{{computer_name}}"
 
 /usr/sbin/scutil --set ComputerName "$NAME"
 /usr/sbin/scutil --set HostName "$NAME"
