@@ -946,7 +946,7 @@ def hostname():
 
 
 def available_volumes():
-
+    mount_system_volumes()
     volumes=available_apfs_volumes()
     volumes.extend(cs_filevault_volumes())
     volumes.extend(mountedVolumes())
@@ -961,7 +961,7 @@ def available_apfs_volumes():
     mount_vols=mounted_apfs_volumes()
     for container in plist[u"Containers"]:
         for volume in container[u"Volumes"]:
-            if ((u"FileVault" in volume) and (volume["FileVault"]==True) or (volume[u"DeviceIdentifier"] in mount_vols and (u"Roles" in volume) and (not u"Data" in volume["Roles"]))):
+            if ((u"System" in volume["Roles"]) or (u"FileVault" in volume) and (volume["FileVault"]==True) or (volume[u"DeviceIdentifier"] in mount_vols and (u"Roles" in volume) and (not u"Data" in volume["Roles"]))):
                 newDisk=macdisk.Disk(volume[u"DeviceIdentifier"])
                 if (u"FileVault" in volume) and (volume["FileVault"]==True):
                     newDisk.filevault=True
@@ -969,6 +969,35 @@ def available_apfs_volumes():
                 volumes.append(newDisk)
 
     return volumes
+    
+def mount_system_volumes():
+    volumes = []
+    plist = diskutil_apfs_list()
+    if (plist==""):
+        return volumes
+    mount_vols=mounted_apfs_volumes()
+    for container in plist[u"Containers"]:
+        for volume in container[u"Volumes"]:
+            if (u"System" in volume["Roles"] and not volume[u"DeviceIdentifier"] in mount_vols ):
+                mount_volume(volume[u"DeviceIdentifier"])
+
+    return volumes
+
+    
+def mount_volume(device):
+    """
+    mounts volume
+    """
+    NSLog("mount volume at %@", device)
+    proc = subprocess.Popen(['/usr/sbin/diskutil', 'mount', device],
+                            bufsize=-1, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    (unused_output, err) = proc.communicate()
+    if proc.returncode:
+        print >> sys.stderr, 'mount failed: %s' % err
+    else:
+        return True
+
 def apfs_filevault_volumes():
 
     volumes = []
