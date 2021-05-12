@@ -1682,13 +1682,16 @@ class MainController(NSObject):
         if os.path.basename(url).endswith('.pkg'):
 
             # Make our temp directory on the target
-            temp_dir = tempfile.mkdtemp(dir=target)
             # Download it
             packagename = os.path.basename(url)
+            temp_dir=""
             if url.startswith("file://"):
+
                 url_parse = urlparse.urlparse(url)
                 downloaded_file=url_parse.path.replace("%20", " ")
             else:
+                temp_dir = tempfile.mkdtemp(dir=target)
+
                 (downloaded_file, error) = Utils.downloadChunks(url, os.path.join(temp_dir,
                 packagename), additional_headers=additional_headers)
                 if error:
@@ -1700,7 +1703,8 @@ class MainController(NSObject):
                 self.errorMessage = "Couldn't install %s" % downloaded_file
                 return False
             # Clean up after ourselves
-            shutil.rmtree(temp_dir)
+            if temp_dir != "":
+                shutil.rmtree(temp_dir)
 
     @objc.python_method
     def downloadDMG(self, url, target):
