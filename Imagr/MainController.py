@@ -8,6 +8,7 @@
 #
 
 import objc
+import json
 import FoundationPlist
 import os
 from SystemConfiguration import *
@@ -406,9 +407,20 @@ class MainController(NSObject):
         self.buildUtilitiesMenu()
         self.volumes = Utils.available_volumes()
 
-
-#        self.volumes = Utils.mountedVolumes()
         theURL = Utils.getServerURL()
+        configFolder=theURL[:theURL.rfind('/')]
+        script=configFolder+"/workflow_options.sh"
+        override_values = []
+        if script.startswith("file://"):
+            script_path = urlparse.urlparse(urllib2.unquote(script)).path
+            full_output=""
+            if os.path.exists(script_path):
+                proc = subprocess.Popen(script_path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+                while proc.poll() is None:
+                    output = proc.stdout.readline().strip().decode('UTF-8')
+                    full_output+=output
+
+                override_values=json.loads(full_output)
 
         if theURL:
             plistData = None
@@ -450,7 +462,10 @@ class MainController(NSObject):
                     pass
 
                 try:
-                    self.autoRunTime = converted_plist['autorun_time']
+                    if override_values['workflow_autorun_timeout']:
+                        self.autoRunTime=int(override_values['workflow_autorun_timeout'])
+                    else:
+                        self.autoRunTime = converted_plist['autorun_time']
                 except:
                     pass
 
@@ -477,7 +492,10 @@ class MainController(NSObject):
                     pass
 
                 try:
-                    self.autorunWorkflow = converted_plist['autorun']
+                    if override_values['workflow_autorun_name']:
+                        self.autorunWorkflow=override_values['workflow_autorun_name']
+                    else:
+                        self.autorunWorkflow = converted_plist['autorun']
 
                     # If we've already cancelled autorun, don't bother trying to autorun again.
                     if self.cancelledAutorun:
@@ -486,8 +504,11 @@ class MainController(NSObject):
                     pass
 
                 try:
-                    self.target_volume_name = urllib2.unquote(
-                        converted_plist['target_volume_name'])
+                    if override_values['workflow_autorun_volume']:
+                        self.target_volume_name=override_values['workflow_autorun_volume']
+                    else:
+                        self.target_volume_name = urllib2.unquote(
+                            converted_plist['target_volume_name'])
                     NSLog("Set target volume name as: %@", self.target_volume_name)
                 except:
                     pass
