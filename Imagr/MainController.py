@@ -461,9 +461,11 @@ class MainController(NSObject):
                 except:
                     pass
 
+                NSLog("trying override values");
                 try:
-                    if override_values['workflow_autorun_timeout']:
+                    if override_values and override_values['workflow_autorun_timeout']:
                         self.autoRunTime=int(override_values['workflow_autorun_timeout'])
+                        NSLog("setting workflow_autorun_timeout ");
                     else:
                         self.autoRunTime = converted_plist['autorun_time']
                 except:
@@ -492,8 +494,10 @@ class MainController(NSObject):
                     pass
 
                 try:
-                    if override_values['workflow_autorun_name']:
+                    if override_values and override_values['workflow_autorun_name']:
                         self.autorunWorkflow=override_values['workflow_autorun_name']
+                        NSLog("setting workflow_autorun_name ");
+
                     else:
                         self.autorunWorkflow = converted_plist['autorun']
 
