@@ -32,6 +32,7 @@ import powermgr
 import osinstall
 import signal
 import unicodedata
+import logging
 import powermgr
 class MainController(NSObject):
     objc.setVerbose(1)
@@ -201,8 +202,6 @@ class MainController(NSObject):
         if self.backgroundWindowSetting() == u"always":
             self.showBackgroundWindow()
 
-#        self.mainWindow.center()
-
         screenRect = NSScreen.mainScreen().frame()
 
         windowRect = self.mainWindow.frame().copy()
@@ -311,7 +310,7 @@ class MainController(NSObject):
         return volume_list
 
     def reloadVolumes(self):
-        if self.targetVolume._attributes['FilesystemType'] == 'apfs':
+        if self.targetVolume and self.targetVolume._attributes['FilesystemType'] == 'apfs':
             self.targetVolume=Utils.system_volume(self.targetVolume)
             if not self.targetVolume.Mounted():
                 self.targetVolume.Mount()
